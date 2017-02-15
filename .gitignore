@@ -1,2 +1,5 @@
 # temporary files
 *~
+
+# pycache
+__pycache__/
