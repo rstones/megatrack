@@ -1,0 +1,15 @@
+#query-tool-wrapper {
+	width: 710px;
+	display: inline-block;	
+}
+
+.viewer-panel {
+	width: 350px;
+	height: 350px;
+	border: 1px solid grey;
+	float: left;
+}
+
+.image-panel {
+	background: black;
+}

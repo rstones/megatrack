@@ -1,8 +1,19 @@
 {% extends "base.html" %}
 {% block head %}
   {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='viewer.css') }}">
 {% endblock %}
 {% block content %}
-<h1>Home page</h1>
+<div id="content-text">
+<h2>Home page</h2>
 Welcome to Megatrack.
+</div>
+
+<div id="query-tool-wrapper">
+	<div id="viewer-front" class="viewer-panel image-panel"></div>
+	<div id="viewer-side" class="viewer-panel image-panel"></div>
+	<div id="viewer-top" class="viewer-panel image-panel"></div>
+	<div id="viewer-query-tool" class="viewer-panel"></div>
+</div>
+
 {% endblock %}
