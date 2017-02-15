@@ -1,11 +1,22 @@
 <html>
 
-    <head>
-
-    </head>
+	<head>
+		{% block head %}
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+		<title>Megatrack Neuroimaging</title>
+		{% endblock %}
+	</head>
 
     <body>
-
+         <div id="header">
+             <div id="logo">Megatrack2</div>
+             <ul>
+                 <li><a href="{{ url_for('index') }}">Home</a></li>
+                 <li><a href="{{ url_for('about') }}">About</a></li>
+             </ul>
+         </div>
+         <div id="content">{% block content %}{% endblock %}</div>
+         <div id="footer">&copy; 2017 NatBrainLab</div>
     </body>
 
 

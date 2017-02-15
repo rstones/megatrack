@@ -3,3 +3,7 @@
 
 # pycache
 __pycache__/
+
+# eclipse files
+.project
+.pydevproject
