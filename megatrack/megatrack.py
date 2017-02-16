@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+import os
+from flask import Flask, render_template, json
+import numpy as np
 
 app = Flask(__name__)
 
@@ -9,6 +11,11 @@ def index():
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+@app.route('/template')
+def get_template():
+    template_data = np.load('data/compact_template_data.npz')['template_data']
+    return json.dumps(template_data.to_list())
 
 if __name__ == '__main__':
     app.debug = True
