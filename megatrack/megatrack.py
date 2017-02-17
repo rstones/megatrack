@@ -1,8 +1,11 @@
 import os
-from flask import Flask, render_template, json
-import numpy as np
+from flask import Flask
 
 app = Flask(__name__)
+
+from flask import render_template, json, make_response
+import numpy as np
+#from megatrack import app
 
 @app.route('/')
 def index():
@@ -12,10 +15,18 @@ def index():
 def about():
     return render_template('about.html')
 
-@app.route('/template')
+@app.route('/get_template')
 def get_template():
-    template_data = np.load('data/compact_template_data.npz')['template_data']
-    return json.dumps(template_data.to_list())
+    template_data = np.load('../data/compact_template_data.npz')['template_data']
+    # may be best to put array into dict along with header data before converting to json
+    r = make_response(json.dumps(template_data.tolist()))
+    r.mimetype = "application/json"
+    return r
+
+@app.route('/_test_viewer')
+def _test_viewer():
+    '''Serve QUnit test file for javascript Viewer.'''
+    return render_template('test_viewer.html')
 
 if __name__ == '__main__':
     app.debug = True

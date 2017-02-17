@@ -4,6 +4,9 @@
 		{% block head %}
 		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 		<title>Megatrack Neuroimaging</title>
+		<script type=text/javascript>
+			$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+		</script>
 		{% endblock %}
 	</head>
 

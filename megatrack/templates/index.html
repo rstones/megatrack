@@ -2,6 +2,10 @@
 {% block head %}
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='viewer.css') }}">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="{{ url_for('static', filename='jquery.js') }}"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="{{ url_for('static', filename='viewer.js') }}"></script>
 {% endblock %}
 {% block content %}
 <div id="content-text">
@@ -9,11 +13,6 @@
 Welcome to Megatrack.
 </div>
 
-<div id="query-tool-wrapper">
-	<div id="viewer-front" class="viewer-panel image-panel"></div>
-	<div id="viewer-side" class="viewer-panel image-panel"></div>
-	<div id="viewer-top" class="viewer-panel image-panel"></div>
-	<div id="viewer-query-tool" class="viewer-panel"></div>
-</div>
+<div id="viewer"></div>
 
 {% endblock %}

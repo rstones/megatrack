@@ -1,4 +1,4 @@
-#query-tool-wrapper {
+#viewer {
 	width: 710px;
 	display: inline-block;	
 }
@@ -10,6 +10,6 @@
 	float: left;
 }
 
-.image-panel {
+.view-panel {
 	background: black;
 }
