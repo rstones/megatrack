@@ -4,12 +4,28 @@
 }
 
 .viewer-panel {
-	width: 350px;
-	height: 350px;
+	width: 250px;
+	height: 250px;
 	border: 1px solid grey;
 	float: left;
+	background: black;
+	margin: 20px;
 }
 
 .view-panel {
+	height: inherit;
 	background: black;
+	position: relative;
+}
+
+.ui-slider {
+	clear: both;
+}
+
+.crosshairs {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 250px;
+	height: 250px;
 }
