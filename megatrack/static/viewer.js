@@ -5,23 +5,28 @@
  * @param {X.volume} volume
  * @param {JQuery DOM object} container The container for the View.
  * @param {string} orientation The label for the slice orientation eg. X,Y,Z.
+ * @param {boolean} reverse Flip indexing of slice orientation.
  * @param {string} vSlice The orientation for slices vertical relative to orientation of View.
+ * @param {boolean} vReverse Flip indexing of vertical slice.
  * @param {string} hSlice The orientation for slices horizontal relative to orientation of View.
+ * @param {boolean} hReverse Flip indexing of horizontal slice.
  */
-function View(plane, volume, container, orientation, vSlice, hSlice) {
+function View(plane, volume, container, orientation, reverse, vSlice, vReverse, hSlice, hReverse) {
 	
 	this._plane = plane;
 	this._volume = volume;
 	this._container = container;
 	this._orientation = orientation;
+	this._reverse = reverse;
 	this._vSlice = vSlice;
 	this._hSlice = hSlice;
+	this._vReverse = vReverse;
+	this._hReverse = hReverse;
 	
 	this._container.append('<div id="'+this._plane+'-view" class="view"></div>');
 	this._container.append('<div id="'+this._plane+'-slider"></div>');
 	
 	this._view = new X.renderer2D();
-	this._view.radiological = false;
 	this._view.container = this._plane+'-view';
 	this._view.orientation = this._orientation;
 	this._view.init();
@@ -29,33 +34,40 @@ function View(plane, volume, container, orientation, vSlice, hSlice) {
 	this._view.interactor.config.MOUSECLICKS_ENABLED = false;
 	this._view.interactor.config.MOUSEWHEEL_ENABLED = false;
 	this._view.interactor.init();
+	this._view.add(this._volume);
 	
 	this._idx = 'index' + this._orientation;
-	this._dimIdx = 'XYZ'.indexOf(this._orientation); // just get dim here and use it where its needed
+	this._dimIdx = 'XYZ'.indexOf(this._orientation);
 	this._vIdx = 'index' + this._vSlice;
-	this._vDimIdx = 'XYZ'.indexOf(this._vSlice); // same here
+	this._vDimIdx = 'XYZ'.indexOf(this._vSlice);
 	this._hIdx = 'index' + this._hSlice;
-	this._hDimIdx = 'XYZ'.indexOf(this._hSlice); // same here
-	
-	this._view.add(this._volume);
+	this._hDimIdx = 'XYZ'.indexOf(this._hSlice);
 	
 	// initialize canvas for crosshairs overlay
 	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-crosshairs" class="crosshairs"></canvas>')
 }
 View.prototype.constructor = View;
 
-View.prototype.addSlider = function() {
+/**
+ * @param {string} orientation Either horizontal or vertical
+ */
+View.prototype.addSlider = function(orientation) {
 	var view = this;
 	$('#'+this._plane+'-slider').slider({
-		value: Math.floor(view._volume[view._idx]),
-		min: 0,
-		max: view._volume.dimensions[view._dimIdx]-1,
+		value: (view._reverse ? -1 : 1) * Math.floor(view._volume[view._idx]),
+		max: view._reverse ? 0 : view._volume.dimensions[view._dimIdx]-1,
+		min: view._reverse ? -view._volume.dimensions[view._dimIdx]-1 : 0,
 		step: 1,
+		orientation: orientation,
 		slide: function(event, ui) {
-			$('#viewer').trigger('view:slide', [view._plane, ui.value]);
+			$('#viewer').trigger('view:slide', [view._plane, Math.abs(ui.value)]);
 		}
 	});
 };
+
+View.prototype.setSliderValue = function(newValue) {
+	$('#'+this._plane+'-slider').slider('value', this._reverse ? -newValue : newValue);
+}
 
 View.prototype.initSlicingOverlay = function() {
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
@@ -71,16 +83,16 @@ View.prototype.initSlicingOverlay = function() {
 		//view.drawCrosshairs();
 		$('#viewer').trigger('view:click', [view._plane, x, y, canvas.width, canvas.height]);
 	};
-	this.drawCrosshairs();
+	this.drawCrosshairs(this._volume[this._vIdx] / this._volume.dimensions[this._vDimIdx], this._volume[this._hIdx] / this._volume.dimensions[this._hDimIdx]);
 }
 
 /*
  * Horizontal line is stretched because canvas shape is altered by css which scales it
  */
-View.prototype.drawCrosshairs = function() {
+View.prototype.drawCrosshairs = function(vSlicePos, hSlicePos) {
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
-	var vSlicePos = canvas.width * (this._volume[this._vIdx] / this._volume.dimensions[this._vDimIdx]);
-	var hSlicePos = canvas.height * (this._volume[this._hIdx] / this._volume.dimensions[this._hDimIdx]);
+	vSlicePos *= canvas.width;
+	hSlicePos *= canvas.height;
 	var ctx = canvas.getContext('2d');
 	ctx.beginPath();
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -113,43 +125,49 @@ function Viewer(elementId) {
 	container.append('<div id="query-panel"></div>');
 	$('#'+this._elementId+' div').addClass('viewer-panel');
 
-	this._volume = new X.volume(); // is it a good idea for volume to be global?
+	this._volume = new X.volume();
 	this._volume.file = '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
-	this._volume.labelmap.file = '/get_test_map?.nii.gz';
-	this._volume.transform = new X.transform(); // switch to neurological convention
-	this._volume.transform.flipY();
+	this._volume.labelmap.file = '/CingL_map?.nii.gz';
 	var cmapShades = 100;
-	var cmap = Colormaps({
-		colormap: [{"index":0, "rgb":[0,0,0,0]}, {"index":0.01, "rgb":[100,0,0,0.7]}, {"index":0.25, "rgb":[100,0,0,0.8]},
+	var cmap = Colormaps({ //{"index":0.01, "rgb":[100,0,0,0.7]}, 
+		colormap: [{"index":0, "rgb":[0,0,0,0]}, {"index":0.25, "rgb":[100,0,0,0.8]},
 			       {"index":0.55, "rgb":[150,0,0,0.9]}, {"index":0.65, "rgb":[200,0,0,1]}, {"index":0.75, "rgb":[250,0,0,1]},
 			       {"index":0.85, "rgb":[255,0,0,1]}, {"index":1, "rgb":[255,255,0,1]}],
 		alpha: [0,1],
 		nshades: cmapShades,
 		format: 'rgbaString'
 	});
-	this._volume.labelmap.colormap = function(normpixval) {
+	this._volume.labelmap.colormap = this.generateColormap(0.25,1);
+		/*function(normpixval) {
 		var rgbaString = cmap[Math.floor((cmapShades-1)*normpixval)];
 		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
 		var rgba = [];
 		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
 		rgba.push(255*parseFloat(rgbaString[3]));
 		return rgba
-	};	
+	};	*/
 	
+	this._initSetup = true;
 	this._views = {};
-	this._views['sagittal'] = new View('sagittal', this._volume, $('#sagittal-panel'), 'X', 'Y', 'Z');
+	this._views['sagittal'] = new View('sagittal', this._volume, $('#sagittal-panel'), 'X', false, 'Y', true, 'Z', true);
 	this._views['sagittal']._view.render();
 	this._views['sagittal']._view.onShowtime = function() {
-		
-		viewer._views['coronal'] = new View('coronal', viewer._volume, $('#coronal-panel'), 'Y', 'X', 'Z');
-		viewer._views['coronal']._view.render();
-		viewer._views['axial'] = new View('axial', viewer._volume, $('#axial-panel'), 'Z', 'X', 'Y');
-		viewer._views['axial']._view.render();
-		
-		// initialize sliders and crosshairs
-		for (var view in viewer._views) {
-			viewer._views[view].addSlider();
-			viewer._views[view].initSlicingOverlay();
+		if (viewer._initSetup) {
+			viewer._views['coronal'] = new View('coronal', viewer._volume, $('#coronal-panel'), 'Y', true, 'X', false, 'Z', true);
+			viewer._views['coronal']._view.render();
+			viewer._views['axial'] = new View('axial', viewer._volume, $('#axial-panel'), 'Z', false, 'X', false, 'Y', true);
+			viewer._views['axial']._view.render();
+			
+			// initialize sliders and crosshairs
+			for (var view in viewer._views) {
+				viewer._views[view].addSlider('horizontal');
+				viewer._views[view].initSlicingOverlay();
+			}
+			viewer._initSetup = false;
+		} else {
+			// reset renderers
+			viewer._views['coronal']._view.update(viewer._volume);
+			viewer._views['axial']._view.update(viewer._volume);
 		}
 	};
 	
@@ -158,28 +176,117 @@ function Viewer(elementId) {
 		viewer._volume[viewer._views[plane]._idx] = sliderVal;
 		// update slice lines on other Views
 		for (var view in viewer._views) {
-			viewer._views[view].drawCrosshairs();
+			var vDim = viewer._volume.dimensions[viewer._views[view]._vDimIdx];
+			var hDim = viewer._volume.dimensions[viewer._views[view]._hDimIdx];
+			var vSlicePos = (viewer._views[view]._vReverse ? vDim - viewer._volume[viewer._views[view]._vIdx] - 1 : viewer._volume[viewer._views[view]._vIdx]) / vDim;
+			var hSlicePos = (viewer._views[view]._hReverse ? hDim - viewer._volume[viewer._views[view]._hIdx] - 1 : viewer._volume[viewer._views[view]._hIdx]) / hDim;
+			viewer._views[view].drawCrosshairs(vSlicePos, hSlicePos);
 		}
 	});
 	
 	$('#viewer').on('view:click', function(event, plane, x, y, canvasWidth, canvasHeight) {
-		// update volume for other Views
-		viewer._volume[viewer._views[plane]._vIdx] = Math.round(viewer._volume.dimensions[viewer._views[plane]._vDimIdx] * (x / canvasWidth));
-		viewer._volume[viewer._views[plane]._hIdx] = Math.round(viewer._volume.dimensions[viewer._views[plane]._hDimIdx] * (y / canvasHeight));
+		// update volume for other Views, need to reverse the volume idx for some views
+		var view = viewer._views[plane];
+		x = view._vReverse ? canvasWidth - x : x;
+		y = view._hReverse ? canvasHeight - y : y;
+		viewer._volume[view._vIdx] = Math.round(viewer._volume.dimensions[view._vDimIdx] * (x / canvasWidth));
+		viewer._volume[view._hIdx] = Math.round(viewer._volume.dimensions[view._hDimIdx] * (y / canvasHeight));
 		// update slice lines on all Views
 		for (var view in viewer._views) {
-			viewer._views[view].drawCrosshairs();
+			var vDim = viewer._volume.dimensions[viewer._views[view]._vDimIdx];
+			var hDim = viewer._volume.dimensions[viewer._views[view]._hDimIdx];
+			var vSlicePos = (viewer._views[view]._vReverse ? vDim - viewer._volume[viewer._views[view]._vIdx] - 1 : viewer._volume[viewer._views[view]._vIdx]) / vDim;
+			var hSlicePos = (viewer._views[view]._hReverse ? hDim - viewer._volume[viewer._views[view]._hIdx] - 1 : viewer._volume[viewer._views[view]._hIdx]) / hDim;
+			viewer._views[view].drawCrosshairs(vSlicePos, hSlicePos);
+			// update slider positions
+			viewer._views[view].setSliderValue(viewer._volume[viewer._views[view]._idx]);
 		}
 	});
 	
+	// quick test to select different tracts
+	$('#query-panel').append('<form>Select tract: <select id="trk-select"></select></form>');
+	$('#trk-select').append('<option value="CingL">Cing L</option>');
+	$('#trk-select').append('<option value="FatL">FAT L</option>');
+	$('#trk-select').append('<option value="FatR">FAT R</option>');
+	$('#trk-select').on('change', function(event) {
+		viewer._volume.labelmap.file = '/'+event.currentTarget.value+'_map?nii.gz';
+		viewer.resetVolumeSlices();
+	});
+	
+	// example range slider for probability map
+	$('#query-panel').append('<div id="probability-range">'
+					+ '<p><label for="prob-range">Probability range:</label>'
+					+'<input type="text" id="prob-range-text" readonly></p>'
+					+'<div id="prob-range-slider"></div>'
+					+'</div>');
+	
+	$('#prob-range-slider').slider({
+		range: true,
+		min: 0,
+		max: 100,
+		values: [25, 100],
+		slide: function(event, ui) {
+			$('#prob-range-text').val(ui.values[0]+'% - ' + ui.values[1]+'%');
+			// set labelmap.colormap function
+			viewer._volume.labelmap.colormap = viewer.generateColormap(ui.values[0]/100, ui.values[1]/100);
+			/*
+			 * Resetting all slices, and firing volume modified to initiate reslicing.
+			 * Doesn't immediately redraw current slice (sagittal) and throws errors when sliding coronal and axial
+			 * are X.renderer2D.slices pointing to _volume._children[i]._children? No
+			 * Error when sliding coronal renderer is because new current slice doesn't exist. What normally creates it?
+			 */
+			for (var i=0; i<3; i++) {
+				viewer._volume._children[i]._children = new Array(viewer._volume.dimensions[i]);
+			}
+			viewer._volume.modified();
+			// need to update renderers explicitly to set _slices to _volume._children
+			viewer._views['sagittal']._view.update(viewer._volume);
+			viewer._views['coronal']._view.update(viewer._volume);
+			viewer._views['axial']._view.update(viewer._volume);
+		}
+	});
+	$('#prob-range-text').val($('#prob-range-slider').slider('values', 0)+'% - ' + $('#prob-range-slider').slider('values', 1)+'%');
+	
+};
+Viewer.prototype.constructor = Viewer;
+
+Viewer.prototype.resetVolumeSlices = function() {
+	// when xtk is compiled this won't work as _children is obfuscated away
+	// need to see if there is a built in reset in xtk or add a way to do this
+	for (var i=0; i<3; i++) {
+		this._volume._children[i]._children = new Array(this._volume.dimensions[i]);
+	}
+	this._views['sagittal']._view.update(this._volume);
 };
 
-Viewer.prototype = {
-		constructor: Viewer,
-		onSlide: function() {
-			
-		}
-}
+Viewer.prototype.generateColormap = function(min, max) {
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments; i++) {
+		var r = 120+(i*135/numSegments);
+		var g = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
+		var b = 0;
+		var a = 0.8+(i*0.2/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
+	}
+	//colormap.push({"index":max+0.001, "rgb":[0,0,0,0]})
+	var cmapShades = 100;
+	var cmap = Colormaps({
+		colormap: colormap,
+		alpha: [0,1],
+		nshades: cmapShades,
+		format: 'rgbaString'
+	});
+	return function(normpixval) {
+		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
+		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
+		var rgba = [];
+		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
+		rgba.push(255*parseFloat(rgbaString[3]));
+		return rgba;
+	};
+};
 
 $(document).ready(function() {
 	viewer = new Viewer("viewer");

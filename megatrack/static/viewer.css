@@ -29,3 +29,16 @@
 	/*width: 250px;
 	height: 250px;*/
 }
+
+#query-panel {
+	background: white;
+	border: none;
+}
+
+#prob-range-text {
+	border:0;
+	color:darkgrey;
+	font-weight:bold;
+	width: 100px;
+	margin-left: 18px;
+}
