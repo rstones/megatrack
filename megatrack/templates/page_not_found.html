@@ -1,0 +1,29 @@
+<html>
+
+	<head>
+
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+		<title>Megatrack Neuroimaging</title>
+	</head>
+
+    <body>
+         <div id="header-wrapper">
+         	<div id="header">
+	         	<div id="logo"><h1>Megatrack</h1></div>
+	             <ul>
+	                 <li><a href="{{ url_for('index') }}">Home</a></li>
+	                 <li><a href="{{ url_for('about') }}">About</a></li>
+	             </ul>
+	             <div style="clear: both;"></div>
+             </div>
+         </div>
+         <div id="content-wrapper">
+         	<div id="content">404 Error: Page not found!</div>
+         </div>
+         <div id="footer-wrapper">
+         	<div id="footer">&copy; 2017 NatBrainLab</div>
+         </div>
+    </body>
+
+
+</html>

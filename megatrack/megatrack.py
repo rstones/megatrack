@@ -1,7 +1,10 @@
 import os
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATBASE_URI'] = ''
+db = SQLAlchemy(app)
 
 from flask import render_template, json, make_response, request, send_file
 import numpy as np
@@ -19,16 +22,9 @@ def about():
 
 @app.route('/get_template')
 def get_template():
-    file_name = 'Template_T1_2mm_new.nii.gz' #'anatomical.nii.gz'
+    file_name = 'Template_T1_2mm_new.nii.gz'
     r = send_file(data_file_path+file_name, as_attachment=True, attachment_filename=file_name, conditional=True, add_etags=True)
-    #r.last_modified = dt.datetime.fromtimestamp(os.path.getmtime(filename))
     r.make_conditional(request)
-    return r
-
-@app.route('/get_test_map')
-def get_test_map():
-    file_name = 'mean_Cing_L_2mm.nii.gz'
-    r = send_file(data_file_path+file_name, as_attachment=True, attachment_filename=file_name, conditional=True, add_etags=True)
     return r
 
 def get_map_response(file_name):
@@ -49,7 +45,7 @@ def get_FAT_R_map():
 @app.route('/_test_viewer')
 def _test_viewer():
     '''Serve QUnit test file for javascript Viewer.'''
-    return render_template('test_viewer.html')
+    return render_template('test_viewer.html') if app.debug else render_template('page_not_found.html'), 404
 
 if __name__ == '__main__':
     app.debug = True

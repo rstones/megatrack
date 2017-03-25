@@ -5,6 +5,6 @@ setup(
     packages=['megatrack'],
     include_package_data=True,
     install_requires=[
-        'flask', 'numpy', 'nibabel',
+        'flask', 'flask_sqlalchemy', 'numpy', 'nibabel',
     ],
 )
