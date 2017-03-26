@@ -7,12 +7,13 @@ from megatrack import app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://megatrack:megatrack@localhost:3306/test'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://megatrack:megatrack@localhost:3306/megatracktest'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True) # need unique id to distinguish subjects from different datasets
-    atlas_id = db.Column(db.String(10), unique=True) # would have different format depending on dataset
+    atlas_id = db.Column(db.String(12), unique=True) # would have different format depending on dataset
     age = db.Column(db.Integer) # check, 0 < age < 100?
     gender = db.Column(db.String(1)) # add check, takes values M and F
     iq = db.Column(db.Integer) # check, 0 < iq < 200?
@@ -55,7 +56,7 @@ class Tract(db.Model):
     name = db.Column(db.String(20), unique=True) # eg. Left Cingulum
     file_path = db.Column(db.String(20), unique=True) # subdirectory within subject directory for this tract
     
-    def _init_(self, code, name, file_path):
+    def __init__(self, code, name, file_path):
         self.code = code
         self.name = name
         self.file_path = file_path

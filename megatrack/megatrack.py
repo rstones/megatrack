@@ -1,10 +1,7 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATBASE_URI'] = ''
-db = SQLAlchemy(app)
 
 from flask import render_template, json, make_response, request, send_file
 import numpy as np
