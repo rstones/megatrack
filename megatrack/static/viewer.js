@@ -25,6 +25,7 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	this._hReverse = hReverse;
 	this._viewWidth = dim[0];
 	this._viewHeight = dim[1];
+	this._mniCoord = 0;
 	
 	this._container.append('<div id="'+this._plane+'-view" class="view '+this._plane+'"></div>');
 	$('#'+this._plane+'-view').css('width', this._viewWidth);
@@ -34,6 +35,7 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	this._view = new X.renderer2D();
 	this._view.container = this._plane+'-view';
 	this._view.orientation = this._orientation;
+	this._view.config.PROGRESSBAR_ENABLED = false;
 	this._view.init();
 	this._view.interactor.config.KEYBOARD_ENABLED = false;
 	this._view.interactor.config.MOUSECLICKS_ENABLED = false;
@@ -76,6 +78,10 @@ View.prototype.setSliderValue = function(newValue) {
 	$('#'+this._plane+'-slider').slider('value', this._reverse ? -newValue : newValue);
 }
 
+View.prototype.getSliderValue = function() {
+	return $('#'+this._plane+'-slider').slider('option', 'value');
+}
+
 View.prototype.initSlicingOverlay = function() {
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
 	var viewContainer = $('#'+this._plane+'-crosshairs').parent().get(0);
@@ -87,29 +93,37 @@ View.prototype.initSlicingOverlay = function() {
 		var y = event.pageY - viewContainer.offsetTop;
 		$('#viewer').trigger('view:click', [view._plane, x, y, canvas.width, canvas.height]);
 	};
-	this.drawCrosshairs(this._volume[this._vIdx] / this._volume.dimensions[this._vDimIdx], this._volume[this._hIdx] / this._volume.dimensions[this._hDimIdx]);
+	this.drawCrosshairs();
 }
 
-View.prototype.initLabelOverlay = function() {
+View.prototype.drawLabels = function() {
 	var canvas = $('#'+this._plane+'-labels').get(0);
 	canvas.width = this._viewWidth;
 	canvas.height = this._viewHeight;
 	var ctx = canvas.getContext('2d');
 	ctx.fillStyle = 'white';
 	ctx.font = 'normal 17px Helvetica';
+	var mniCoord = Math.round(this._volume[this._idx] - (this._volume.dimensions[this._dimIdx] - this._volume._RASCenter[this._dimIdx])/2);
 	if (this._plane == 'sagittal') {
 		ctx.fillText("S", 10, 20);
-		ctx.fillText("I", 10, 240);
+		ctx.fillText("I", 10, this._viewHeight-10);
+		ctx.fillText("x = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	} else if (this._plane == 'coronal') {
 		ctx.fillText("R", 10, 20);
-		ctx.fillText("L", 230, 20);
+		ctx.fillText("L", this._viewWidth-20, 20);
+		ctx.fillText("y = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	} else if (this._plane == 'axial') {
 		ctx.fillText("A", 10, 20);
-		ctx.fillText("P", 10, 290);
+		ctx.fillText("P", 10, this._viewHeight-10);
+		ctx.fillText("z = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	}
 }
 
-View.prototype.drawCrosshairs = function(vSlicePos, hSlicePos) {
+View.prototype.drawCrosshairs = function() {
+	var vDim = this._volume.dimensions[this._vDimIdx];
+	var hDim = this._volume.dimensions[this._hDimIdx];
+	var vSlicePos = (this._vReverse ? vDim - this._volume[this._vIdx] - 1 : this._volume[this._vIdx]) / vDim;
+	var hSlicePos = (this._hReverse ? hDim - this._volume[this._hIdx] - 1 : this._volume[this._hIdx]) / hDim;
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
 	vSlicePos *= canvas.width;
 	hSlicePos *= canvas.height;
@@ -144,12 +158,12 @@ function Viewer(elementId) {
 
 	this._volume = new X.volume();
 	this._volume.file = '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
-	this._volume.labelmap.file = '/CingL_map?.nii.gz';
+	this._volume.labelmap.file = '/CINGL_map?.nii.gz';
 	this._volume.labelmap.colormap = this.generateColormap(0.25,1);
 	
-	this._sagittalViewDim = [300,250];
-	this._coronalViewDim = [250,250];
-	this._axialViewDim = [250,300];
+	this._sagittalViewDim = [336,280];
+	this._coronalViewDim = [280,280];
+	this._axialViewDim = [280,336];
 	
 	this._initSetup = true;
 	this._views = {};
@@ -165,11 +179,14 @@ function Viewer(elementId) {
 												'Z', false, 'X', false, 'Y', true);
 			viewer._views['axial']._view.render();
 			
+			viewer.centreInMNISpace();
+			
 			// initialize sliders and crosshairs
-			for (var view in viewer._views) {
-				viewer._views[view].addSlider('horizontal');
-				viewer._views[view].initSlicingOverlay();
-				viewer._views[view].initLabelOverlay();
+			for (var key in viewer._views) {
+				var view = viewer._views[key];
+				view.addSlider('horizontal');
+				view.initSlicingOverlay();
+				view.drawLabels();
 			}
 			viewer._initSetup = false;
 		} else {
@@ -184,11 +201,8 @@ function Viewer(elementId) {
 		viewer._volume[viewer._views[plane]._idx] = sliderVal;
 		// update slice lines on other Views
 		for (var view in viewer._views) {
-			var vDim = viewer._volume.dimensions[viewer._views[view]._vDimIdx];
-			var hDim = viewer._volume.dimensions[viewer._views[view]._hDimIdx];
-			var vSlicePos = (viewer._views[view]._vReverse ? vDim - viewer._volume[viewer._views[view]._vIdx] - 1 : viewer._volume[viewer._views[view]._vIdx]) / vDim;
-			var hSlicePos = (viewer._views[view]._hReverse ? hDim - viewer._volume[viewer._views[view]._hIdx] - 1 : viewer._volume[viewer._views[view]._hIdx]) / hDim;
-			viewer._views[view].drawCrosshairs(vSlicePos, hSlicePos);
+			viewer._views[view].drawCrosshairs();
+			viewer._views[view].drawLabels();
 		}
 	});
 	
@@ -199,26 +213,29 @@ function Viewer(elementId) {
 		y = view._hReverse ? canvasHeight - y : y;
 		viewer._volume[view._vIdx] = Math.round(viewer._volume.dimensions[view._vDimIdx] * (x / canvasWidth));
 		viewer._volume[view._hIdx] = Math.round(viewer._volume.dimensions[view._hDimIdx] * (y / canvasHeight));
-		// update slice lines on all Views
-		for (var view in viewer._views) {
-			var vDim = viewer._volume.dimensions[viewer._views[view]._vDimIdx];
-			var hDim = viewer._volume.dimensions[viewer._views[view]._hDimIdx];
-			var vSlicePos = (viewer._views[view]._vReverse ? vDim - viewer._volume[viewer._views[view]._vIdx] - 1 : viewer._volume[viewer._views[view]._vIdx]) / vDim;
-			var hSlicePos = (viewer._views[view]._hReverse ? hDim - viewer._volume[viewer._views[view]._hIdx] - 1 : viewer._volume[viewer._views[view]._hIdx]) / hDim;
-			viewer._views[view].drawCrosshairs(vSlicePos, hSlicePos);
-			// update slider positions
-			viewer._views[view].setSliderValue(viewer._volume[viewer._views[view]._idx]);
+		// update slice lines on all Views and slider positions
+		for (var key in viewer._views) {
+			var view = viewer._views[key];
+			view.drawCrosshairs();
+			view.setSliderValue(viewer._volume[view._idx]);
+			view.drawLabels();
 		}
 	});
 	
-	// quick test to select different tracts
-	$('#query-panel').append('<form>Select tract: <select id="trk-select"></select></form>');
-	$('#trk-select').append('<option value="CingL">Cing L</option>');
-	$('#trk-select').append('<option value="FatL">FAT L</option>');
-	$('#trk-select').append('<option value="FatR">FAT R</option>');
-	$('#trk-select').on('change', function(event) {
-		viewer._volume.labelmap.file = '/'+event.currentTarget.value+'_map?nii.gz';
-		viewer.resetVolumeSlices();
+	// quick test to select available tracts from database
+	$('#query-panel').append('<form>Select tract: <select id="tract-select"></select></form>');
+	$.ajax({
+		dataType: 'json',
+		url: '/tract_select',
+		success: function(data) {
+			for (var i in data) {
+				$('#tract-select').append('<option value="'+data[i].code+'">'+data[i].name+'</option>')
+			}
+			$('#tract-select').on('change', function(event) {
+				viewer._volume.labelmap.file = '/'+event.currentTarget.value+'_map?nii.gz';
+				viewer.resetVolumeSlices();
+			});
+		}
 	});
 	
 	// example range slider for probability map
@@ -238,9 +255,8 @@ function Viewer(elementId) {
 			// update labelmap.colormap function
 			viewer._volume.labelmap.colormap = viewer.generateColormap(ui.values[0]/100, ui.values[1]/100);
 			// reset slices for each orientation
-			// this won't work when xtk is compiled, add new function to xtk for this
 			for (var i=0; i<3; i++) {
-				viewer._volume._children[i]._children = new Array(viewer._volume.dimensions[i]);
+				viewer._volume.children[i].children = new Array(viewer._volume.dimensions[i]);
 			}
 			// fire modified event on X.volume
 			viewer._volume.modified();
@@ -256,10 +272,8 @@ function Viewer(elementId) {
 Viewer.prototype.constructor = Viewer;
 
 Viewer.prototype.resetVolumeSlices = function() {
-	// when xtk is compiled this won't work as _children is obfuscated away
-	// need to see if there is a built in reset in xtk or add a way to do this
 	for (var i=0; i<3; i++) {
-		this._volume._children[i]._children = new Array(this._volume.dimensions[i]);
+		this._volume.children[i].children = new Array(this._volume.dimensions[i]);
 	}
 	this._views['sagittal']._view.update(this._volume);
 };
@@ -297,6 +311,17 @@ Viewer.prototype.generateColormap = function(min, max) {
 		return rgba;
 	};
 };
+
+Viewer.prototype.centreInMNISpace = function() {
+	var idx = 0;
+	for (var key in viewer._views) {
+		var view = this._views[key];
+		// might need to add a getter method for _RASCenter when using compiled xtk.js
+		var centre = Math.round(this._volume._RASCenter[view._dimIdx] / 2);
+		this._volume[view._idx] -= centre;
+		idx++;
+	}
+}
 
 $(document).ready(function() {
 	viewer = new Viewer("viewer");

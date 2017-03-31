@@ -1,17 +1,37 @@
-'''
-Created on 23 Mar 2017
-
-@author: richard
-'''
 from megatrack import app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 
+# create database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://megatrack:megatrack@localhost:3306/megatracktest'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+from flask import json
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
+
+# json encoder for SQLAlchemy objects
+class AlchemyEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o.__class__, DeclarativeMeta):
+            data = {}
+            fields = o.__json__() if hasattr(o, '__json__') else dir(o)
+            for field in [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]:
+                value = o.__getattribute__(field)
+                try:
+                    json.dumps(value)
+                    data[field] = value
+                except TypeError:
+                    data[field] = None
+            return data
+        return json.JSONEncoder.default(self, o)
+     
+app.json_encoder = AlchemyEncoder
+
 class Subject(db.Model):
+    '''
+    Doc string
+    '''
     id = db.Column(db.Integer, primary_key=True) # need unique id to distinguish subjects from different datasets
     atlas_id = db.Column(db.String(12), unique=True) # would have different format depending on dataset
     age = db.Column(db.Integer) # check, 0 < age < 100?
@@ -63,3 +83,6 @@ class Tract(db.Model):
         
     def __repr__(self):
         return '<Tract %r>' % self.name
+    
+    def __json__(self):
+        return ['code', 'name']
