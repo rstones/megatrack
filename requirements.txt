@@ -1,0 +1,7 @@
+Flask==0.12
+Flask-SQLAlchemy==2.2
+Flask-Migrate==2.0.3
+Flask-Script==2.0.5
+flask-jsontools==0.1.1.post0
+PyMySQL==0.7.10
+Flask-Testing==0.6.2

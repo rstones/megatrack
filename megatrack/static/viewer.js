@@ -103,7 +103,7 @@ View.prototype.drawLabels = function() {
 	var ctx = canvas.getContext('2d');
 	ctx.fillStyle = 'white';
 	ctx.font = 'normal 17px Helvetica';
-	var mniCoord = Math.round(this._volume[this._idx] - (this._volume.dimensions[this._dimIdx] - this._volume._RASCenter[this._dimIdx])/2);
+	var mniCoord = Math.round(this._volume[this._idx] - (this._volume.dimensions[this._dimIdx] - this._volume.RASCenter[this._dimIdx])/2);
 	if (this._plane == 'sagittal') {
 		ctx.fillText("S", 10, 20);
 		ctx.fillText("I", 10, this._viewHeight-10);
@@ -317,7 +317,7 @@ Viewer.prototype.centreInMNISpace = function() {
 	for (var key in viewer._views) {
 		var view = this._views[key];
 		// might need to add a getter method for _RASCenter when using compiled xtk.js
-		var centre = Math.round(this._volume._RASCenter[view._dimIdx] / 2);
+		var centre = Math.round(this._volume.RASCenter[view._dimIdx] / 2);
 		this._volume[view._idx] -= centre;
 		idx++;
 	}

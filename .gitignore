@@ -19,3 +19,6 @@ megatrack.egg-info
 
 # development config file
 config.py
+
+# python virtual environment
+megatrack-venv

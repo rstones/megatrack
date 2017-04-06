@@ -1,12 +1,6 @@
-#from megatrack import app
-#from megatrack import db
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 
-# create database
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://megatrack:megatrack@localhost:3306/megatracktest'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
 db = SQLAlchemy()
 
 from flask import json
@@ -27,8 +21,6 @@ class AlchemyEncoder(json.JSONEncoder):
                     data[field] = None
             return data
         return json.JSONEncoder.default(self, o)
-     
-#app.json_encoder = AlchemyEncoder
 
 class Subject(db.Model):
     '''
