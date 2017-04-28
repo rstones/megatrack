@@ -30,6 +30,10 @@ def populate_tract_select():
     tracts = Tract.query.all() # can order them in a certain way here
     return jsonify(tracts)
 
+'''
+Could dynamically generate the density map routes based on entries in Tract table?
+Data can drive server side code as well as front end
+'''
 @megatrack.route('/CINGL_map')
 def get_CingL_map():
     return get_map_response('mean_Cing_L_2mm.nii.gz')

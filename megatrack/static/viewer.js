@@ -158,8 +158,15 @@ function Viewer(elementId) {
 
 	this._volume = new X.volume();
 	this._volume.file = '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
-	this._volume.labelmap.file = '/CINGL_map?.nii.gz';
-	this._volume.labelmap.colormap = this.generateColormap(0.25,1);
+//	this._volume.labelmap.file = '/CINGL_map?.nii.gz';
+//	this._volume.labelmap.colormap = this.generateColormap(0.25,1);
+	var cingMap = new X.labelmap(this._volume);
+	cingMap.file = '/CINGL_map?.nii.gz';
+	cingMap.colormap = this.generateRedColormap(0.25,1);
+	var fatMap = new X.labelmap(this._volume);
+	fatMap.file = '/FATL_map?.nii.gz';
+	fatMap.colormap = this.generateBlueColormap(0.25,1);
+	this._volume.labelmap = [cingMap, fatMap];
 	
 	this._sagittalViewDim = [336,280];
 	this._coronalViewDim = [280,280];
@@ -253,7 +260,9 @@ function Viewer(elementId) {
 		slide: function(event, ui) {
 			$('#prob-range-text').val(ui.values[0]+'% - ' + ui.values[1]+'%');
 			// update labelmap.colormap function
-			viewer._volume.labelmap.colormap = viewer.generateColormap(ui.values[0]/100, ui.values[1]/100);
+			//viewer._volume.labelmap.colormap = viewer.generateColormap(ui.values[0]/100, ui.values[1]/100);
+			viewer._volume.labelmap[0].colormap = viewer.generateRedColormap(ui.values[0]/100, ui.values[1]/100);
+			viewer._volume.labelmap[1].colormap = viewer.generateBlueColormap(ui.values[0]/100, ui.values[1]/100);
 			// reset slices for each orientation
 			for (var i=0; i<3; i++) {
 				viewer._volume.children[i].children = new Array(viewer._volume.dimensions[i]);
@@ -278,7 +287,7 @@ Viewer.prototype.resetVolumeSlices = function() {
 	this._views['sagittal']._view.update(this._volume);
 };
 
-Viewer.prototype.generateColormap = function(min, max) {
+Viewer.prototype.generateRedColormap = function(min, max) {
 	if (min < 0.01) { // cutoff for nifti density maps
 		min = 0.01;
 	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
@@ -291,6 +300,40 @@ Viewer.prototype.generateColormap = function(min, max) {
 		var r = 120+(i*135/numSegments);
 		var g = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
 		var b = 0;
+		var a = 0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
+	}
+	colormap.push({"index": 1, "rgb": [255,255,0,1]});
+	var cmapShades = 100;
+	var cmap = Colormaps({
+		colormap: colormap,
+		alpha: [0,1],
+		nshades: cmapShades,
+		format: 'rgbaString'
+	});
+	return function(normpixval) {
+		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
+		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
+		var rgba = [];
+		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
+		rgba.push(255*parseFloat(rgbaString[3]));
+		return rgba;
+	};
+};
+
+Viewer.prototype.generateBlueColormap = function(min, max) {
+	if (min < 0.01) { // cutoff for nifti density maps
+		min = 0.01;
+	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
+		throw TypeError("Invalid min/max values passed to Viewer.prototype.generateColormap function");
+	}
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
+		var g = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
+		var b = 120+(i*135/numSegments);
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
 	}
