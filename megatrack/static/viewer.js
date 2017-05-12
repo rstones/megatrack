@@ -155,18 +155,21 @@ function Viewer(elementId) {
 	container.append('<div id="axial-panel"></div>');
 	container.append('<div id="query-panel"></div>');
 	$('#'+this._elementId+' div').addClass('viewer-panel');
+	
+	this._colormapMin = 0.25;
+	this._colormapMax = 1.0;
+	
+	this._colormaps = {};
+	for (var key in this.colormapFunctions) {
+		this._colormaps[key] = this.colormapFunctions[key](this._colormapMin, this._colormapMax);
+	}
+	this._numColormaps = Object.keys(this._colormaps).length;
 
 	this._volume = new X.volume();
+	this._volume.lowerThreshold = 1000; // threshold to remove grey background of template
 	this._volume.file = '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
-//	this._volume.labelmap.file = '/CINGL_map?.nii.gz';
-//	this._volume.labelmap.colormap = this.generateColormap(0.25,1);
-	var cingMap = new X.labelmap(this._volume);
-	cingMap.file = '/CINGL_map?.nii.gz';
-	cingMap.colormap = this.generateRedColormap(0.25,1);
-	var fatMap = new X.labelmap(this._volume);
-	fatMap.file = '/FATL_map?.nii.gz';
-	fatMap.colormap = this.generateBlueColormap(0.25,1);
-	this._volume.labelmap = [cingMap, fatMap];
+	this._volume.labelmap = []; //[cingMap, fatMap];
+	this._labelmapColors = [];
 	
 	this._sagittalViewDim = [336,280];
 	this._coronalViewDim = [280,280];
@@ -228,20 +231,95 @@ function Viewer(elementId) {
 			view.drawLabels();
 		}
 	});
+
+	$('#query-panel').append('<div id="table-div">'
+						+'<table id="tract-table">'
+						+'<tbody>'
+						+'</tbody>'
+						+'</table>'
+						+'<div id="tract-select-container"><span class="ui-icon ui-icon-plusthick"></span>Add tract</div>'
+						+'<ul id="tract-select"></ul>'
+						+'</div>');
 	
-	// quick test to select available tracts from database
-	$('#query-panel').append('<form>Select tract: <select id="tract-select"></select></form>');
 	$.ajax({
 		dataType: 'json',
 		url: '/tract_select',
 		success: function(data) {
 			for (var i in data) {
-				$('#tract-select').append('<option value="'+data[i].code+'">'+data[i].name+'</option>')
+				$('#tract-select').append('<li id="'+data[i].code+'"><div>'+data[i].name+'</div></li>');
 			}
-			$('#tract-select').on('change', function(event) {
-				viewer._volume.labelmap.file = '/'+event.currentTarget.value+'_map?nii.gz';
-				viewer.resetVolumeSlices();
+			$("#tract-select").menu({
+				select: function(event, ui) {
+					$('#tract-select').hide();
+					ui.item.addClass('ui-state-disabled');
+					var map = new X.labelmap(viewer._volume);
+					map.file = '/'+ui.item[0].id+'_map?.nii.gz';
+					var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];
+					map.colormap = viewer.generateXTKColormap(viewer._colormaps[color]);
+					viewer._volume.labelmap.push(map);
+					viewer._labelmapColors.push(color);
+					// re-render
+					viewer.resetVolumeSlices();
+					
+					// add row to table
+					$('#tract-table > tbody').append('<tr id="'+ui.item[0].id+'" class="tract-row">'
+							+'<td id="tract-name" class="tract-table-cell">'+ui.item[0].id+'</td>'
+							+'<td id="tract-colormap" class="tract-table-cell"><div class="red-colormap">&nbsp&nbsp&nbsp</div></td>'
+							//+'<td class="tract-table-cell tract-spacer-col">&nbsp</td>'
+							+'<td id="tract-download" class="tract-table-cell"><span class="clickable ui-icon ui-icon-arrowthickstop-1-s" title="Download density map"></td>'
+							+'<td id="tract-remove" class="tract-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
+							+'</tr>'
+							+'<tr id="'+ui.item[0].id+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
+					
+					$('#'+ui.item[0].id+' > #tract-remove').on('click', function(event) {
+						$('#tract-select > #'+event.currentTarget.parentElement.id).removeClass('ui-state-disabled');
+						event.currentTarget.parentElement.remove();
+						$('#'+event.currentTarget.parentElement.id+'-spacer').remove();
+						// remove labelmap from X.volume.labelmap
+						for (var i=0; i<viewer._volume.labelmap.length; i++) {
+							var map = viewer._volume.labelmap[i];
+							var filepath = map.file;
+							if (filepath.indexOf(event.currentTarget.parentElement.id) !== -1) {
+								viewer._volume.labelmap.splice(i, 1);
+								viewer._labelmapColors.splice(i, 1);
+								viewer.resetMultipleLabelmapSlices(i);
+								break;
+							}
+						}
+					});
+					
+				}
 			});
+			$('#tract-select').css('display', 'none');
+			$('#tract-select-container').on('click', function(event) {
+				var tractSelect = $('#tract-select');
+				var clickPosX = event.originalEvent.pageX;
+				var clickPosY = event.originalEvent.pageY;
+				var menuWidth = tractSelect.width() + 5;
+				var menuHeight = tractSelect.height() + 5;
+				var windowWidth = $(window).width();
+				var windowHeight = $(window).height();
+				if (windowWidth - clickPosX < menuWidth) {
+					tractSelect.css('left', clickPosX-menuWidth);
+				} else {
+					tractSelect.css('left', clickPosX);
+				}
+				if (windowHeight - clickPosY < menuHeight) {
+					tractSelect.css('top', clickPosY-menuHeight);
+				} else {
+					tractSelect.css('top', clickPosY);
+				}
+				tractSelect.show('fade');
+			});
+			$(document).on('click', function(event) {
+				if (event.target.id != 'tract-select-container') {
+					$('#tract-select').hide();
+				}
+			});
+			$(window).resize(function() {
+				$('#tract-select').hide();	
+			});
+			
 		}
 	});
 	
@@ -260,9 +338,14 @@ function Viewer(elementId) {
 		slide: function(event, ui) {
 			$('#prob-range-text').val(ui.values[0]+'% - ' + ui.values[1]+'%');
 			// update labelmap.colormap function
-			//viewer._volume.labelmap.colormap = viewer.generateColormap(ui.values[0]/100, ui.values[1]/100);
-			viewer._volume.labelmap[0].colormap = viewer.generateRedColormap(ui.values[0]/100, ui.values[1]/100);
-			viewer._volume.labelmap[1].colormap = viewer.generateBlueColormap(ui.values[0]/100, ui.values[1]/100);
+			viewer._colormapMin = ui.values[0]/100;
+			viewer._colormapMax = ui.values[1]/100;
+			for (var key in viewer.colormapFunctions) {
+				viewer._colormaps[key] = viewer.colormapFunctions[key](viewer._colormapMin, viewer._colormapMax);
+			}
+			for (var i=0; i<viewer._volume.labelmap.length; i++) {
+				viewer._volume.labelmap[i].colormap = viewer.generateXTKColormap(viewer._colormaps[viewer._labelmapColors[i]]);//viewer.generateRedColormap(viewer._colormapMin, viewer._colormapMax);
+			}
 			// reset slices for each orientation
 			for (var i=0; i<3; i++) {
 				viewer._volume.children[i].children = new Array(viewer._volume.dimensions[i]);
@@ -287,12 +370,32 @@ Viewer.prototype.resetVolumeSlices = function() {
 	this._views['sagittal']._view.update(this._volume);
 };
 
-Viewer.prototype.generateRedColormap = function(min, max) {
+Viewer.prototype.resetMultipleLabelmapSlices = function(mapToRemoveIdx) {
+	for (var i=0; i<3; i++) {
+		for (var j=0; j<this._volume.children[i].children.length; j++) {
+			if (this._volume.children[i].children[j]) {
+				// remove labelmap from slice
+				this._volume.children[i].children[j]._labelmap.splice(mapToRemoveIdx, 1);
+			}
+		}
+	}
+	this._views['sagittal']._view.update(this._volume);
+	this._views['coronal']._view.update(this._volume);
+	this._views['axial']._view.update(this._volume);
+}
+
+Viewer.prototype.checkColormapMinMax = function(min, max) {
 	if (min < 0.01) { // cutoff for nifti density maps
 		min = 0.01;
 	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
-		throw TypeError("Invalid min/max values passed to Viewer.prototype.generateColormap function");
+		throw TypeError("Invalid min/max values passed to colormap function");
 	}
+	return {"min":min, "max":max};
+}
+
+Viewer.prototype.redColormap = function(min, max) {
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
 	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
@@ -303,41 +406,49 @@ Viewer.prototype.generateRedColormap = function(min, max) {
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
 	}
-	colormap.push({"index": 1, "rgb": [255,255,0,1]});
-	var cmapShades = 100;
-	var cmap = Colormaps({
-		colormap: colormap,
-		alpha: [0,1],
-		nshades: cmapShades,
-		format: 'rgbaString'
-	});
-	return function(normpixval) {
-		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
-		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
-		var rgba = [];
-		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
-		rgba.push(255*parseFloat(rgbaString[3]));
-		return rgba;
-	};
-};
+	colormap.push({"index": 1, "rgb": [255,150,0,1]});
+	return colormap;
+}
 
-Viewer.prototype.generateBlueColormap = function(min, max) {
-	if (min < 0.01) { // cutoff for nifti density maps
-		min = 0.01;
-	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
-		throw TypeError("Invalid min/max values passed to Viewer.prototype.generateColormap function");
-	}
+Viewer.prototype.blueColormap = function(min, max) {
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
 	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
 	for (var i=0; i<numSegments+1; i++) {
-		var r = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
-		var g = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
+		var r = 0;
+		var g = 100 + i*150/(numSegments/3) ? i > numSegments/3 : 0;
 		var b = 120+(i*135/numSegments);
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
 	}
-	colormap.push({"index": 1, "rgb": [255,255,0,1]});
+	colormap.push({"index": 1, "rgb": [0,200,255,1]});
+	return colormap;
+}
+
+Viewer.prototype.purpleColormap = function(min, max) {
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 90+(i*165/numSegments);
+		var g = 100 + i*150/(numSegments/3) ? i > numSegments/3 : 0;
+		var b = 90+(i*165/numSegments);
+		var a = 0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
+	}
+	colormap.push({"index": 1, "rgb": [255,150,255,1]});
+	return colormap;
+}
+
+Viewer.prototype.colormapFunctions = {"red": Viewer.prototype.redColormap,
+									  "blue": Viewer.prototype.blueColormap,
+									  "purple": Viewer.prototype.purpleColormap} // object of colormap functions
+
+Viewer.prototype.generateXTKColormap = function(colormap) {
 	var cmapShades = 100;
 	var cmap = Colormaps({
 		colormap: colormap,
@@ -353,7 +464,7 @@ Viewer.prototype.generateBlueColormap = function(min, max) {
 		rgba.push(255*parseFloat(rgbaString[3]));
 		return rgba;
 	};
-};
+}
 
 Viewer.prototype.centreInMNISpace = function() {
 	var idx = 0;

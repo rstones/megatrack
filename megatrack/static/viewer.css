@@ -1,13 +1,18 @@
+body {
+	background: black;
+}
+
 #viewer {
-	width: 710px;
-	display: inline-block;	
+	width: 1150px;
+	display: inline-block;
+	background: black;
 }
 
 .viewer-panel {
 	/*border: 1px solid grey;*/
 	float: left;
 	background: black;
-	margin: 20px;
+	margin: 40px;
 }
 
 .view {
@@ -30,6 +35,7 @@
 	height: 300px;
 	background: white;
 	border: none;
+	background: black;
 }
 
 #prob-range-text {
@@ -39,3 +45,104 @@
 	width: 100px;
 	margin-left: 18px;
 }
+
+#table-div {
+	height: 150px;
+	width: 330px;
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	overflow: scrollable;
+	padding: 3px;
+}
+
+#tract-table {
+	width: inherit;
+	/*height: 200px;*/
+	/*background: lightgrey;*/
+	/*border-collapse: collapse;*/
+	border-spacing: 0;
+}
+
+.tract-table-cell {
+	background: #fcfff4; /* Old browsers */
+	background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	text-align: center;
+}
+
+#tract-table tr {
+	/*border: 1px solid darkgrey;
+	border-radius: 10px;*/
+	width: inherit;
+}
+
+.tract-row {
+	height: 25px;
+}
+
+#tract-name {
+	border-left: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	width: 70%;
+}
+
+#tract-colormap {
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	width: 10%;
+}
+
+#tract-download {
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	width: 10%;
+}
+
+#tract-remove {
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-right: 1px solid darkgrey;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	width: 10%;
+}
+
+.clickable:hover {
+	cursor: pointer;
+}
+
+.red-colormap {
+	/*background: -moz-radial-gradient(center, circle, #efeb09, #ef8809, #ef0909, #ef0909);*/
+	background: -moz-linear-gradient(darkred, red, red, orange, yellow, orange, red, red, darkred);
+	border-radius: 8px;
+	border: 1px solid lightgrey;
+}
+
+.tract-spacer-row {
+	height: 3px;
+}
+
+.tract-spacer-col {
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	width: 0%;
+}
+
+#tract-select-container {
+	float: left;
+	cursor: pointer;
+}
+
+#tract-select {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	box-shadow: 2px 2px 2px lightgrey;
+	border-radius: 5px;
+	z-index: 3;
+}
+
