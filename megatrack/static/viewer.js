@@ -150,11 +150,15 @@ function Viewer(elementId) {
 	
 	this._elementId = elementId;
 	var container = $('#'+this._elementId);
-	container.append('<div id="coronal-panel"></div>');
-	container.append('<div id="sagittal-panel"></div>');
-	container.append('<div id="axial-panel"></div>');
+	$('#'+this._elementId).append('<div id="view-container"></div>');
+	var viewContainer = $('#view-container');
+	viewContainer.append('<div id="coronal-panel"></div>');
+	viewContainer.append('<div id="sagittal-panel"></div>');
+	viewContainer.append('<div id="axial-panel"></div>');
+	$('#view-container div').addClass('viewer-panel');
+	$('#'+this._elementId).append('<div class="clear"></div>')
 	container.append('<div id="query-panel"></div>');
-	$('#'+this._elementId+' div').addClass('viewer-panel');
+	container.append('<div id="tract-panel"></div>')
 	
 	this._colormapMin = 0.25;
 	this._colormapMax = 1.0;
@@ -162,6 +166,18 @@ function Viewer(elementId) {
 	this._colormaps = {};
 	for (var key in this.colormapFunctions) {
 		this._colormaps[key] = this.colormapFunctions[key](this._colormapMin, this._colormapMax);
+		// insert colormap css classes
+		var rgbaColors = [];
+		var n = 8;
+		for (var i=5; i<n+1; i++) {
+			var color = this._colormaps[key][i].rgb;
+			rgbaColors.push('rgba('+color[0]+','+color[1]+','+color[2]+','+color[3]+')');
+		}
+		$('head').append('<style>'
+							+'.'+key+'-colormap {'
+							+'background:-moz-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
+							+'}'
+							+'</style>');
 	}
 	this._numColormaps = Object.keys(this._colormaps).length;
 
@@ -231,15 +247,108 @@ function Viewer(elementId) {
 			view.drawLabels();
 		}
 	});
+	
+	$('input').checkboxradio();
+	$('#query-panel').append('<form id="query-form" action="" method="get">'
+								+'<fieldset class="query-checkboxes"><legend>Gender</legend>'
+									+'<label>Male</label><input type="checkbox" name="male" id="male-checkbox" value="true" checked>'
+									+'<label>Female</label><input type="checkbox" name="female" id="female-checkbox" value="true" checked>'
+								+'</fieldset>'
+								+'<fieldset class="query-checkboxes"><legend>Handedness</legend>'
+									+'<label>Right</label><input type="checkbox" name="right" id="right-checkbox" value="true" checked>'
+									+'<label>Left</label><input type="checkbox" name="left" id="left-checkbox" value="true" checked>'
+									//+'<label>Amb</label><input type="checkbox" name="amb" id="amb-checkbox">'
+								+'</fieldset>'
+								+'<div id="age-range" class="query-range"><p><label>Age:</label><input type="text" id="age-range-text" class="range-label" readonly></p><div id="age-range-slider"></div></div>'
+								+'<div id="iq-range" class="query-range"><label>Ravens IQ (raw):</label><input type="text" id="iq-range-text" class="range-label" readonly><div id="iq-range-slider"></div></div>'
+								// would be good to generate dataset checkboxes here depending on the available datasets in DB, like for tract select
+								+'<fieldset class="query-checkboxes"><legend>Dataset</legend>'
+									+'<label>BRC</label><input type="checkbox" name="brc" id="brc-checkbox" value="true" disabled checked>'
+								+'</fieldset>'
+								+'<input id="query-submit" type="submit" value="Update">'
+							+'</form>');
+	
+	$('#age-range-slider').slider({
+		range: true,
+		min: 18,
+		max: 100,
+		values: [18, 60],
+		slide: function(event, ui) {
+			$('#age-range-text').val(ui.values[0]+' - ' + ui.values[1]+' years');
+		}
+	});
+	$('#age-range-text').val($('#age-range-slider').slider('values', 0)+' - ' + $('#age-range-slider').slider('values', 1)+' years');
+	$('#iq-range-slider').slider({
+		range: true,
+		min: 0,
+		max: 60,
+		values: [20, 60],
+		slide: function(event, ui) {
+			$('#iq-range-text').val(ui.values[0]+' - ' + ui.values[1]);
+		}
+	});
+	$('#iq-range-text').val($('#iq-range-slider').slider('values', 0)+' - ' + $('#iq-range-slider').slider('values', 1));
+	
+	$('#query-form').submit(function(event) {
+		var form = $('#query-form');
+		/*
+		 * Run some checks here. eg. a gender and handedness needs to be selected before submission.
+		 * Open alert box if not.
+		 */
+		$.get({
+			dataType: 'json',
+			data: {
+				"male": form.find('input[name="male"]').prop('checked'),
+				"female": form.find('input[name="female"]').prop('checked'),
+				"right": form.find('input[name="right"]').prop('checked'),
+				"left": form.find('input[name="left"]').prop('checked'),
+				"age_min": $('#age-range-slider').slider('values', 0),
+				"age_max": $('#age-range-slider').slider('values', 1),
+				"iq_min": $('#iq-range-slider').slider('values', 0),
+				"iq_max": $('#iq-range-slider').slider('values', 1),
+				"brc": form.find('input[name="brc"]').prop('checked')
+			},
+			url: '/query_report',
+			success: function(data) {
+				// update query report display with data
+				// loop through all labelmaps in volume and update file path with query string
+				console.log('query report success!');
+				console.log(data);
+			}
+		});
+		return false; // returning false prevents the default 'submit' event from firing as well
+	});
 
-	$('#query-panel').append('<div id="table-div">'
+	$('#tract-panel').append('<div id="table-div">'
 						+'<table id="tract-table">'
 						+'<tbody>'
 						+'</tbody>'
 						+'</table>'
 						+'<div id="tract-select-container"><span class="ui-icon ui-icon-plusthick"></span>Add tract</div>'
 						+'<ul id="tract-select"></ul>'
+						+'<ul id="colormap-select"></ul>'
 						+'</div>');
+	
+	for (var key in this._colormaps) {
+		$('#colormap-select').append('<div id="'+key+'-colormap-select-item" class="colormap-select-item clickable '+key+'-colormap">&nbsp&nbsp&nbsp</div>');
+		$('#'+key+'-colormap-select-item').on('click', {color: key}, function(event) {
+			// fetch selected tract code from colormap select
+			var tractCode = $('#colormap-select').data("tractCode");
+			var color = event.data.color;
+			for (var i=0; i<viewer._volume.labelmap.length; i++) {
+				var map = viewer._volume.labelmap[i];
+				if (map.file.indexOf(tractCode) != -1 && viewer._labelmapColors[i] != color) {
+					map.colormap = viewer.generateXTKColormap(viewer._colormaps[color]);
+					$('#'+tractCode+'-colormap-indicator').removeClass(viewer._labelmapColors[i]+'-colormap');
+					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+					viewer._labelmapColors[i] = color;
+					viewer.resetSlicesForColormapChange();
+					break;
+				}
+			}
+		});
+	}
+	$('#colormap-select').hide();
 	
 	$.ajax({
 		dataType: 'json',
@@ -252,26 +361,38 @@ function Viewer(elementId) {
 				select: function(event, ui) {
 					$('#tract-select').hide();
 					ui.item.addClass('ui-state-disabled');
+					var tractCode = ui.item[0].id;
 					var map = new X.labelmap(viewer._volume);
-					map.file = '/'+ui.item[0].id+'_map?.nii.gz';
+					map.file = '/'+tractCode+'_map?.nii.gz';
 					var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];
 					map.colormap = viewer.generateXTKColormap(viewer._colormaps[color]);
 					viewer._volume.labelmap.push(map);
 					viewer._labelmapColors.push(color);
 					// re-render
-					viewer.resetVolumeSlices();
+					viewer.resetSlicesForDirtyFiles();
+					
+					/*
+					 * Above needs change to use new route using tract code in query param
+					 * Also send the data of the current query as query params
+					 * 
+					 * On page load, trigger a request to do default query, then all 'add tract' interactions
+					 * have a set of query params to use
+					 */
 					
 					// add row to table
-					$('#tract-table > tbody').append('<tr id="'+ui.item[0].id+'" class="tract-row">'
-							+'<td id="tract-name" class="tract-table-cell">'+ui.item[0].id+'</td>'
-							+'<td id="tract-colormap" class="tract-table-cell"><div class="red-colormap">&nbsp&nbsp&nbsp</div></td>'
+					$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
+							+'<td id="tract-name" class="tract-table-cell">'+tractCode+'</td>'
+							+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
 							//+'<td class="tract-table-cell tract-spacer-col">&nbsp</td>'
 							+'<td id="tract-download" class="tract-table-cell"><span class="clickable ui-icon ui-icon-arrowthickstop-1-s" title="Download density map"></td>'
 							+'<td id="tract-remove" class="tract-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
 							+'</tr>'
 							+'<tr id="'+ui.item[0].id+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
 					
-					$('#'+ui.item[0].id+' > #tract-remove').on('click', function(event) {
+					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+					
+					// add event listener on remove icon
+					$('#'+tractCode+' > #tract-remove').on('click', function(event) {
 						$('#tract-select > #'+event.currentTarget.parentElement.id).removeClass('ui-state-disabled');
 						event.currentTarget.parentElement.remove();
 						$('#'+event.currentTarget.parentElement.id+'-spacer').remove();
@@ -282,15 +403,32 @@ function Viewer(elementId) {
 							if (filepath.indexOf(event.currentTarget.parentElement.id) !== -1) {
 								viewer._volume.labelmap.splice(i, 1);
 								viewer._labelmapColors.splice(i, 1);
-								viewer.resetMultipleLabelmapSlices(i);
+								viewer.removeLabelmapSlices(i);
 								break;
 							}
 						}
 					});
 					
+					// add click event listener on colormap select
+					$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
+						// hide first in case colormap-select is already open for another tract
+						$('#colormap-select').hide();
+						
+						// work out position of colormap indicator for current tract
+						var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
+						$('#colormap-select').css('top', indicatorPos.top);
+						$('#colormap-select').css('left', indicatorPos.left - 6);
+						
+						// attach selected tract code to colormap select
+						$('#colormap-select').data('tractCode', event.data.tractCode);
+						// show colormap select
+						$('#colormap-select').show('blind');
+					});
+					
 				}
 			});
 			$('#tract-select').css('display', 'none');
+			// add click event listener to display tract select menu
 			$('#tract-select-container').on('click', function(event) {
 				var tractSelect = $('#tract-select');
 				var clickPosX = event.originalEvent.pageX;
@@ -311,22 +449,30 @@ function Viewer(elementId) {
 				}
 				tractSelect.show('fade');
 			});
+			
+			// events to close tract select menu (other than actually selecting a tract)
+			// add in closing of colormap select here too
 			$(document).on('click', function(event) {
 				if (event.target.id != 'tract-select-container') {
 					$('#tract-select').hide();
 				}
+				if (event.target.id.indexOf('colormap-indicator') == -1 
+						&& event.target.parentElement.id.indexOf('colormap-indicator') == -1) {
+					$('#colormap-select').hide();
+				}
 			});
 			$(window).resize(function() {
-				$('#tract-select').hide();	
+				$('#tract-select').hide();
+				$('#colormap-select').hide();
 			});
 			
 		}
 	});
 	
 	// example range slider for probability map
-	$('#query-panel').append('<div id="probability-range">'
+	$('#tract-panel').append('<div id="probability-range">'
 					+ '<p><label for="prob-range">Probability range:</label>'
-					+'<input type="text" id="prob-range-text" readonly></p>'
+					+'<input type="text" id="prob-range-text" class="range-label" readonly></p>'
 					+'<div id="prob-range-slider"></div>'
 					+'</div>');
 	
@@ -346,16 +492,7 @@ function Viewer(elementId) {
 			for (var i=0; i<viewer._volume.labelmap.length; i++) {
 				viewer._volume.labelmap[i].colormap = viewer.generateXTKColormap(viewer._colormaps[viewer._labelmapColors[i]]);//viewer.generateRedColormap(viewer._colormapMin, viewer._colormapMax);
 			}
-			// reset slices for each orientation
-			for (var i=0; i<3; i++) {
-				viewer._volume.children[i].children = new Array(viewer._volume.dimensions[i]);
-			}
-			// fire modified event on X.volume
-			viewer._volume.modified();
-			// update renderers explicitly to reset _slices to _volume._children
-			viewer._views['sagittal']._view.update(viewer._volume);
-			viewer._views['coronal']._view.update(viewer._volume);
-			viewer._views['axial']._view.update(viewer._volume);
+			viewer.resetSlicesForColormapChange();
 		}
 	});
 	$('#prob-range-text').val($('#prob-range-slider').slider('values', 0)+'% - ' + $('#prob-range-slider').slider('values', 1)+'%');
@@ -363,14 +500,39 @@ function Viewer(elementId) {
 };
 Viewer.prototype.constructor = Viewer;
 
-Viewer.prototype.resetVolumeSlices = function() {
+/*
+ * Resets volume slices when a new labelmap is added and the file needs loading
+ */
+Viewer.prototype.resetSlicesForDirtyFiles = function() {
+	// reset slices for each orientation
 	for (var i=0; i<3; i++) {
 		this._volume.children[i].children = new Array(this._volume.dimensions[i]);
 	}
+	// since new labelmap file is dirty this single update loads new labelmap
+	// and triggers update of other views
 	this._views['sagittal']._view.update(this._volume);
-};
+}
 
-Viewer.prototype.resetMultipleLabelmapSlices = function(mapToRemoveIdx) {
+/*
+ * Resets volume slices when colormap of a labelmap is changed and no new files need loading
+ */
+Viewer.prototype.resetSlicesForColormapChange = function() {
+	// reset slices for each orientation
+	for (var i=0; i<3; i++) {
+		this._volume.children[i].children = new Array(this._volume.dimensions[i]);
+	}
+	// fire modified event on X.volume
+	this._volume.modified();
+	// update renderers explicitly to reset _slices to _volume._children
+	this._views['sagittal']._view.update(this._volume);
+	this._views['coronal']._view.update(this._volume);
+	this._views['axial']._view.update(this._volume);
+}
+
+/*
+ * Removes volume slices of a certain labelmap that has been removed
+ */
+Viewer.prototype.removeLabelmapSlices = function(mapToRemoveIdx) {
 	for (var i=0; i<3; i++) {
 		for (var j=0; j<this._volume.children[i].children.length; j++) {
 			if (this._volume.children[i].children[j]) {
@@ -401,7 +563,7 @@ Viewer.prototype.redColormap = function(min, max) {
 	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
 	for (var i=0; i<numSegments+1; i++) {
 		var r = 120+(i*135/numSegments);
-		var g = 200 + i*50/(numSegments/3) ? i > numSegments/3 : 0;
+		var g = 0;
 		var b = 0;
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
@@ -418,7 +580,7 @@ Viewer.prototype.blueColormap = function(min, max) {
 	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
 	for (var i=0; i<numSegments+1; i++) {
 		var r = 0;
-		var g = 100 + i*150/(numSegments/3) ? i > numSegments/3 : 0;
+		var g = 0;
 		var b = 120+(i*135/numSegments);
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});
@@ -435,7 +597,7 @@ Viewer.prototype.purpleColormap = function(min, max) {
 	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
 	for (var i=0; i<numSegments+1; i++) {
 		var r = 90+(i*165/numSegments);
-		var g = 100 + i*150/(numSegments/3) ? i > numSegments/3 : 0;
+		var g = 0;
 		var b = 90+(i*165/numSegments);
 		var a = 0.6+(i*0.4/numSegments);
 		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,a]});

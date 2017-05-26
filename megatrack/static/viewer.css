@@ -1,11 +1,25 @@
 body {
-	background: black;
+	background: white;
+}
+
+.clear {
+	clear: both;
 }
 
 #viewer {
 	width: 1150px;
 	display: inline-block;
+	background: white;
+	border: 1px solid darkgrey;
+	border-radius: 10px;
+	padding: 10px;
+}
+
+#view-container {
+	width: inherit;
+	height: 420px;
 	background: black;
+	border-radius: 10px;
 }
 
 .viewer-panel {
@@ -30,20 +44,52 @@ body {
 	top: 0;
 }
 
+#tract-panel {
+	width: 48%;
+	float: left;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
 #query-panel {
-	width: 300px;
+	width: 48%;
 	height: 300px;
 	background: white;
 	border: none;
-	background: black;
+	background: white;
+	float: left;
+	padding: 10px;
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	height: 250px;
 }
 
-#prob-range-text {
+#query-form-container {
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	height: 200px;
+}
+
+#query-submit {
+	margin-top: 25px;
+}
+
+.range-label {
 	border:0;
 	color:darkgrey;
 	font-weight:bold;
 	width: 100px;
 	margin-left: 18px;
+}
+
+.query-checkboxes {
+	width: 44%;
+	float: left;
+}
+
+.query-range {
+	width: 70%;
+	margin: auto;
 }
 
 #table-div {
@@ -87,13 +133,13 @@ body {
 	border-bottom: 1px solid darkgrey;
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
-	width: 70%;
+	width: 50%;
 }
 
 #tract-colormap {
 	border-top: 1px solid darkgrey;
 	border-bottom: 1px solid darkgrey;
-	width: 10%;
+	width: 30%;
 }
 
 #tract-download {
@@ -115,12 +161,61 @@ body {
 	cursor: pointer;
 }
 
-.red-colormap {
-	/*background: -moz-radial-gradient(center, circle, #efeb09, #ef8809, #ef0909, #ef0909);*/
-	background: -moz-linear-gradient(darkred, red, red, orange, yellow, orange, red, red, darkred);
-	border-radius: 8px;
+.colormap-indicator {
+	border-radius: 10px;
+	border: 1px solid lightgrey;
+	height: 12px;
+}
+
+.colormap-indicator:hover {
+	border: 1px solid grey;
+}
+
+.colormap-indicator-caret {
+	float: right;
+	position: relative;
+	top: 2px;
+}
+
+#colormap-select {
+	position: absolute;
+	width: 100px;
+	height: 50px;
+	background: grey;
+	border: 1px solid lightgrey;
+	padding: 5px;
+	border-radius: 5px;
+	opacity: 0.9;
+}
+
+.colormap-select-item {
+	width: 95px;
+	height: 12px;
+	margin-bottom: 4px;
+	border-radius: 10px;
 	border: 1px solid lightgrey;
 }
+
+.colormap-select-item:hover {
+	border: 1px solid grey;
+}
+
+.colormap-select-indicator {
+	border: 1px solid lightgrey;
+	border-radius: 10px;
+}
+
+/*.red-colormap {
+	background: -moz-linear-gradient(left, darkred, red, red, orange, yellow);
+}
+
+.blue-colormap {
+	background: -moz-linear-gradient(left, darkblue, blue, blue, lightblue);
+}
+
+.purple-colormap {
+	background: -moz-linear-gradient(left, #551A8B, #8A2BE2, #8A2BE2, #BF5FFF);
+}*/
 
 .tract-spacer-row {
 	height: 3px;
