@@ -156,9 +156,13 @@ function Viewer(elementId) {
 	viewContainer.append('<div id="sagittal-panel"></div>');
 	viewContainer.append('<div id="axial-panel"></div>');
 	$('#view-container div').addClass('viewer-panel');
-	$('#'+this._elementId).append('<div class="clear"></div>')
+	container.append('<div class="clear"></div>');
+	container.append('<div id="query-report"></div>');
+	container.append('<div class="clear"></div>');
 	container.append('<div id="query-panel"></div>');
-	container.append('<div id="tract-panel"></div>')
+	container.append('<div id="tract-panel"></div>');
+	
+	this._currentQueryData = {};
 	
 	this._colormapMin = 0.25;
 	this._colormapMax = 1.0;
@@ -248,76 +252,92 @@ function Viewer(elementId) {
 		}
 	});
 	
-	$('input').checkboxradio();
-	$('#query-panel').append('<form id="query-form" action="" method="get">'
-								+'<fieldset class="query-checkboxes"><legend>Gender</legend>'
-									+'<label>Male</label><input type="checkbox" name="male" id="male-checkbox" value="true" checked>'
-									+'<label>Female</label><input type="checkbox" name="female" id="female-checkbox" value="true" checked>'
-								+'</fieldset>'
-								+'<fieldset class="query-checkboxes"><legend>Handedness</legend>'
-									+'<label>Right</label><input type="checkbox" name="right" id="right-checkbox" value="true" checked>'
-									+'<label>Left</label><input type="checkbox" name="left" id="left-checkbox" value="true" checked>'
-									//+'<label>Amb</label><input type="checkbox" name="amb" id="amb-checkbox">'
-								+'</fieldset>'
-								+'<div id="age-range" class="query-range"><p><label>Age:</label><input type="text" id="age-range-text" class="range-label" readonly></p><div id="age-range-slider"></div></div>'
-								+'<div id="iq-range" class="query-range"><label>Ravens IQ (raw):</label><input type="text" id="iq-range-text" class="range-label" readonly><div id="iq-range-slider"></div></div>'
-								// would be good to generate dataset checkboxes here depending on the available datasets in DB, like for tract select
-								+'<fieldset class="query-checkboxes"><legend>Dataset</legend>'
-									+'<label>BRC</label><input type="checkbox" name="brc" id="brc-checkbox" value="true" disabled checked>'
-								+'</fieldset>'
-								+'<input id="query-submit" type="submit" value="Update">'
-							+'</form>');
+//	$('input').checkboxradio();
+//	$('#query-panel').append('<form id="query-form" action="" method="get">'
+//								+'<fieldset class="query-checkboxes"><legend>Gender</legend>'
+//									+'<label>Male</label><input type="checkbox" name="male" id="male-checkbox" value="true" checked>'
+//									+'<label>Female</label><input type="checkbox" name="female" id="female-checkbox" value="true" checked>'
+//								+'</fieldset>'
+//								+'<fieldset class="query-checkboxes"><legend>Handedness</legend>'
+//									+'<label>Right</label><input type="checkbox" name="right" id="right-checkbox" value="true" checked>'
+//									+'<label>Left</label><input type="checkbox" name="left" id="left-checkbox" value="true" checked>'
+//									//+'<label>Amb</label><input type="checkbox" name="amb" id="amb-checkbox">'
+//								+'</fieldset>'
+//								+'<div id="age-range" class="query-range"><p><label>Age:</label><input type="text" id="age-range-text" class="range-label" readonly></p><div id="age-range-slider"></div></div>'
+//								+'<div id="iq-range" class="query-range"><label>Ravens IQ (raw):</label><input type="text" id="iq-range-text" class="range-label" readonly><div id="iq-range-slider"></div></div>'
+//								// would be good to generate dataset checkboxes here depending on the available datasets in DB, like for tract select
+//								+'<fieldset class="query-checkboxes"><legend>Dataset</legend>'
+//									+'<label>BRC</label><input type="checkbox" name="brc" id="brc-checkbox" value="true" disabled checked>'
+//								+'</fieldset>'
+//								+'<input id="query-submit" type="submit" value="Update">'
+//							+'</form>');
+//	
+//	$('#age-range-slider').slider({
+//		range: true,
+//		min: 18,
+//		max: 100,
+//		values: [18, 60],
+//		slide: function(event, ui) {
+//			$('#age-range-text').val(ui.values[0]+' - ' + ui.values[1]+' years');
+//		}
+//	});
+//	$('#age-range-text').val($('#age-range-slider').slider('values', 0)+' - ' + $('#age-range-slider').slider('values', 1)+' years');
+//	$('#iq-range-slider').slider({
+//		range: true,
+//		min: 0,
+//		max: 60,
+//		values: [20, 60],
+//		slide: function(event, ui) {
+//			$('#iq-range-text').val(ui.values[0]+' - ' + ui.values[1]);
+//		}
+//	});
+//	$('#iq-range-text').val($('#iq-range-slider').slider('values', 0)+' - ' + $('#iq-range-slider').slider('values', 1));
+//	
+//	$('#query-form').submit(function(event) {
+//		var form = $('#query-form');
+//		/*
+//		 * Run some checks here. eg. a gender and handedness needs to be selected before submission.
+//		 * Open alert box if not.
+//		 */
+//		
+//		viewer._currentQueryData = {
+//										"male": form.find('input[name="male"]').prop('checked'),
+//										"female": form.find('input[name="female"]').prop('checked'),
+//										"right": form.find('input[name="right"]').prop('checked'),
+//										"left": form.find('input[name="left"]').prop('checked'),
+//										"age_min": $('#age-range-slider').slider('values', 0),
+//										"age_max": $('#age-range-slider').slider('values', 1),
+//										"iq_min": $('#iq-range-slider').slider('values', 0),
+//										"iq_max": $('#iq-range-slider').slider('values', 1),
+//										"brc": form.find('input[name="brc"]').prop('checked')
+//									};
+//		
+//		$.get({
+//			dataType: 'json',
+//			data: viewer._currentQueryData,
+//			url: '/query_report',
+//			success: function(data) {
+//				// update query report display with data
+//				// loop through all labelmaps in volume and update file path with query string
+//				console.log('query report success!');
+//				console.log(data);
+//			}
+//		});
+//		
+//		// loop through each tract currently displayed and update nii.gz
+//		for (var i=0; i<viewer._volume.labelmap.length; i++) {
+//			var map = viewer._volume.labelmap[i];
+//			// I've stored the tractCode on the labelmap for now. Need to come up with a cleaner solution
+//			map.file = viewer.constructTractURL(map.tractCode);
+//			viewer.resetSlicesForDirtyFiles();
+//		}
+//		
+//		return false; // returning false prevents the default 'submit' event from firing as well
+//	});
 	
-	$('#age-range-slider').slider({
-		range: true,
-		min: 18,
-		max: 100,
-		values: [18, 60],
-		slide: function(event, ui) {
-			$('#age-range-text').val(ui.values[0]+' - ' + ui.values[1]+' years');
-		}
-	});
-	$('#age-range-text').val($('#age-range-slider').slider('values', 0)+' - ' + $('#age-range-slider').slider('values', 1)+' years');
-	$('#iq-range-slider').slider({
-		range: true,
-		min: 0,
-		max: 60,
-		values: [20, 60],
-		slide: function(event, ui) {
-			$('#iq-range-text').val(ui.values[0]+' - ' + ui.values[1]);
-		}
-	});
-	$('#iq-range-text').val($('#iq-range-slider').slider('values', 0)+' - ' + $('#iq-range-slider').slider('values', 1));
+	var queryReport = new QueryReport();
 	
-	$('#query-form').submit(function(event) {
-		var form = $('#query-form');
-		/*
-		 * Run some checks here. eg. a gender and handedness needs to be selected before submission.
-		 * Open alert box if not.
-		 */
-		$.get({
-			dataType: 'json',
-			data: {
-				"male": form.find('input[name="male"]').prop('checked'),
-				"female": form.find('input[name="female"]').prop('checked'),
-				"right": form.find('input[name="right"]').prop('checked'),
-				"left": form.find('input[name="left"]').prop('checked'),
-				"age_min": $('#age-range-slider').slider('values', 0),
-				"age_max": $('#age-range-slider').slider('values', 1),
-				"iq_min": $('#iq-range-slider').slider('values', 0),
-				"iq_max": $('#iq-range-slider').slider('values', 1),
-				"brc": form.find('input[name="brc"]').prop('checked')
-			},
-			url: '/query_report',
-			success: function(data) {
-				// update query report display with data
-				// loop through all labelmaps in volume and update file path with query string
-				console.log('query report success!');
-				console.log(data);
-			}
-		});
-		return false; // returning false prevents the default 'submit' event from firing as well
-	});
+	var _queryBuilder = new QueryBuilder('query-panel');
 
 	$('#tract-panel').append('<div id="table-div">'
 						+'<table id="tract-table">'
@@ -363,6 +383,7 @@ function Viewer(elementId) {
 					ui.item.addClass('ui-state-disabled');
 					var tractCode = ui.item[0].id;
 					var map = new X.labelmap(viewer._volume);
+					map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
 					map.file = '/'+tractCode+'_map?.nii.gz';
 					var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];
 					map.colormap = viewer.generateXTKColormap(viewer._colormaps[color]);
@@ -499,6 +520,10 @@ function Viewer(elementId) {
 	
 };
 Viewer.prototype.constructor = Viewer;
+
+Viewer.prototype.constructTractURL = function(tractCode) {
+	return '/get_density_map?' + $.param(viewer._currentQueryData) + '&tract='+tractCode+'&.nii.gz';
+}
 
 /*
  * Resets volume slices when a new labelmap is added and the file needs loading

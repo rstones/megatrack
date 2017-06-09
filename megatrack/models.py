@@ -32,20 +32,24 @@ class Subject(db.Model):
     gender = db.Column(db.String(1), nullable=False) # add check, takes values M and F
     handedness = db.Column(db.String(1)) # takes values R,L,A
     ravens_iq_raw = db.Column(db.Integer) # check, 0 < iq < 60?
+    mmse = db.Column(db.Integer) # 0 < mmse < 30
     file_path = db.Column(db.String(20), unique=True, nullable=False) # directory containing data for this subject
     
-    min_age = 18
-    max_age = 100
+    age_min = 18
+    age_max = 100
     ravens_iq_raw_min = 0
     ravens_iq_raw_max = 60
+    mmse_min = 0
+    mmse_max = 30
     
-    def __init__(self, subject_id, dataset_code, age, gender, handedness, ravens_iq_raw, file_path):
+    def __init__(self, subject_id, dataset_code, age, gender, handedness, ravens_iq_raw, mmse, file_path):
         self.subject_id = subject_id
         self.dataset_code = dataset_code
         self.age = age
         self.gender = gender
         self.handedness = handedness
         self.ravens_iq_raw = ravens_iq_raw
+        self.mmse = mmse
         self.file_path = file_path
         
     def __repr__(self):
@@ -53,9 +57,9 @@ class Subject(db.Model):
     
     @validates('age')
     def validate_age(self, key, age):
-        if not Subject.min_age <= age <= Subject.max_age:
+        if not Subject.age_min <= age <= Subject.age_max:
             print(age)
-            raise ValueError('Subject:age is outside validation range ['+str(self.min_age)+','+str(self.max_age)+']')
+            raise ValueError('Subject:age is outside validation range ['+str(Subject.age_min)+','+str(Subject.age_max)+']')
         return age
         
     @validates('gender')
@@ -75,6 +79,12 @@ class Subject(db.Model):
         if ravens_iq_raw and not Subject.ravens_iq_raw_min <= ravens_iq_raw <= Subject.ravens_iq_raw_max:
             raise ValueError('Subject:ravens_iq_raw is outside validation range [0,60]')
         return ravens_iq_raw
+    
+    @validates('mmse')
+    def validate_mmse(self, key, mmse):
+        if mmse and not Subject.mmse_min <= mmse <= Subject.mmse_max:
+            raise ValueError('Subject:mmse is validation range ['+str(Subject.mmse_min)+','+str(Subject.mmse_max)+']')
+        return mmse
 
 class Tract(db.Model):
     '''Populate frontend tract select from this table so adding new tracts only requires
@@ -99,7 +109,9 @@ class Dataset(db.Model):
     '''Model to store file path for each tractography dataset.'''
     #id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(12), primary_key=True) # eg. BRC or BRC_ATLAS
+    name = db.Column(db.String(20), unique=True, nullable=False)
     file_path = db.Column(db.String(20), unique=True, nullable=False) # eg. brc_atlas
+    query_params = db.Column(db.String(1000))
     
     def _init_(self, code, file_path):
         self.code = code
@@ -107,5 +119,8 @@ class Dataset(db.Model):
         
     def __repr__(self):
         return '<Dataset %r>' % self.code
+    
+    def __json__(self):
+        return ['code', 'name', 'query_params']
         
         

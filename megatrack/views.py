@@ -1,6 +1,10 @@
-from megatrack.models import Tract, Subject
+from megatrack.models import Tract, Subject, Dataset
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify
 from flask_jsontools import jsonapi
+import numpy as np
+import nibabel as nib
+from nibabel.nifti1 import Nifti1Image
+import datetime
 
 megatrack = Blueprint('megatrack', __name__)
 
@@ -30,9 +34,64 @@ def populate_tract_select():
     tracts = Tract.query.all() # can order them in a certain way here
     return jsonify(tracts)
 
+@megatrack.route('/dataset_select')
+def populate_dataset_select():
+    datasets = Dataset.query.all()
+    return jsonify(datasets)
+
 @jsonapi
 @megatrack.route('/query_report')
 def query_report():
+    '''
+    Need to change filter constructor to deal with json coming from client and unknown
+    fields. Use getattr(<string>) to access attributes of models from JSON object keys.
+    Only bit of coupling is to have different behaviour for query types:
+    radio is equals
+    range is less than / greater than
+    checkbox is in
+    Also need 'and' logic within a dataset and 'or' logic between datasets.
+    
+    What data is to be sent back to client? Total no. subjects selected, no. per dataset, per gender, per handedness etc?
+    '''
+    filter_list = construct_subject_query_filter(request)
+    # need a query to get subject ids
+    subjects = Subject.query.with_entities(Subject.subject_id, Subject.file_path).filter(*filter_list).all()
+    # need to analyse query results to send only required info to client eg. number of results
+    return jsonify(subjects)
+
+@megatrack.route('/get_tract')
+def get_density_map():
+    # get the filepath for the tract
+    tract_code = request.args.get("tract")
+    tract_dir = Tract.query.with_entities(Tract.file_path).filter(Tract.code == tract_code).first()
+    tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
+    # get file path for the datasets
+    # this is always the BRC_ATLAS for now
+    dataset_dir = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.code == "BRC_ATLAS").first()
+    # query db to get subjects satisfying other query params
+    subject_filter_list = construct_subject_query_filter(request)
+    subject_file_names = Subject.query.with_entities(Subject.file_path).filter(*subject_filter_list).all()
+    # file path to data folder
+    data_file_path = current_app.config['DATA_FILE_PATH']
+    # construct a list of file paths for each subject
+    # <dataset.file_path>/<tract.file_path>/<subject.file_path>+<tract.file_path>+".nii.gz"
+    # load each file data and average before converting back to nifti
+    imgs = []
+    data = np.zeros((len(subject_file_names), 91, 109, 91), dtype=np.int16)
+    for i in range(len(subject_file_names)):
+        file_path = data_file_path + dataset_dir + '/' + tract_dir + '/' + subject_file_names[i] + tract_file_name + '.nii.gz'
+        imgs.append(nib.load(file_path))
+        data[i] = imgs[i].get_data()
+        
+    mean = np.mean(data, axis=0)
+    new_img = Nifti1Image(mean.astype(np.int16), imgs[0].affine, imgs[0].header)
+    temp_file = '../data/temp/'+'BRC_ATLAS_'+tract_code+'_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
+    nib.save(new_img, temp_file)
+    
+    # return the nifti file (this may be slightly tricky, may need to save it first then use send_file, then delete it)    
+    return send_file(temp_file, as_attachment=True, attachment_filename=temp_file, conditional=True, add_etags=True)
+
+def construct_subject_query_filter(request):
     filter_list = []
     
     if request.args.get("male") == "true" and request.args.get("female") == "false":
@@ -54,21 +113,10 @@ def query_report():
         filter_list.append(Subject.ravens_iq_raw >= iq_min)
         filter_list.append(Subject.ravens_iq_raw <= iq_max)
     
-    if request.args.get("brc") == "true":
+    if request.args.get("brc") == "true": # should always be true for now
         filter_list.append(Subject.dataset_code == "BRC_ATLAS") # probably shouldnt hard code the dataset codes here
-    # need a query to get subject ids
-    subjects = Subject.query.with_entities(Subject.subject_id, Subject.file_path).filter(*filter_list).all()
-    return jsonify(subjects)
-
-@megatrack.route('/get_tract')
-def get_tract():
-    tract_code = request.args.get("tract")
-    # query db to get subjects satisfying other query params
-    # construct a list of file paths for each subject
-    # <dataset.file_path>/<tract.file_path>/<subject.file_path>+<tract.file_path>+".nii.gz"
-    # load each file data and average before converting back to nifti
-    # return the nifti file (this may be slightly tricky, may need to save it first then use send_file, then delete it)    
-    return False
+    return filter_list
+    
 
 '''
 Could dynamically generate the density map routes based on entries in Tract table?

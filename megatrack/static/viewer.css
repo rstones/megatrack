@@ -44,6 +44,12 @@ body {
 	top: 0;
 }
 
+#query-report {
+	width: 98%;
+	float: left;
+	background: black;
+}
+
 #tract-panel {
 	width: 48%;
 	float: left;
@@ -239,5 +245,74 @@ body {
 	box-shadow: 2px 2px 2px lightgrey;
 	border-radius: 5px;
 	z-index: 3;
+}
+
+#dataset-table {
+	width: 100%;
+}
+
+#dataset-title-query-select {
+	width: 35%;
+}
+
+.query-constraints {
+	width: 65%;
+}
+
+.query-constraints-table {
+	width: 100%;
+}
+
+#query-name {
+	width: 30%;
+}
+
+#query-control {
+	width: 60%;
+}
+
+#query-remove {
+	width: 10%;
+}
+
+.dataset-query-row {
+	background: lemonchiffon;
+}
+
+.query-constraint-row {
+	background: lightblue;
+}
+
+.query-slider-handle {
+	font-size: small;
+}
+
+#add-dataset-button {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	width: 68%;
+	margin-top: 4px;
+	float: left;
+}
+
+#add-dataset-button:hover {
+	cursor: pointer;
+	background: rgb(225,225,225);
+}
+
+#update-query-button {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	width: 30%;
+	margin-top: 4px;
+	margin-left: 4px;
+	background: #DAEEF5;
+	float: left;
+}
+
+#update-query-button:hover {
+	cursor: pointer;
+	background: #C3DDE6;
+	
 }
 
