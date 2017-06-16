@@ -2,11 +2,13 @@
 /*
  * Insert div where query report will go and start listening for query-update event which calls update function
  */
-function QueryReport() {
+function QueryReport(containerId) {
 	var instance = this;
+	this._containerId = containerId;
+	
+	//$('#'+containerId).append('<div id="query-report-text">Displaying averaged density maps for datasets:</div>');
 	
 	$(document).on('query-update', function(event, newQuery) {
-		console.log(newQuery);
 		instance.update(newQuery);
 	});
 }
@@ -20,11 +22,15 @@ QueryReport.prototype.update = function(queryData) {
 	var instance = this;
 	$.ajax({
 		dataType: 'json',
-		contentType: 'application/json',
-		data: queryData,
-		url: '/query_report',
+		url: '/query_report?'+$.param(queryData),
 		success: function(data) {
-			
+			$('#'+instance._containerId).empty();
+			$('#'+instance._containerId).html('<div id="query-report-text">Displaying averaged density maps for datasets:</div>'
+											+'<ul id="query-report-dataset-list">'
+											+'</ul>');
+			for (var key in data.dataset) {
+				$('#query-report-dataset-list').append('<li>'+key+' ('+data.dataset[key]+' subjects)</li>');
+			}
 		} 
 	});
 }

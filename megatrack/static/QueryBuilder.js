@@ -71,8 +71,8 @@ function QueryBuilder(containerId) {
 							newQuery[queries[i]._datasetId][key]["value"] = constraint._queryRow.find('input[name="'+key+'"]:checked').val();
 							break;
 						case "range":
-							newQuery[queries[i]._datasetId][key]["min"] = constraint._sliderDiv.slider('values',0);
-							newQuery[queries[i]._datasetId][key]["max"] = constraint._sliderDiv.slider('values',1);
+							newQuery[queries[i]._datasetId][key]["min"] = $(constraint._sliderDiv).slider('values',0);
+							newQuery[queries[i]._datasetId][key]["max"] = $(constraint._sliderDiv).slider('values',1);
 							break;
 						case "checkbox":
 							// not sure if the following selector + .val() gets all the vals or just one. need to check.
@@ -104,7 +104,8 @@ function DatasetQuery(tableId, datasetId, dataset) {
 									 "label":"Gender",
 									 "type": "radio",
 									 "options" :{
-													"values": ["Male", "Female"]
+													"values": ["M", "F"],
+													"labels": ["Male", "Female"]
 												}
 								},
 								"age": {
@@ -122,7 +123,8 @@ function DatasetQuery(tableId, datasetId, dataset) {
 										"label":"Handedness",
 										"type": "radio",
 										"options": {
-														"values": ["Right", "Left"]
+														"values": ["R", "L"],
+														"labels": ["Right", "Left"]
 													}
 								}
 							}
@@ -248,11 +250,12 @@ function RadioQueryConstraint(queryCode, queryParams, datasetCode) {
 	this._queryRow = $('#'+datasetCode+'-'+queryCode+'-query');
 	$('#'+datasetCode+'-'+queryCode+'-query > #query-control').append('<form>');
 	var queryValues = queryParams.options.values;
+	var queryLabels = queryParams.options.labels;
 	for (var i=0; i<queryValues.length; i++) {
 		$('#'+datasetCode+'-'+queryCode+'-query > #query-control > form').append('<input '
 																				+'type="radio" '
 																				+'name="'+queryCode+'" value="'+queryValues[i]+'" '+(i==0?'checked':'')+'>'
-																				+queryValues[i]);
+																				+queryLabels[i]);
 	}
 	
 	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {

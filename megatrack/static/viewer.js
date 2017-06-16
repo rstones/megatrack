@@ -197,16 +197,16 @@ function Viewer(elementId) {
 	
 	this._initSetup = true;
 	this._views = {};
-	this._views['sagittal'] = new View('sagittal', this._volume, $('#sagittal-panel'), this._sagittalViewDim, 'X', false, 'Y', true, 'Z', true);
+	this._views['sagittal'] = new View('sagittal', this._volume, $('#sagittal-panel'), this._sagittalViewDim, 'X', true, 'Y', true, 'Z', true);
 	this._views['sagittal']._view.render();
 	// onShowtime executes after data has been fully loaded, before rendering
 	this._views['sagittal']._view.onShowtime = function() {
 		if (viewer._initSetup) {
 			viewer._views['coronal'] = new View('coronal', viewer._volume, $('#coronal-panel'), viewer._coronalViewDim, 
-												'Y', true, 'X', false, 'Z', true);
+												'Y', true, 'X', true, 'Z', true);
 			viewer._views['coronal']._view.render();
 			viewer._views['axial'] = new View('axial', viewer._volume, $('#axial-panel'), viewer._axialViewDim, 
-												'Z', false, 'X', false, 'Y', true);
+												'Z', false, 'X', true, 'Y', true);
 			viewer._views['axial']._view.render();
 			
 			viewer.centreInMNISpace();
@@ -252,92 +252,12 @@ function Viewer(elementId) {
 		}
 	});
 	
-//	$('input').checkboxradio();
-//	$('#query-panel').append('<form id="query-form" action="" method="get">'
-//								+'<fieldset class="query-checkboxes"><legend>Gender</legend>'
-//									+'<label>Male</label><input type="checkbox" name="male" id="male-checkbox" value="true" checked>'
-//									+'<label>Female</label><input type="checkbox" name="female" id="female-checkbox" value="true" checked>'
-//								+'</fieldset>'
-//								+'<fieldset class="query-checkboxes"><legend>Handedness</legend>'
-//									+'<label>Right</label><input type="checkbox" name="right" id="right-checkbox" value="true" checked>'
-//									+'<label>Left</label><input type="checkbox" name="left" id="left-checkbox" value="true" checked>'
-//									//+'<label>Amb</label><input type="checkbox" name="amb" id="amb-checkbox">'
-//								+'</fieldset>'
-//								+'<div id="age-range" class="query-range"><p><label>Age:</label><input type="text" id="age-range-text" class="range-label" readonly></p><div id="age-range-slider"></div></div>'
-//								+'<div id="iq-range" class="query-range"><label>Ravens IQ (raw):</label><input type="text" id="iq-range-text" class="range-label" readonly><div id="iq-range-slider"></div></div>'
-//								// would be good to generate dataset checkboxes here depending on the available datasets in DB, like for tract select
-//								+'<fieldset class="query-checkboxes"><legend>Dataset</legend>'
-//									+'<label>BRC</label><input type="checkbox" name="brc" id="brc-checkbox" value="true" disabled checked>'
-//								+'</fieldset>'
-//								+'<input id="query-submit" type="submit" value="Update">'
-//							+'</form>');
-//	
-//	$('#age-range-slider').slider({
-//		range: true,
-//		min: 18,
-//		max: 100,
-//		values: [18, 60],
-//		slide: function(event, ui) {
-//			$('#age-range-text').val(ui.values[0]+' - ' + ui.values[1]+' years');
-//		}
-//	});
-//	$('#age-range-text').val($('#age-range-slider').slider('values', 0)+' - ' + $('#age-range-slider').slider('values', 1)+' years');
-//	$('#iq-range-slider').slider({
-//		range: true,
-//		min: 0,
-//		max: 60,
-//		values: [20, 60],
-//		slide: function(event, ui) {
-//			$('#iq-range-text').val(ui.values[0]+' - ' + ui.values[1]);
-//		}
-//	});
-//	$('#iq-range-text').val($('#iq-range-slider').slider('values', 0)+' - ' + $('#iq-range-slider').slider('values', 1));
-//	
-//	$('#query-form').submit(function(event) {
-//		var form = $('#query-form');
-//		/*
-//		 * Run some checks here. eg. a gender and handedness needs to be selected before submission.
-//		 * Open alert box if not.
-//		 */
-//		
-//		viewer._currentQueryData = {
-//										"male": form.find('input[name="male"]').prop('checked'),
-//										"female": form.find('input[name="female"]').prop('checked'),
-//										"right": form.find('input[name="right"]').prop('checked'),
-//										"left": form.find('input[name="left"]').prop('checked'),
-//										"age_min": $('#age-range-slider').slider('values', 0),
-//										"age_max": $('#age-range-slider').slider('values', 1),
-//										"iq_min": $('#iq-range-slider').slider('values', 0),
-//										"iq_max": $('#iq-range-slider').slider('values', 1),
-//										"brc": form.find('input[name="brc"]').prop('checked')
-//									};
-//		
-//		$.get({
-//			dataType: 'json',
-//			data: viewer._currentQueryData,
-//			url: '/query_report',
-//			success: function(data) {
-//				// update query report display with data
-//				// loop through all labelmaps in volume and update file path with query string
-//				console.log('query report success!');
-//				console.log(data);
-//			}
-//		});
-//		
-//		// loop through each tract currently displayed and update nii.gz
-//		for (var i=0; i<viewer._volume.labelmap.length; i++) {
-//			var map = viewer._volume.labelmap[i];
-//			// I've stored the tractCode on the labelmap for now. Need to come up with a cleaner solution
-//			map.file = viewer.constructTractURL(map.tractCode);
-//			viewer.resetSlicesForDirtyFiles();
-//		}
-//		
-//		return false; // returning false prevents the default 'submit' event from firing as well
-//	});
+	var queryBuilder = new QueryBuilder('query-panel');
 	
-	var queryReport = new QueryReport();
-	
-	var _queryBuilder = new QueryBuilder('query-panel');
+	this._currentQuery = null;
+	$(document).on('query-update', function(event, newQuery) {
+		viewer._currentQuery = newQuery;
+	});
 
 	$('#tract-panel').append('<div id="table-div">'
 						+'<table id="tract-table">'
@@ -370,35 +290,37 @@ function Viewer(elementId) {
 	}
 	$('#colormap-select').hide();
 	
+	this._availableTracts = {};
+	this._selectedTracts = {};
+	
 	$.ajax({
 		dataType: 'json',
 		url: '/tract_select',
 		success: function(data) {
 			for (var i in data) {
 				$('#tract-select').append('<li id="'+data[i].code+'"><div>'+data[i].name+'</div></li>');
+				viewer._availableTracts[data[i.code]] = {"code": data[i].code, "name": data[i].name};
 			}
 			$("#tract-select").menu({
 				select: function(event, ui) {
 					$('#tract-select').hide();
 					ui.item.addClass('ui-state-disabled');
 					var tractCode = ui.item[0].id;
+					viewer._selectedTracts[tractCode] = viewer._availableTracts[tractCode];
 					var map = new X.labelmap(viewer._volume);
 					map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
-					map.file = '/'+tractCode+'_map?.nii.gz';
+					if (viewer._currentQuery) {
+						map.file = '/tract/'+tractCode+'?'+$.param(viewer._currentQuery)+'&file_type=.nii.gz';
+					} else {
+						console.log('sending request for ' + tractCode);
+						map.file = '/tract/'+tractCode+'?file_type=.nii.gz';
+					}
 					var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];
 					map.colormap = viewer.generateXTKColormap(viewer._colormaps[color]);
 					viewer._volume.labelmap.push(map);
 					viewer._labelmapColors.push(color);
 					// re-render
 					viewer.resetSlicesForDirtyFiles();
-					
-					/*
-					 * Above needs change to use new route using tract code in query param
-					 * Also send the data of the current query as query params
-					 * 
-					 * On page load, trigger a request to do default query, then all 'add tract' interactions
-					 * have a set of query params to use
-					 */
 					
 					// add row to table
 					$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
@@ -414,14 +336,16 @@ function Viewer(elementId) {
 					
 					// add event listener on remove icon
 					$('#'+tractCode+' > #tract-remove').on('click', function(event) {
-						$('#tract-select > #'+event.currentTarget.parentElement.id).removeClass('ui-state-disabled');
+						var tractCode = event.currentTarget.parentElement.id;
+						$('#tract-select > #'+tractCode).removeClass('ui-state-disabled');
 						event.currentTarget.parentElement.remove();
-						$('#'+event.currentTarget.parentElement.id+'-spacer').remove();
+						$('#'+tractCode+'-spacer').remove();
+						delete viewer._selectedTracts[tractCode];
 						// remove labelmap from X.volume.labelmap
 						for (var i=0; i<viewer._volume.labelmap.length; i++) {
 							var map = viewer._volume.labelmap[i];
 							var filepath = map.file;
-							if (filepath.indexOf(event.currentTarget.parentElement.id) !== -1) {
+							if (filepath.indexOf(tractCode) !== -1) {
 								viewer._volume.labelmap.splice(i, 1);
 								viewer._labelmapColors.splice(i, 1);
 								viewer.removeLabelmapSlices(i);
@@ -489,6 +413,23 @@ function Viewer(elementId) {
 			
 		}
 	});
+	
+	/*
+	 * Loop through all the currently selected tracts and update the associated labelmaps
+	 */
+	$(document).on('query-update', function(event, newQuery) {
+		for (var i=0; i<viewer._volume.labelmap.length; i++) {
+			var map = viewer._volume.labelmap[i];
+			var tractCode = map.tractCode;
+			map.file = '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
+			// may need to set file to dirty to initiate reloading
+			viewer.resetSlicesForDirtyFiles();
+		}
+	});
+	
+	$('#tract-panel').append('<div id="query-report-container"></div>');
+	
+	this._queryReport = new QueryReport('query-report-container');
 	
 	// example range slider for probability map
 	$('#tract-panel').append('<div id="probability-range">'

@@ -105,6 +105,7 @@ body {
 	border-radius: 5px;
 	overflow: scrollable;
 	padding: 3px;
+	float: left;
 }
 
 #tract-table {
@@ -314,5 +315,14 @@ body {
 	cursor: pointer;
 	background: #C3DDE6;
 	
+}
+
+#query-report-container {
+    width: 200px;
+    height: 200px;
+    float: left;
+    margin-left: 10px;
+	border-radius: 5px;
+    border: 1px solid darkgrey;
 }
 

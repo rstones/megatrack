@@ -6,6 +6,6 @@ setup(
     packages=['megatrack'],
     include_package_data=True,
     install_requires=[
-        'flask', 'flask_sqlalchemy', 'flask_script', 'flask_migrate', 'flask_jsontools', 'pymysql', 'numpy', 'nibabel'
+        'flask', 'flask_sqlalchemy', 'flask_script', 'flask_migrate', 'flask_jsontools', 'pymysql', 'numpy', 'nibabel', 'jquery-unparam'
     ],
 )
