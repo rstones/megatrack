@@ -22,3 +22,6 @@ config.py
 
 # python virtual environment
 megatrack-venv
+
+# a folder that suddenly appeared
+megatrack/bin/

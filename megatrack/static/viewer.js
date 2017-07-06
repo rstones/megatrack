@@ -23,13 +23,18 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	this._hSlice = hSlice;
 	this._vReverse = vReverse;
 	this._hReverse = hReverse;
-	this._viewWidth = dim[0];
-	this._viewHeight = dim[1];
+	this._renderWidth = dim[0];
+	this._renderHeight = dim[1];
+	this._viewWidth = this._renderWidth + 80;
+	this._viewHeight = this._renderHeight + 80;
 	this._mniCoord = 0;
 	
-	this._container.append('<div id="'+this._plane+'-view" class="view '+this._plane+'"></div>');
-	$('#'+this._plane+'-view').css('width', this._viewWidth);
-	$('#'+this._plane+'-view').css('height', this._viewHeight);
+	this._container.append('<div id="'+this._plane+'-view-border" class="view-border"></div>');
+	$('#'+this._plane+'-view-border').css('width', this._viewWidth);
+	$('#'+this._plane+'-view-border').css('height', this._viewHeight);
+	$('#'+this._plane+'-view-border').append('<div id="'+this._plane+'-view" class="view"></div>');
+	$('#'+this._plane+'-view').css('width', this._renderWidth);
+	$('#'+this._plane+'-view').css('height', this._renderHeight);
 	this._container.append('<div id="'+this._plane+'-slider"></div>');
 	
 	this._view = new X.renderer2D();
@@ -50,9 +55,12 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	this._hIdx = 'index' + this._hSlice;
 	this._hDimIdx = 'XYZ'.indexOf(this._hSlice);
 	
-	// initialize canvas for labels
-	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-labels" class="overlay"></canvas>');
-	// initialize canvas for crosshairs overlay
+//	// initialize canvas for labels
+//	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-labels" class="overlay"></canvas>');
+//	// initialize canvas for crosshairs overlay
+//	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-crosshairs" class="overlay"></canvas>');
+	
+	this._container.append('<canvas id="'+this._plane+'-labels" class="overlay"></canvas>');
 	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-crosshairs" class="overlay"></canvas>');
 }
 View.prototype.constructor = View;
@@ -85,12 +93,12 @@ View.prototype.getSliderValue = function() {
 View.prototype.initSlicingOverlay = function() {
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
 	var viewContainer = $('#'+this._plane+'-crosshairs').parent().get(0);
-	canvas.width = this._viewWidth;
-	canvas.height = this._viewHeight;
+	canvas.width = this._renderWidth;
+	canvas.height = this._renderHeight;
 	var view = this;
 	canvas.onclick = function(event) {
-		var x = event.pageX - viewContainer.offsetLeft;
-		var y = event.pageY - viewContainer.offsetTop;
+		var x = event.pageX - $('#'+view._plane+'-crosshairs').offset().left;
+		var y = event.pageY - $('#'+view._plane+'-crosshairs').offset().top;
 		$('#viewer').trigger('view:click', [view._plane, x, y, canvas.width, canvas.height]);
 	};
 	this.drawCrosshairs();
@@ -105,16 +113,22 @@ View.prototype.drawLabels = function() {
 	ctx.font = 'normal 17px Helvetica';
 	var mniCoord = Math.round(this._volume[this._idx] - (this._volume.dimensions[this._dimIdx] - this._volume.RASCenter[this._dimIdx])/2);
 	if (this._plane == 'sagittal') {
-		ctx.fillText("S", 10, 20);
-		ctx.fillText("I", 10, this._viewHeight-10);
+		ctx.fillText("S", this._viewWidth/2, 25);
+		ctx.fillText("I", this._viewWidth/2, this._viewHeight-15);
+		ctx.fillText("A", 10, this._viewHeight/2);
+		ctx.fillText("P", this._viewWidth-15, this._viewHeight/2);
 		ctx.fillText("x = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	} else if (this._plane == 'coronal') {
-		ctx.fillText("R", 10, 20);
-		ctx.fillText("L", this._viewWidth-20, 20);
+		ctx.fillText("R", 10, this._viewHeight/2);
+		ctx.fillText("L", this._viewWidth-20, this._viewHeight/2);
+		ctx.fillText("S", this._viewWidth/2, 25);
+		ctx.fillText("I", this._viewWidth/2, this._viewHeight-15);
 		ctx.fillText("y = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	} else if (this._plane == 'axial') {
-		ctx.fillText("A", 10, 20);
-		ctx.fillText("P", 10, this._viewHeight-10);
+		ctx.fillText("A", this._viewWidth/2, 20);
+		ctx.fillText("P", this._viewWidth/2, this._viewHeight-10);
+		ctx.fillText("R", 10, this._viewHeight/2);
+		ctx.fillText("L", this._viewWidth-20, this._viewHeight/2);
 		ctx.fillText("z = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	}
 }
@@ -312,7 +326,6 @@ function Viewer(elementId) {
 					if (viewer._currentQuery) {
 						map.file = '/tract/'+tractCode+'?'+$.param(viewer._currentQuery)+'&file_type=.nii.gz';
 					} else {
-						console.log('sending request for ' + tractCode);
 						map.file = '/tract/'+tractCode+'?file_type=.nii.gz';
 					}
 					var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];

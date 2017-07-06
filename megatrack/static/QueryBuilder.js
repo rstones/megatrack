@@ -8,12 +8,12 @@ function QueryBuilder(containerId) {
 		
 		// insert div for query builder
 		$('#'+containerId).append('<div id="query-builder-container">'
+									+'<div id="add-dataset-button">Add dataset</div>'
+									+'<div id="update-query-button">Update</div>'
 									+'<table id="dataset-table">'
 									+'<tbody>'
 									+'</tbody>'
 									+'</table>'
-									+'<div id="add-dataset-button">Add dataset</div>'
-									+'<div id="update-query-button">Update</div>'
 									+'<ul id="dataset-select"></ul>'
 									+'</div>');
 		$('#dataset-select').hide();
@@ -39,7 +39,7 @@ function QueryBuilder(containerId) {
 						ui.item.addClass('ui-state-disabled');
 						var datasetId = ui.item[0].id;
 						// add new DatasetQuery object to QueryBuilder's array
-						instance._datasetQueries.push(new DatasetQuery(instance._datasetTableId, datasetId, instance._data[datasetId]));
+						instance._datasetQueries.push(new DatasetQuery(instance._datasetTableId, datasetId, instance._data[datasetId], instance));
 						// DatasetQuery init should insert a div into #dataset-table and setup other stuff
 					}
 				});
@@ -48,8 +48,35 @@ function QueryBuilder(containerId) {
 		});
 		
 		$('#add-dataset-button').on('click', function(event) {
-			$('#dataset-select').show('fade');
+			var datasetSelect = $('#dataset-select');
+			var clickPosX = event.originalEvent.pageX;
+			var clickPosY = event.originalEvent.pageY;
+			var menuWidth = datasetSelect.width() + 5;
+			var menuHeight = datasetSelect.height() + 5;
+			var windowWidth = $(window).width();
+			var windowHeight = $(window).height();
+			if (windowWidth - clickPosX < menuWidth) {
+				datasetSelect.css('left', clickPosX-menuWidth);
+			} else {
+				datasetSelect.css('left', clickPosX);
+			}
+			if (windowHeight - clickPosY < menuHeight) {
+				datasetSelect.css('top', clickPosY-menuHeight);
+			} else {
+				datasetSelect.css('top', clickPosY);
+			}
+			datasetSelect.show('fade');
 			// need to sort out the positioning of the dataset select here
+		});
+		
+		$(document).on('click', function(event) {
+			if (event.target.id != 'dataset-select') {
+				$('#dataset-select').hide();
+			}
+		});
+		
+		$(window).resize(function() {
+			$('#dataset-select').hide();
 		});
 		
 		/*
@@ -76,7 +103,21 @@ function QueryBuilder(containerId) {
 							break;
 						case "checkbox":
 							// not sure if the following selector + .val() gets all the vals or just one. need to check.
-							newQuery[queries[i]._datasetId][key]["values"] = constraint._queryRow.find('input[name="'+key+'"]:checked').val();
+							var vals = [];
+							constraint._queryRow.find('input[name="'+key+'"]:checked').each(function() {
+																								vals.push($(this).val());
+																							});
+							if (vals.length > 0) {
+								newQuery[queries[i]._datasetId][key]["values"] = vals;
+							} else {
+								// This is a bit of a hack to get round if there are no checkboxes selected.
+								// I've got a bit of a dilemma about what's most logical for users when
+								// querying a column on a set of two fixed values. Radio button and have user
+								// remove constraint when they want to include all values. Or checkboxes and have
+								// all checked and none checked meaning the same thing of include all values. Or all
+								// checkboxes empty meaning no query?
+								delete newQuery[queries[i]._datasetId][key];
+							}
 							break;
 					}
 				}
@@ -90,54 +131,26 @@ QueryBuilder.prototype.constructor = QueryBuilder;
 
 /**
  * @param tableId is the id of the table in which to insert a row
- * @param data is object defining the dataset name and possible query types
+ * @param datasetId the dataset code
+ * @param dataset is object defining the dataset code, name and possible query types
+ * @param the parent of this query object which should be the QueryBuilder object
  * @returns
  */
-function DatasetQuery(tableId, datasetId, dataset) {
+function DatasetQuery(tableId, datasetId, dataset, parent) {
 	
 	var instance = this;
 	this._datasetId = datasetId;
 	this._dataset = dataset;
-	
-	var testQueryParams = {
-								"gender": {
-									 "label":"Gender",
-									 "type": "radio",
-									 "options" :{
-													"values": ["M", "F"],
-													"labels": ["Male", "Female"]
-												}
-								},
-								"age": {
-										"label":"Age",
-										"type": "range",
-										"options": {
-														"min": 18,
-														"max": 99,
-														"initMin": 20,
-														"initMax": 60
-														
-													}
-								},
-								"handedness": {
-										"label":"Handedness",
-										"type": "radio",
-										"options": {
-														"values": ["R", "L"],
-														"labels": ["Right", "Left"]
-													}
-								}
-							}
-	this._dataset.queryParams = testQueryParams;
+	this._parent = parent;
 	this._constraints = {};
 	
 	// insert a div into query builder div for this dataset
 	$('#'+tableId+' > tbody').append('<tr id="'+this._dataset.code+'-query" class="dataset-query-row">'
-										+'<td id="dataset-title-query-select">'
-										+'<h3>'+this._dataset.name+'</h3>'
+										+'<td class="dataset-title-query-select dataset-table-cell">'
+										+'<h3>'+this._dataset.name+' <span id="'+this._dataset.code+'-remove" class="clickable ui-icon ui-icon-close" title="Remove dataset"></span></h3>'
 										+'<select id="'+this._dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select>'
 										+'</td>'
-										+'<td id="'+this._dataset.code+'-query-constraints" class="query-constraints">'
+										+'<td id="'+this._dataset.code+'-query-constraints" class="query-constraints dataset-table-cell">'
 										+'<table id="'+this._dataset.code+'-query-constraints-table" class="query-constraints-table"><tbody></tbody></table>'
 										+'</td>'
 										+'</tr>');
@@ -148,17 +161,7 @@ function DatasetQuery(tableId, datasetId, dataset) {
 	// on query select, init a new QueryConstraint and add to list, disable that query from select
 	$('#'+this._dataset.code+'-query-select').change(function(event) {
 		var queryCode = event.currentTarget.value;
-		switch (instance._dataset.queryParams[queryCode].type) {
-			case "radio":
-				instance._constraints[queryCode] = new RadioQueryConstraint(queryCode, instance._dataset.queryParams[queryCode], instance._dataset.code);
-				break;
-			case "range":
-				instance._constraints[queryCode] = new RangeQueryConstraint(queryCode, instance._dataset.queryParams[queryCode], instance._dataset.code);
-				break;
-			case "checkbox":
-				instance._constraints[queryCode] = new CheckboxQueryConstraint(queryCode, instance._dataset.queryParams[queryCode], instance._dataset.code);
-				break;
-		}
+		instance._constraints[queryCode] = new QueryConstraint(instance._dataset.queryParams[queryCode].type, queryCode, instance._dataset.queryParams[queryCode], instance._dataset.code, instance)
 		
 		// disable current query from select
 		$('#'+instance._dataset.code+'-query-select option[value='+queryCode+']').prop('disabled', true);
@@ -166,40 +169,67 @@ function DatasetQuery(tableId, datasetId, dataset) {
 		$('#'+instance._dataset.code+'-query-select option[value=default]').prop('selected', true);
 		return false;
 	});
+	
+	$('#'+this._dataset.code+'-remove').on('click', function(event) {
+		$('#dataset-select > #'+instance._dataset.code).removeClass('ui-state-disabled');
+		var datasetQueries = instance._parent._datasetQueries;
+		for (var i=0; i<datasetQueries.length; i++) {
+			if (datasetQueries[i].code == this._datasetId) {
+				datasetQueries.splice(i, 1);
+				break;
+			}
+		}
+		$('#'+instance._dataset.code+'-query').remove();
+	});
 
 };
 DatasetQuery.prototype.constructor = DatasetQuery;
 
-/*
- * I want this to be the superclass of more specific types of query constraints
- * with the functionality of this class to be inserting a div into the dataset
- * table with consistent styling for the label etc...
- * Will create the subclasses using this as a prototype and not maintain any
- * state in QueryConstraint itself as all the subclasses will have it on their
- * prototype chain. Object.create
- */
-var QueryConstraint = {
-		init: function() {
-			// maybe don't need an init here, just call some common functions from the subclass inits
-		},
-		insertConstraintBar: function() {
-			// insert a div into query builder for this query
-		}
-};
-
-function RangeQueryConstraint(queryCode, queryParams, datasetCode) {
+function QueryConstraint(type, queryCode, queryParams, datasetCode, parent) {
 	var instance = this;
-	this._type = "range";
+	this._type = type;
 	this._queryCode = queryCode;
 	this._queryParams = queryParams;
 	this._datasetCode = datasetCode;
-	// insert a JQuery UI slider into the query constraint div
+	this._parent = parent;
+	
 	$('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
-																+'<td id="query-name">'+queryParams.label+': </td>'
-																+'<td id="query-control"></td>'
-																+'<td id="query-remove"><span class="clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
-																+'</tr>');
-	// add a spacer row as well here for aesthetic purposes (See tract table)
+																+'<td id="query-name" class="query-constraint-table-cell">'+queryParams.label+': </td>'
+																+'<td id="query-control" class="query-constraint-table-cell"></td>'
+																+'<td id="query-remove" class="query-constraint-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove constraint"></span></td>'
+																+'</tr>'
+																+'<tr id="'+datasetCode+'-'+queryCode+'-spacer" class="query-constraint-spacer-row"><td></td><td></td><td></td></tr>');
+	
+	// listener to remove constraint from query
+	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
+		// remove constraint from parent object
+		delete instance._parent._constraints[queryCode];
+		// reenable this query in the select
+		$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
+		// remove query row and spacer row
+		$('#'+datasetCode+'-'+queryCode+'-query').remove();
+		$('#'+datasetCode+'-'+queryCode+'-spacer').remove();
+	});
+	
+	// add functionality specific to constraint type
+	switch (this._type) {
+		case "radio":
+			this.radioConstraint();
+			break;
+		case "range":
+			this.rangeConstraint();
+			break;
+		case "checkbox":
+			this.checkboxConstraint();
+			break;
+	}
+	
+}
+
+QueryConstraint.prototype.constructor = QueryConstraint;
+
+QueryConstraint.prototype.rangeConstraint = function() {
+	var instance = this;
 	var controlCell = $('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control')
 	controlCell.append('<div id="query-range-slider"></div>');
 	this._sliderDiv = $('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control > #query-range-slider');
@@ -222,79 +252,31 @@ function RangeQueryConstraint(queryCode, queryParams, datasetCode) {
 			maxHandle.text(ui.values[1]);
 		}
 	});
-	
-	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
-		// reenable this query in the select
-		$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
-		// remove query row and spacer row
-		$('#'+datasetCode+'-'+queryCode+'-query').remove();
-	});
 }
-RangeQueryConstraint.prototype.constructor = RangeQueryConstraint;
 
-RangeQueryConstraint.prototype.insertSlider = function() {
-	
-};
-
-function RadioQueryConstraint(queryCode, queryParams, datasetCode) {
-	var instance = this;
-	this._type = "radio";
-	this._queryCode = queryCode;
-	this._queryParams = queryParams;
-	this._datasetCode = datasetCode;
-	$('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
-																+'<td id="query-name">'+queryParams.label+': </td>'
-																+'<td id="query-control"></td>'
-																+'<td id="query-remove"><span class="clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
-																+'</tr>');
-	this._queryRow = $('#'+datasetCode+'-'+queryCode+'-query');
-	$('#'+datasetCode+'-'+queryCode+'-query > #query-control').append('<form>');
-	var queryValues = queryParams.options.values;
-	var queryLabels = queryParams.options.labels;
+QueryConstraint.prototype.radioConstraint = function() {
+	this._queryRow = $('#'+this._datasetCode+'-'+this._queryCode+'-query');
+	$('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control').append('<form>');
+	var queryValues = this._queryParams.options.values;
+	var queryLabels = this._queryParams.options.labels;
 	for (var i=0; i<queryValues.length; i++) {
-		$('#'+datasetCode+'-'+queryCode+'-query > #query-control > form').append('<input '
+		$('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control > form').append('<input '
 																				+'type="radio" '
-																				+'name="'+queryCode+'" value="'+queryValues[i]+'" '+(i==0?'checked':'')+'>'
+																				+'name="'+this._queryCode+'" value="'+queryValues[i]+'" '+(i==0?'checked':'')+'>'
 																				+queryLabels[i]);
 	}
-	
-	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
-		// reenable this query in the select
-		$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
-		// remove query row and spacer row
-		$('#'+datasetCode+'-'+queryCode+'-query').remove();
-	});
-	
 }
-RadioQueryConstraint.prototype.constructor = RadioQueryConstraint;
 
-RadioQueryConstraint.insertRadioButtons = function() {
-	
-};
-
-function CheckboxQueryConstraint(queryCode, queryParams, datasetCode) {
-	var instance = this;
-	this._type = "checkbox";
-	this._queryCode = queryCode;
-	this._queryParams = queryParams;
-	this._datasetCode = datasetCode;
-	$('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
-																+'<td id="query-name">'+queryParams.label+': </td>'
-																+'<td id="query-control">checkboxes here</td>'
-																+'<td id="query-remove"><span class="clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
-																+'</tr>');
-	
-	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
-		// reenable this query in the select
-		$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
-		// remove query row and spacer row
-		$('#'+datasetCode+'-'+queryCode+'-query').remove();
-	});
+QueryConstraint.prototype.checkboxConstraint = function() {
+	this._queryRow = $('#'+this._datasetCode+'-'+this._queryCode+'-query');
+	$('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control').append('<form>');
+	var queryValues = this._queryParams.options.values;
+	var queryLabels = this._queryParams.options.labels;
+	for (var i=0; i<queryValues.length; i++) {
+		$('#'+this._datasetCode+'-'+this._queryCode+'-query > #query-control > form').append('<input '
+																				+'type="checkbox" '
+																				+'name="'+this._queryCode+'" value="'+queryValues[i]+'" '+(i==0?'checked':'')+'>'
+																				+queryLabels[i]);
+	}
 }
-CheckboxQueryConstraint.prototype.constructor = CheckboxQueryConstraint;
-
-CheckboxQueryConstraint.insertCheckboxes = function() {
-	
-};
-
 

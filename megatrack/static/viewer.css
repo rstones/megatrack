@@ -7,7 +7,7 @@ body {
 }
 
 #viewer {
-	width: 1150px;
+	width: 1260px;
 	display: inline-block;
 	background: white;
 	border: 1px solid darkgrey;
@@ -17,7 +17,7 @@ body {
 
 #view-container {
 	width: inherit;
-	height: 420px;
+	height: 480px;
 	background: black;
 	border-radius: 10px;
 }
@@ -26,12 +26,21 @@ body {
 	/*border: 1px solid grey;*/
 	float: left;
 	background: black;
-	margin: 40px;
+	margin: 20px;
+	position: relative;
+}
+
+.view-border {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .view {
 	background: black;
 	position: relative;
+	/*margin: auto;*/
+	z-index: 1;
 }
 
 .ui-slider {
@@ -55,6 +64,7 @@ body {
 	float: left;
 	padding-left: 10px;
 	padding-right: 10px;
+	margin-top: 10px;
 }
 
 #query-panel {
@@ -68,6 +78,7 @@ body {
 	border: 1px solid darkgrey;
 	border-radius: 5px;
 	height: 250px;
+	margin-top: 10px;
 }
 
 #query-form-container {
@@ -212,18 +223,6 @@ body {
 	border-radius: 10px;
 }
 
-/*.red-colormap {
-	background: -moz-linear-gradient(left, darkred, red, red, orange, yellow);
-}
-
-.blue-colormap {
-	background: -moz-linear-gradient(left, darkblue, blue, blue, lightblue);
-}
-
-.purple-colormap {
-	background: -moz-linear-gradient(left, #551A8B, #8A2BE2, #8A2BE2, #BF5FFF);
-}*/
-
 .tract-spacer-row {
 	height: 3px;
 }
@@ -250,38 +249,72 @@ body {
 
 #dataset-table {
 	width: 100%;
+	border-spacing: 0;
 }
 
-#dataset-title-query-select {
+.dataset-table-cell {
+	background: #fcfff4; /* Old browsers */
+	/*background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+	/*background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+	/*background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+.dataset-title-query-select {
 	width: 35%;
+	border-left: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
 }
 
 .query-constraints {
 	width: 65%;
+	border-right: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 
 .query-constraints-table {
 	width: 100%;
+	border-spacing: 0;
 }
 
 #query-name {
 	width: 30%;
+	border-left: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
 }
 
 #query-control {
 	width: 60%;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
 }
 
 #query-remove {
 	width: 10%;
+	border-right: 1px solid darkgrey;
+	border-top: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
 }
 
-.dataset-query-row {
-	background: lemonchiffon;
+.query-constraint-table-cell {
+	background: #fcfff4; /* Old browsers */
+	background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 }
 
-.query-constraint-row {
-	background: lightblue;
+.query-constraint-spacer-row {
+	height: 3px;
 }
 
 .query-slider-handle {
@@ -299,6 +332,15 @@ body {
 #add-dataset-button:hover {
 	cursor: pointer;
 	background: rgb(225,225,225);
+}
+
+#dataset-select {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	box-shadow: 2px 2px 2px lightgrey;
+	border-radius: 5px;
+	z-index: 3;
 }
 
 #update-query-button {
@@ -324,5 +366,6 @@ body {
     margin-left: 10px;
 	border-radius: 5px;
     border: 1px solid darkgrey;
+    margin-top: 10px;
 }
 
