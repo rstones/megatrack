@@ -2,6 +2,42 @@ body {
 	background: white;
 }
 
+hr {
+	background-color: lightgrey;
+	color: lightgrey;
+	border: none;
+	height: 1px;
+	margin-top: 3px;
+}
+
+select {
+	background-color: white;
+	color: grey;
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 28px;
+	background: url("images/select-caret.png") 96% / 8% no-repeat white;
+}
+
+select > option[disabled] {
+	color: lightgrey;
+}
+
+select::-ms-expand { 
+    display: none; /* remove default arrow in IE 10 and 11 */
+}
+
+/* target Internet Explorer 9 to undo the custom arrow */
+@media screen and (min-width:0\0) {
+    select {
+        background:none\9;
+        padding: 5px\9;
+    }
+}
+
 .clear {
 	clear: both;
 }
@@ -67,8 +103,32 @@ body {
 	margin-top: 10px;
 }
 
+.tract-select-container {
+	width: 45%;
+	float: left;
+	margin-bottom: 7px;
+}
+
+#add-tract-select {
+	width: 100%;	
+}
+
+#add-tract-button {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	width: 40%;
+	/*margin-top: 4px;
+	margin-bottom: 6px;*/
+	float: left;
+}
+
+#add-tract-button:hover {
+	cursor: pointer;
+	background: rgb(225,225,225);
+}
+
 #query-panel {
-	width: 48%;
+	width: 40%;
 	height: 300px;
 	background: white;
 	border: none;
@@ -91,6 +151,16 @@ body {
 	margin-top: 25px;
 }
 
+#query-info {
+	font-size: 80%;
+	text-align: right;
+	width: 38%;
+	height: 10px;
+	float: left;
+	top: -5px;
+	position: relative;
+}
+
 .range-label {
 	border:0;
 	color:darkgrey;
@@ -110,12 +180,12 @@ body {
 }
 
 #table-div {
-	height: 150px;
-	width: 330px;
+	height: 250px;
+	width: 450px;
 	border: 1px solid darkgrey;
 	border-radius: 5px;
 	overflow: scrollable;
-	padding: 3px;
+	padding: 10px;
 	float: left;
 }
 
@@ -146,33 +216,47 @@ body {
 }
 
 #tract-name {
-	border-left: 1px solid darkgrey;
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
+	border-left: 1px solid lightgrey;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
-	width: 50%;
+	width: 45%;
+	font-size: 85%;
+	text-align: left;
+	padding-left: 20px;
 }
 
 #tract-colormap {
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
-	width: 30%;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	width: 25%;
+	margin-right: 3px;
+}
+
+#tract-settings {
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	width: 8%;
 }
 
 #tract-download {
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
-	width: 10%;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	width: 8%;
 }
 
 #tract-remove {
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
-	border-right: 1px solid darkgrey;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	border-right: 1px solid lightgrey;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
-	width: 10%;
+	width: 8%;
+}
+
+.tract-icon {
+	margin: 0 auto;
 }
 
 .clickable:hover {
@@ -197,8 +281,8 @@ body {
 
 #colormap-select {
 	position: absolute;
-	width: 100px;
-	height: 50px;
+	width: 120px;
+	height: 86px;
 	background: grey;
 	border: 1px solid lightgrey;
 	padding: 5px;
@@ -207,7 +291,7 @@ body {
 }
 
 .colormap-select-item {
-	width: 95px;
+	width: 117px;
 	height: 12px;
 	margin-bottom: 4px;
 	border-radius: 10px;
@@ -247,9 +331,30 @@ body {
 	z-index: 3;
 }
 
+.dataset-query-heading {
+	width: 30%;
+	float: left;
+}
+
+.dataset-query-constraint-select {
+	width: 40%;
+	float: left;
+}
+
+.dataset-remove {
+	float: right;
+	width: 10%;
+}
+
 #dataset-table {
 	width: 100%;
 	border-spacing: 0;
+}
+
+.dataset-query-cell {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	padding: 3px;
 }
 
 .dataset-table-cell {
@@ -280,28 +385,31 @@ body {
 .query-constraints-table {
 	width: 100%;
 	border-spacing: 0;
+	margin-top: 5px;
 }
 
 #query-name {
-	width: 30%;
-	border-left: 1px solid darkgrey;
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
+	width: 40%;
+	border-left: 1px solid lightgrey;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
+	text-align: left;
+	padding-left: 10px;
 }
 
 #query-control {
-	width: 60%;
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
+	width: 50%;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 }
 
 #query-remove {
 	width: 10%;
-	border-right: 1px solid darkgrey;
-	border-top: 1px solid darkgrey;
-	border-bottom: 1px solid darkgrey;
+	border-right: 1px solid lightgrey;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
 }
@@ -321,10 +429,35 @@ body {
 	font-size: small;
 }
 
+#query-range-slider {
+	height: 8px;
+}
+
+#query-range-min-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#query-range-max-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+.dataset-select-container {
+	width: 30%;
+	float: left;
+}
+
+#add-dataset-select {
+	width: 100%;	
+}
+
 #add-dataset-button {
 	border: 1px solid lightgrey;
 	border-radius: 5px;
-	width: 68%;
+	width: 30%;
 	margin-top: 4px;
 	float: left;
 }
@@ -344,20 +477,45 @@ body {
 }
 
 #update-query-button {
-	border: 1px solid lightgrey;
+	/*border: 1px solid lightgrey;*/
 	border-radius: 5px;
 	width: 30%;
-	margin-top: 4px;
-	margin-left: 4px;
-	background: #DAEEF5;
+	margin-top: 1px;
+	margin-left: 8px;
+	margin-bottom: 7px;
+	/*background: lightgrey;*/
 	float: left;
+	height: 25px;
 }
 
-#update-query-button:hover {
+/*#update-query-button:hover {
 	cursor: pointer;
 	background: #C3DDE6;
-	
+}*/
+
+.update-query-button-active {
+	background: white;
+	background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	border: 1px solid lightgrey;
 }
+
+.update-query-button-active:hover {
+	background: #e9e9ce;
+	cursor: pointer;
+}
+
+.update-query-button-disabled {
+	border: 1px solid lightgrey;
+	background: #EBEDE6;
+	color: lightgrey;
+}
+
+/*.update-query-button-disabled:hover {
+	background: lightgrey;
+	cursor: default;
+}*/
 
 #query-report-container {
     width: 200px;
@@ -369,3 +527,130 @@ body {
     margin-top: 10px;
 }
 
+#prob-range-slider-wrapper {
+	width: 50%;
+	float: left;
+	top: -7px;
+	position: relative;
+	left: 18px;
+}
+
+#prob-range-slider {
+	height: 8px;
+}
+
+.prob-range-slider-handle {
+	font-size: small;
+}
+
+#prob-range-min-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#prob-range-max-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#prob-range-label {
+	font-size: 80%;
+	margin-bottom: 5px;
+	text-align: left;
+}
+
+#tract-prob-range-slider-wrapper {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 30px;
+}
+
+#tract-prob-range-slider {
+	height: 8px;
+}
+
+.tract-prob-range-slider-handle {
+	font-size: small;
+}
+
+#tract-prob-range-min-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#tract-prob-range-max-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#tract-prob-range-label {
+	font-size: 80%;
+	margin-bottom: 5px;
+	text-align: left;
+}
+
+#tract-settings-menu {
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	box-shadow: 2px 2px 2px lightgrey;
+	width: 250px;
+	height: 155px;
+	background: white;
+	z-index: 10;
+	position: relative;
+}
+
+#tract-settings-menu-header {
+	margin: 10px;
+}
+
+#tract-settings-title {
+	width: 90%;
+	float: left;
+	text-align: left;
+	font-size: 90%;
+}
+
+#tract-settings-close {
+	float: left;
+	width: 20px;
+	height: 20px;
+	top: 10px;
+}
+
+#tract-opacity-slider-wrapper {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 30px;
+}
+
+#tract-opacity-slider {
+	height: 8px;
+}
+
+#tract-opacity-slider-handle {
+	width: 1.7em;
+	top: -0.4em;
+	text-align: center;
+	font-size: small;
+}
+
+#tract-opacity-label {
+	font-size: 80%;
+	margin-bottom: 5px;
+	text-align: left;
+}
+
+.triangle{
+    position: absolute;
+    top: 150px;
+    left: 49px;
+    margin-left: -15px;
+    border-top: 15px solid white;
+    border-right: 15px solid transparent;
+    border-left: 15px solid transparent;
+}

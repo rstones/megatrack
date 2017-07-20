@@ -106,7 +106,7 @@ class Tract(db.Model):
     changes to data and not frontend as well.'''
     #id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(10), primary_key=True) # eg. CINGL
-    name = db.Column(db.String(20), unique=True, nullable=False) # eg. Cingulum (L)
+    name = db.Column(db.String(50), unique=True, nullable=False) # eg. Cingulum (L)
     file_path = db.Column(db.String(20), unique=True, nullable=False) # subdirectory within subject directory for this tract, eg. Left_Cingulum
     
     def __init__(self, code, name, file_path):
