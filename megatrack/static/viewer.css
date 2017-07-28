@@ -19,7 +19,37 @@ select {
 	-webkit-appearance: none;
 	appearance: none;
 	height: 28px;
-	background: url("images/select-caret.png") 96% / 8% no-repeat white;
+	background: url("images/select-caret.png") 96% / 10px no-repeat white;
+}
+
+select:hover {
+	background-color: #F5F5F5;
+	border: 1px solid grey;
+	cursor: pointer;
+}
+
+select[disabled] {
+	background-color: white;
+	color: lightgrey;
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 28px;
+	background: url("images/select-caret-disabled.png") 96% / 10px no-repeat white;
+}
+
+select[disabled]:hover {
+	cursor: default;
+}
+
+select > option {
+	background: white;
+}
+
+select > option:hover {
+	background: white;
 }
 
 select > option[disabled] {
@@ -113,6 +143,17 @@ select::-ms-expand {
 	width: 100%;	
 }
 
+#add-tract-disabled-message {
+	color: #F00202;
+	font-size: 80%;
+	width: 50%;
+	float: left;
+	text-align: left;
+	padding-left: 10px;
+	position: relative;
+	top: 4px;
+}
+
 #add-tract-button {
 	border: 1px solid lightgrey;
 	border-radius: 5px;
@@ -153,12 +194,16 @@ select::-ms-expand {
 
 #query-info {
 	font-size: 80%;
-	text-align: right;
+	text-align: left;
 	width: 38%;
 	height: 10px;
 	float: left;
-	top: -5px;
+	top: 5px;
 	position: relative;
+}
+
+#query-report-text {
+	padding-left: 15px;
 }
 
 .range-label {
@@ -331,13 +376,26 @@ select::-ms-expand {
 	z-index: 3;
 }
 
+.dataset-query-row {
+	
+}
+
+.dataset-query-row-excluded {
+	color: lightgrey;
+}
+
 .dataset-query-heading {
 	width: 30%;
 	float: left;
 }
 
 .dataset-query-constraint-select {
-	width: 40%;
+	width: 35%;
+	float: left;
+}
+
+.dataset-exclude {
+	width: 20%;
 	float: left;
 }
 

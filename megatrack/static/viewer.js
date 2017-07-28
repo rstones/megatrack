@@ -118,15 +118,10 @@ function Viewer(elementId) {
 	
 	var queryBuilder = new QueryBuilder('query-panel');
 	
-	this._currentQuery = null;
-	$(document).on('query-update', function(event, newQuery) {
-		viewer._currentQuery = newQuery;
-	});
-
 	$('#tract-panel').append('<div id="table-div">'
-						//+'<div id="add-tract-button">Add tract</div>'
-						+'<div class="tract-select-container"><select id="add-tract-select"><option value="default" disabled selected>Add tract...</option></select></div>'
+						+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
 						//+'<div id="prob-range-slider-wrapper"><div id="prob-range-label">Probability range (%):</div><div id="prob-range-slider"></div></div>'
+						+'<div id="add-tract-disabled-message">Query a dataset before selecting a tract</div>'
 						+'<div class="clear"></div>'
 						+'<hr>'
 						+'<table id="tract-table">'
@@ -388,8 +383,11 @@ function Viewer(elementId) {
 	
 	/*
 	 * Loop through all the currently selected tracts and update the associated labelmaps
+	 * Also enable tract select if not already enabled
 	 */
+	this._currentQuery = null;
 	$(document).on('query-update', function(event, newQuery) {
+		viewer._currentQuery = newQuery;
 		for (var i=0; i<viewer._volume.labelmap.length; i++) {
 			var map = viewer._volume.labelmap[i];
 			var tractCode = map.tractCode;
@@ -397,7 +395,13 @@ function Viewer(elementId) {
 			// may need to set file to dirty to initiate reloading
 			viewer.resetSlicesForDirtyFiles();
 		}
+		if ($('#add-tract-select').prop('disabled')) {
+			$('#add-tract-select').prop('disabled', false);
+			$('#add-tract-disabled-message').hide();
+		}
 	});
+	
+	
 	
 	//$('#tract-panel').append('<div id="query-report-container"></div>');
 	
