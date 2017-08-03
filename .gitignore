@@ -21,7 +21,7 @@ megatrack.egg-info
 config.py
 
 # python virtual environment
-megatrack-venv
+megatrackvenv
 
 # a folder that suddenly appeared
 megatrack/bin/
