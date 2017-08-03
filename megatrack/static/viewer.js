@@ -290,9 +290,9 @@ function Viewer(elementId, rootPath) {
 		var map = new X.labelmap(viewer._volume);
 		map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
 		if (viewer._currentQuery) {
-			map.file = '/tract/'+tractCode+'?'+$.param(viewer._currentQuery)+'&file_type=.nii.gz';
+			map.file = viewer._rootPath + '/tract/'+tractCode+'?'+$.param(viewer._currentQuery)+'&file_type=.nii.gz';
 		} else {
-			map.file = '/tract/'+tractCode+'?file_type=.nii.gz';
+			map.file = viewer._rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
 		}
 		var color = Object.keys(viewer._colormaps)[Math.floor(Math.random()*viewer._numColormaps)];
 		viewer._tractSettings[tractCode] = {
