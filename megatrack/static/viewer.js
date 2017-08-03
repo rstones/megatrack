@@ -50,7 +50,7 @@ function Viewer(elementId, rootPath) {
 
 	this._volume = new X.volume();
 	this._volume.lowerThreshold = 1000; // threshold to remove grey background of template
-	this._volume.file = viewer._rootPath + '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
+	this._volume.file = this._rootPath + '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
 	this._volume.labelmap = [];
 	this._labelmapColors = [];
 	this._labelmapTransparencies = [];
