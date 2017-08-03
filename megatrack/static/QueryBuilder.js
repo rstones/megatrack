@@ -63,12 +63,8 @@ function QueryBuilder(containerId, rootPath) {
 				$.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
 				$.ajax({
 					dataType: 'json',
-					url: '/query_report?'+$.param(newQuery),
+					url: instance._rootPath + '/query_report?'+$.param(newQuery),
 					success: function(data) {
-//						$('#query-info').empty();
-//						$('#query-info').html('<div id="query-report-text">Displaying averaged density maps for datasets:</div>'
-//														+'<ul id="query-report-dataset-list">'
-//														+'</ul>');
 						var totalSubjects = 0
 						for (var key in data.dataset) {
 							totalSubjects += data.dataset[key];

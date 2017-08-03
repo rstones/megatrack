@@ -251,7 +251,7 @@ function Viewer(elementId, rootPath) {
 	
 	$.ajax({
 		dataType: 'json',
-		url: viewer._rootPath + '/tract_select',
+		url: this._rootPath + '/tract_select',
 		success: function(data) {
 			for (var i in data) {
 				//$('#tract-select').append('<li id="'+data[i].code+'"><div>'+data[i].name+'</div></li>');
