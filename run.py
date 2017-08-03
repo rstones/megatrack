@@ -1,6 +1,6 @@
-from megatrack import app, db
+from megatrack import application, db
 
 if __name__=='__main__':
-    app.debug = app.config['FLASK_DEBUG']
-    db.create_all(app=app)
-    app.run()
+    application.debug = application.config['FLASK_DEBUG']
+    db.create_all(app=application)
+    application.run()
