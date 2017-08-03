@@ -1,6 +1,7 @@
 
-function QueryBuilder(containerId) {
+function QueryBuilder(containerId, rootPath) {
 		var instance = this;
+		this._rootPath = rootPath;
 		this._data = {};
 		this._datasetQueries = [];
 		this._datasetTableId = 'dataset-table';
@@ -24,7 +25,7 @@ function QueryBuilder(containerId) {
 		
 		// ajax call to get available datasets and associated query params
 		$.ajax({
-			url: '/dataset_select',
+			url: instance._rootPath + '/dataset_select',
 			dataType: 'json',
 			success: function(data) {
 				// populate dataset select and attach data to QueryBuilder object

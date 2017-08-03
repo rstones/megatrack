@@ -3,8 +3,9 @@
  * @constructor
  * @param {string} elementId ID of container for Viewer
  */
-function Viewer(elementId) {
+function Viewer(elementId, rootPath) {
 	
+	this._rootPath = rootPath;
 	this._elementId = elementId;
 	var container = $('#'+this._elementId);
 	$('#'+this._elementId).append('<div id="view-container"></div>');
@@ -49,8 +50,8 @@ function Viewer(elementId) {
 
 	this._volume = new X.volume();
 	this._volume.lowerThreshold = 1000; // threshold to remove grey background of template
-	this._volume.file = '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
-	this._volume.labelmap = []; //[cingMap, fatMap];
+	this._volume.file = viewer._rootPath + '/get_template?.nii.gz'; // should these addresses be a bit more hidden for security? see neurosynth
+	this._volume.labelmap = [];
 	this._labelmapColors = [];
 	this._labelmapTransparencies = [];
 	this._tractSettings = {};
@@ -116,7 +117,7 @@ function Viewer(elementId) {
 		}
 	});
 	
-	var queryBuilder = new QueryBuilder('query-panel');
+	var queryBuilder = new QueryBuilder('query-panel', this._rootPath);
 	
 	$('#tract-panel').append('<div id="table-div">'
 						+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
@@ -250,7 +251,7 @@ function Viewer(elementId) {
 	
 	$.ajax({
 		dataType: 'json',
-		url: '/tract_select',
+		url: viewer._rootPath + '/tract_select',
 		success: function(data) {
 			for (var i in data) {
 				//$('#tract-select').append('<li id="'+data[i].code+'"><div>'+data[i].name+'</div></li>');
@@ -628,7 +629,7 @@ Viewer.prototype.centreInMNISpace = function() {
 }
 
 $(document).ready(function() {
-	viewer = new Viewer("viewer");
+	viewer = new Viewer('viewer', '/megatrack');
 	// is it a good idea for viewer to be global? it is needed for onShowtime function though
 	// may want to wrap it in a namespace eventually
 });

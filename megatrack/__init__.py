@@ -18,4 +18,4 @@ application.config.from_object('config.BaseConfig')
 application.json_encoder = AlchemyEncoder
 
 db.init_app(application)
-application.register_blueprint(megatrack)
+application.register_blueprint(megatrack, url_prefix='/megatrack')
