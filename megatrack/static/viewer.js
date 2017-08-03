@@ -392,7 +392,7 @@ function Viewer(elementId, rootPath) {
 		for (var i=0; i<viewer._volume.labelmap.length; i++) {
 			var map = viewer._volume.labelmap[i];
 			var tractCode = map.tractCode;
-			map.file = '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
+			map.file = viewer._rootPath + '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
 			// may need to set file to dirty to initiate reloading
 			viewer.resetSlicesForDirtyFiles();
 		}
