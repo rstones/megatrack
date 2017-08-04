@@ -6,6 +6,7 @@ import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 import datetime
 from jquery_unparam import jquery_unparam
+from flask import current_app # current_app is only accessible within a request
 
 megatrack = Blueprint('megatrack', __name__)
 
@@ -19,6 +20,7 @@ def about():
 
 @megatrack.route('/get_template')
 def get_template():
+    current_app.logger.info('Loading template...')
     file_name = 'Template_T1_2mm_new_RAS.nii.gz'#'Template_T1_2mm_brain.nii.gz' #
     data_file_path = current_app.config['DATA_FILE_PATH']
     r = send_file(data_file_path+file_name, as_attachment=True, attachment_filename=file_name, conditional=True, add_etags=True)
@@ -28,11 +30,13 @@ def get_template():
 @jsonapi
 @megatrack.route('/tract_select')
 def populate_tract_select():
+    current_app.logger.info('Getting available tracts...')
     tracts = Tract.query.all() # can order them in a certain way here
     return jsonify(tracts)
 
 @megatrack.route('/dataset_select')
 def populate_dataset_select():
+    current_app.logger.info('Getting available datasets...')
     datasets = Dataset.query.all()
     return jsonify(datasets)
 
@@ -43,6 +47,7 @@ def query_report():
     What data is to be sent back to client? Total no. subjects selected, no. per dataset, per gender, per handedness etc?
     Send a json object {"dataset": {"BRC_ATLAS": 10, "OTHER_DATASET": 9}, "gender": {"Male": 7, "Female":12}} to start with
     '''
+    current_app.logger.info('Requesting query report...')
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
     results = {"dataset":{}}
     for key in request_query:
@@ -116,7 +121,7 @@ def generate_average_density_map(file_paths, data_file_path, tract_code):
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
-
+    current_app.logger.info('Getting tract ' + tract_code)
     tract = Tract.query.filter(Tract.code == tract_code).first()
     if not tract:
         return 'The requested tract ' + tract_code + ' does not exist', 404
