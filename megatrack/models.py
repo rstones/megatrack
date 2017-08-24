@@ -125,7 +125,7 @@ class Dataset(db.Model):
     #id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(12), primary_key=True) # eg. BRC or BRC_ATLAS
     name = db.Column(db.String(20), unique=True, nullable=False)
-    file_path = db.Column(db.String(20), unique=True, nullable=False) # eg. brc_atlas
+    file_path = db.Column(db.String(20), unique=False, nullable=False) # eg. brc_atlas
     query_params = db.Column(db.String(2000)) # json string defining the fields in Subject this dataset can be queried on 
     
     def _init_(self, code, file_path):
