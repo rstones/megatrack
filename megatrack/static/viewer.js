@@ -359,11 +359,8 @@ function Viewer(elementId, rootPath) {
 			
 			// position menu at settings button or mouse click?
 			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
-			console.log(button_offset);
+			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
 			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
-			console.log(settings_menu.offset());
-			
-			settings_menu.show();
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
