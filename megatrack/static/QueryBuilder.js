@@ -160,7 +160,7 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 	$('#'+tableId+' > tbody').append('<tr id="'+this._dataset.code+'-query" class="dataset-query-row"><td class="dataset-query-cell">'
 			+'<div class="dataset-query-heading">'+this._dataset.name+'</div>'
 			+'<div class="dataset-query-constraint-select"><select id="'+this._dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
-			+'<div class="dataset-exclude"><form><input id="'+this._dataset.code+'-exclude" type="checkbox"><label for="'+this._dataset.code+'-exclude">Exclude</label></form></div>'
+			+'<div class="dataset-exclude"><form><input id="'+this._dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+this._dataset.code+'-exclude">Exclude</label></form></div>'
 			//+'<div class="dataset-remove"><span id="'+this._dataset.code+'-remove" class="clickable ui-icon ui-icon-close" title="Remove dataset"></span></div>'
 			+'<div class="dataset-remove"><div id="'+this._dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
 			+'<div class="clear"></div>'
@@ -196,7 +196,7 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 			$('#'+instance._dataset.code+'-query-constraints-table').find('input').each(function(){
 																						$(this).prop('disabled', true);
 																					});
-			$('#'+instance._dataset.code+'-query-constraints-table').find('#query-range-slider').each(function() {
+			$('#'+instance._dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
 				$(this).slider('option', 'disabled', true);
 			});
 			// disable the remove icons of the query constraint rows
@@ -216,7 +216,7 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 			$('#'+instance._dataset.code+'-query-constraints-table').find('input').each(function(){
 																						$(this).prop('disabled', false);
 																					});
-			$('#'+instance._dataset.code+'-query-constraints-table').find('#query-range-slider').each(function() {
+			$('#'+instance._dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
 				$(this).slider('option', 'disabled', false);
 			});
 			$('#'+instance._dataset.code+'-query-constraints-table').find('.remove-icon-disabled').each(function() {
@@ -255,7 +255,7 @@ function QueryConstraint(type, queryCode, queryParams, datasetCode, parent) {
 	this._parent = parent;
 	
 	$('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
-																+'<td id="query-name" class="query-constraint-table-cell">'+queryParams.label+': </td>'
+																+'<td id="query-name" class="query-constraint-table-cell">'+queryParams.label+'</td>'
 																+'<td id="query-control" class="query-constraint-table-cell"></td>'
 																//+'<td id="query-remove" class="query-constraint-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove constraint"></span></td>'
 																+'<td id="query-remove" class="query-constraint-table-cell"><div class="clickable remove-icon" title="Remove constraint"></div></td>'
@@ -344,7 +344,7 @@ QueryConstraint.prototype.checkboxConstraint = function() {
 																				+'type="checkbox" '
 																				+'class="query-constraint" '
 																				+'name="'+this._queryCode+'" value="'+queryValues[i]+'" checked>'
-																				+queryLabels[i]);
+																				+'<label class="query-constraint-checkbox-label">'+queryLabels[i]+'</label>');
 	}
 }
 
