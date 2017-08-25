@@ -72,6 +72,30 @@ select::-ms-expand {
 	clear: both;
 }
 
+.remove-icon {
+	width: 10px;
+	height: 10px;
+	background: url("images/remove-icon.png") 96% / 8px no-repeat;
+}
+
+.remove-icon-disabled {
+	width: 10px;
+	height: 10px;
+	background: url("images/remove-icon-disabled.png") 96% / 8px no-repeat;
+}
+
+.download-icon {
+	width: 20px;
+	height: 20px;
+	background: url("images/download-icon.png") 96% / 22px no-repeat;
+}
+
+.settings-icon {
+	width: 20px;
+	height: 20px;
+	background: url("images/settings-icon.png") 96% / 12px no-repeat;
+}
+
 #viewer {
 	width: 1260px;
 	display: inline-block;
@@ -283,6 +307,7 @@ select::-ms-expand {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	width: 8%;
+	padding-left: 8px;
 }
 
 #tract-download {
@@ -380,6 +405,10 @@ select::-ms-expand {
 	
 }
 
+.dataset-spacer-row {
+	height: 6px;
+}
+
 .dataset-query-row-excluded {
 	color: lightgrey;
 }
@@ -470,6 +499,7 @@ select::-ms-expand {
 	border-bottom: 1px solid lightgrey;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
+	padding-left: 25px;
 }
 
 .query-constraint-table-cell {
@@ -574,6 +604,11 @@ select::-ms-expand {
 	background: lightgrey;
 	cursor: default;
 }*/
+
+.dataset-remove-icon {
+	margin-left: 25px;
+	margin-top: 10px;
+}
 
 #query-report-container {
     width: 200px;

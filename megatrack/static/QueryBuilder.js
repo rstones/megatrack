@@ -161,10 +161,12 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 			+'<div class="dataset-query-heading">'+this._dataset.name+'</div>'
 			+'<div class="dataset-query-constraint-select"><select id="'+this._dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
 			+'<div class="dataset-exclude"><form><input id="'+this._dataset.code+'-exclude" type="checkbox"><label for="'+this._dataset.code+'-exclude">Exclude</label></form></div>'
-			+'<div class="dataset-remove"><span id="'+this._dataset.code+'-remove" class="clickable ui-icon ui-icon-close" title="Remove dataset"></span></div>'
+			//+'<div class="dataset-remove"><span id="'+this._dataset.code+'-remove" class="clickable ui-icon ui-icon-close" title="Remove dataset"></span></div>'
+			+'<div class="dataset-remove"><div id="'+this._dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
 			+'<div class="clear"></div>'
 			+'<table id="'+this._dataset.code+'-query-constraints-table" class="query-constraints-table"><tbody></tbody></table>'
-			+'</td></tr>');
+			+'</td></tr>'
+			+'<tr id="'+this._dataset.code+'-spacer" class="dataset-spacer-row"><td></td></tr>');
 	
 	// populate query select menu from query builder data for this dataset
 	for (var key in dataset.queryParams) {
@@ -198,6 +200,11 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 				$(this).slider('option', 'disabled', true);
 			});
 			// disable the remove icons of the query constraint rows
+			$('#'+instance._dataset.code+'-query-constraints-table').find('.remove-icon').each(function() {
+				$(this).removeClass('clickable');
+				$(this).removeClass('remove-icon');
+				$(this).addClass('remove-icon-disabled');
+			});
 			
 			// exclude in all future updates (ie. in buildQuery function), set a flag on the DatasetQuery obj for this
 			instance._excluded = true;
@@ -211,6 +218,11 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 																					});
 			$('#'+instance._dataset.code+'-query-constraints-table').find('#query-range-slider').each(function() {
 				$(this).slider('option', 'disabled', false);
+			});
+			$('#'+instance._dataset.code+'-query-constraints-table').find('.remove-icon-disabled').each(function() {
+				$(this).addClass('clickable');
+				$(this).removeClass('remove-icon-disabled');
+				$(this).addClass('remove-icon');
 			});
 			instance._excluded = false;
 			// enable "Update" button
@@ -245,20 +257,23 @@ function QueryConstraint(type, queryCode, queryParams, datasetCode, parent) {
 	$('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
 																+'<td id="query-name" class="query-constraint-table-cell">'+queryParams.label+': </td>'
 																+'<td id="query-control" class="query-constraint-table-cell"></td>'
-																+'<td id="query-remove" class="query-constraint-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove constraint"></span></td>'
+																//+'<td id="query-remove" class="query-constraint-table-cell"><span class="clickable ui-icon ui-icon-close" title="Remove constraint"></span></td>'
+																+'<td id="query-remove" class="query-constraint-table-cell"><div class="clickable remove-icon" title="Remove constraint"></div></td>'
 																+'</tr>'
 																+'<tr id="'+datasetCode+'-'+queryCode+'-spacer" class="query-constraint-spacer-row"><td></td><td></td><td></td></tr>');
 	
 	// listener to remove constraint from query
 	$('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
-		// remove constraint from parent object
-		delete instance._parent._constraints[queryCode];
-		// reenable this query in the select
-		$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
-		// remove query row and spacer row
-		$('#'+datasetCode+'-'+queryCode+'-query').remove();
-		$('#'+datasetCode+'-'+queryCode+'-spacer').remove();
-		$('#update-query-button').trigger('query:change');
+		if (!parent._excluded) {
+			// remove constraint from parent object
+			delete instance._parent._constraints[queryCode];
+			// reenable this query in the select
+			$('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
+			// remove query row and spacer row
+			$('#'+datasetCode+'-'+queryCode+'-query').remove();
+			$('#'+datasetCode+'-'+queryCode+'-spacer').remove();
+			$('#update-query-button').trigger('query:change');
+		}
 	});
 	
 	// add functionality specific to constraint type

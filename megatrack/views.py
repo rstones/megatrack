@@ -137,7 +137,7 @@ def get_tract(tract_code):
     
     if subject_file_paths:
         temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)   
-        return send_file(temp_file_path, as_attachment=True, attachment_filename=temp_file_path, conditional=True, add_etags=True)
+        return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code, conditional=True, add_etags=True)
     else:
         return "No subjects returned for the current query", 404
 

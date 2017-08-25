@@ -137,7 +137,7 @@ function Viewer(elementId, rootPath) {
 	
 	$('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
 								+'<div id="tract-settings-title"></div>'
-								+'<div id="tract-settings-close" class="clickable ui-icon ui-icon-close"></div>'
+								+'<div id="tract-settings-close" class="clickable remove-icon"></div>'
 								+'</div>'
 								+'<div class="clear"></div>'
 								+'<div id="tract-prob-range-slider-wrapper">'
@@ -314,13 +314,21 @@ function Viewer(elementId, rootPath) {
 				+'<td id="tract-name" class="tract-table-cell">'+viewer._availableTracts[tractCode].name+'</td>'
 				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
 				//+'<td class="tract-table-cell tract-spacer-col">&nbsp</td>'
-				+'<td id="tract-settings" class="tract-table-cell"><span class="tract-icon clickable ui-icon ui-icon-gear" title="Tract settings"></td>'
-				+'<td id="tract-download" class="tract-table-cell"><span class="tract-icon clickable ui-icon ui-icon-arrowthickstop-1-s" title="Download density map"></td>'
-				+'<td id="tract-remove" class="tract-table-cell"><span class="tract-icon clickable ui-icon ui-icon-close" title="Remove tract"></span></td>'
+				//+'<td id="tract-settings" class="tract-table-cell"><span class="tract-icon clickable ui-icon ui-icon-gear" title="Tract settings"></td>'
+				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
+				//+'<td id="tract-download" class="tract-table-cell"><span class="tract-icon clickable ui-icon ui-icon-arrowthickstop-1-s" title="Download density map"></td>'
+				+'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
+				+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
 				+'</tr>'
 				+'<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
 		
 		$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+		
+		$('#'+tractCode+' > #tract-download').on('click', function(event) {
+			event.preventDefault();
+			var tractCode = event.currentTarget.parentElement.id;
+			window.location.href = 'tract/'+tractCode+'?'+$.param(viewer._currentQuery)+'&file_type=.nii.gz';
+		});
 		
 		// add event listener on remove icon
 		$('#'+tractCode+' > #tract-remove').on('click', function(event) {
