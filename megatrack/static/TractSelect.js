@@ -1,6 +1,5 @@
 
 function TractSelect(containerId, parent) {
-	console.log(parent);
 	this._containerId = containerId;
 	this._parent = parent;
 	var instance = this;
@@ -44,6 +43,11 @@ function TractSelect(containerId, parent) {
 			+'</table>'
 			+'<div id="tract-settings-menu"></div>'
 			+'<ul id="colormap-select"></ul>'
+			+'</div>'
+			+'<div id="tract-info-container">'
+			+'<div id="tract-name"></div>'
+			+'<div id="tract-metrics"></div>'
+			+'<div id="tract-description"></div>'
 			+'</div>');
 	
 	$('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
@@ -221,6 +225,7 @@ function TractSelect(containerId, parent) {
 				+'<td id="tract-name" class="tract-table-cell">'+instance._availableTracts[tractCode].name+'</td>'
 				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
 				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
+				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable">i</div></td>'
 				+'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
 				+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
 				+'</tr>'
@@ -273,6 +278,17 @@ function TractSelect(containerId, parent) {
 			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
 			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
 			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
+		});
+		
+		$('#'+tractCode+' > #tract-info').on('click', function(event) {
+			var tractCode = event.currentTarget.parentElement.id;
+			$.ajax({
+				dataType: 'json',
+				url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
+				success: function(data) {
+					// repopulate tract-info-container with info
+				}
+			});
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {

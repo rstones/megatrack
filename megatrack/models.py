@@ -108,17 +108,19 @@ class Tract(db.Model):
     code = db.Column(db.String(10), primary_key=True) # eg. CINGL
     name = db.Column(db.String(50), unique=True, nullable=False) # eg. Cingulum (L)
     file_path = db.Column(db.String(20), unique=True, nullable=False) # subdirectory within subject directory for this tract, eg. Left_Cingulum
+    description = db.Column(db.String(2000), unique=True, nullable=True) # some info about this tract
     
-    def __init__(self, code, name, file_path):
+    def __init__(self, code, name, file_path, description):
         self.code = code
         self.name = name
         self.file_path = file_path
+        self.description = description
         
     def __repr__(self):
         return '<Tract %r>' % self.name
     
     def __json__(self):
-        return ['code', 'name']
+        return ['code', 'name', 'description']
     
 class Dataset(db.Model):
     '''Model to store file path for each tractography dataset.'''

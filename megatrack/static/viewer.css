@@ -150,7 +150,7 @@ select::-ms-expand {
 }
 
 #tract-panel {
-	width: 48%;
+	width: 56%;
 	float: left;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -314,6 +314,11 @@ select::-ms-expand {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	width: 8%;
+}
+
+#tract-info {
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
 }
 
 #tract-remove {
@@ -774,4 +779,14 @@ select::-ms-expand {
     border-top: 15px solid white;
     border-right: 15px solid transparent;
     border-left: 15px solid transparent;
+}
+
+#tract-info-container {
+	width: 205px;
+	height: 250px;
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	/*overflow: scrollable;*/
+	padding: 10px;
+	float: right;
 }

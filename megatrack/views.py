@@ -141,6 +141,31 @@ def get_tract(tract_code):
     else:
         return "No subjects returned for the current query", 404
 
+@jsonapi
+@megatrack.route('/get_tract_info/<tract_code>')
+def get_tract_info(tract_code):
+    current_app.logger.info('Getting info for tract ' + tract_code)
+    tract = Tract.query.filter(Tract.code == tract_code).first()
+    if not tract:
+        return 'The requested tract ' + tract_code + ' does not exist', 404
+    tract_dir = tract.file_path
+    tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    data_file_path = current_app.config['DATA_FILE_PATH']
+    subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
+    temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+       
+    # calculate metrics here like volume, mean FA
+    data = nib.load(temp_file_path).get_data()
+    vol = np.count_nonzero(data) * 8. # assuming the voxel size is 2x2x2mm, get this from the header?
+    
+    results = {}
+    results['tractCode'] = tract_code
+    results['volume'] = vol
+    results['description'] = tract.description
+    
+    return jsonify(results)
+    
 @megatrack.route('/_test_viewer')
 def _test_viewer():
     '''Serve QUnit test file for javascript Viewer.'''
