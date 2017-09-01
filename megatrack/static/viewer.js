@@ -15,11 +15,8 @@ function Viewer(elementId, rootPath) {
 	viewContainer.append('<div id="axial-panel"></div>');
 	$('#view-container div').addClass('viewer-panel');
 	container.append('<div class="clear"></div>');
-	//container.append('<div id="query-report"></div>');
-	//container.append('<div class="clear"></div>');
 	container.append('<div id="query-panel"></div>');
 	container.append('<div id="tract-panel"></div>');
-	container.append('<div id="tract-info"></div>')
 	
 	this._currentQueryData = {};
 

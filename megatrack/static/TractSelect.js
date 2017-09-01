@@ -45,9 +45,9 @@ function TractSelect(containerId, parent) {
 			+'<ul id="colormap-select"></ul>'
 			+'</div>'
 			+'<div id="tract-info-container">'
-			+'<div id="tract-name"></div>'
-			+'<div id="tract-metrics"></div>'
-			+'<div id="tract-description"></div>'
+				+'<div id="tract-info-name"></div>'
+				+'<div id="tract-info-metrics"></div>'
+				+'<div id="tract-info-description"></div>'
 			+'</div>');
 	
 	$('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
@@ -287,6 +287,9 @@ function TractSelect(containerId, parent) {
 				url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
 				success: function(data) {
 					// repopulate tract-info-container with info
+					$('#tract-info-name').html(data.tractName);
+					$('#tract-info-metrics').html('Volume: ' + data.volume + ' mm<sup>3</sup>');
+					$('#tract-info-description').html(data.description);
 				}
 			});
 		});

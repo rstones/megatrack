@@ -35,7 +35,7 @@ class Subject(db.Model):
     edinburgh_handedness_raw = db.Column(db.Integer) # takes values -100 to 100
     ravens_iq_raw = db.Column(db.Integer) # check, 0 < iq < 60?
     mmse = db.Column(db.Integer) # 0 < mmse < 30
-    file_path = db.Column(db.String(20), unique=True, nullable=False) # directory containing data for this subject
+    file_path = db.Column(db.String(20), unique=False, nullable=False) # directory containing data for this subject
     
     age_min = 18
     age_max = 99
@@ -108,7 +108,7 @@ class Tract(db.Model):
     code = db.Column(db.String(10), primary_key=True) # eg. CINGL
     name = db.Column(db.String(50), unique=True, nullable=False) # eg. Cingulum (L)
     file_path = db.Column(db.String(20), unique=True, nullable=False) # subdirectory within subject directory for this tract, eg. Left_Cingulum
-    description = db.Column(db.String(2000), unique=True, nullable=True) # some info about this tract
+    description = db.Column(db.String(2000), unique=False, nullable=True) # some info about this tract
     
     def __init__(self, code, name, file_path, description):
         self.code = code

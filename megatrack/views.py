@@ -7,8 +7,10 @@ from nibabel.nifti1 import Nifti1Image
 import datetime
 from jquery_unparam import jquery_unparam
 from flask import current_app # current_app is only accessible within a request
+from werkzeug.contrib.cache import MemcachedCache
 
 megatrack = Blueprint('megatrack', __name__)
+cache = MemcachedCache(['127.0.0.1:11211']) # points to local memcached server
 
 @megatrack.route('/')
 def index():
@@ -34,6 +36,7 @@ def populate_tract_select():
     tracts = Tract.query.all() # can order them in a certain way here
     return jsonify(tracts)
 
+@jsonapi
 @megatrack.route('/dataset_select')
 def populate_dataset_select():
     current_app.logger.info('Getting available datasets...')
@@ -123,23 +126,28 @@ def generate_average_density_map(file_paths, data_file_path, tract_code):
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     tract = Tract.query.filter(Tract.code == tract_code).first()
-    if not tract:
-        return 'The requested tract ' + tract_code + ' does not exist', 404
-    tract_dir = tract.file_path
-    tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
+    temp_file_path = cache.get(request.query_string)
+    if not temp_file_path:
+        if not tract:
+            return 'The requested tract ' + tract_code + ' does not exist', 404
+        tract_dir = tract.file_path
+        tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
+        
+        data_file_path = current_app.config['DATA_FILE_PATH'] # file path to data folder
+        
+        request_query = jquery_unparam(request.query_string.decode('utf-8'))
+        request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
+        
+        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
+        
+        if subject_file_paths:
+            temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+            cache.set(request.query_string, temp_file_path, timeout=60*60)
+            #return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
+        else:
+            return "No subjects returned for the current query", 404
     
-    data_file_path = current_app.config['DATA_FILE_PATH'] # file path to data folder
-    
-    request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
-    
-    subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
-    
-    if subject_file_paths:
-        temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)   
-        return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
-    else:
-        return "No subjects returned for the current query", 404
+    return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
 
 @jsonapi
 @megatrack.route('/get_tract_info/<tract_code>')
@@ -156,11 +164,12 @@ def get_tract_info(tract_code):
     temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
        
     # calculate metrics here like volume, mean FA
-    data = nib.load(temp_file_path).get_data()
+    data = nib.load('megatrack/'+temp_file_path).get_data()
     vol = np.count_nonzero(data) * 8. # assuming the voxel size is 2x2x2mm, get this from the header?
     
     results = {}
     results['tractCode'] = tract_code
+    results['tractName'] = tract.name
     results['volume'] = vol
     results['description'] = tract.description
     
