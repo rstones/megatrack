@@ -6,11 +6,8 @@ import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 import datetime
 from jquery_unparam import jquery_unparam
-from flask import current_app # current_app is only accessible within a request
-from werkzeug.contrib.cache import MemcachedCache
 
 megatrack = Blueprint('megatrack', __name__)
-cache = MemcachedCache(['127.0.0.1:11211']) # points to local memcached server
 
 @megatrack.route('/')
 def index():
@@ -126,7 +123,7 @@ def generate_average_density_map(file_paths, data_file_path, tract_code):
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     tract = Tract.query.filter(Tract.code == tract_code).first()
-    temp_file_path = cache.get(request.query_string)
+    temp_file_path = current_app.cache.get(request.query_string)
     if not temp_file_path:
         if not tract:
             return 'The requested tract ' + tract_code + ' does not exist', 404
@@ -142,7 +139,7 @@ def get_tract(tract_code):
         
         if subject_file_paths:
             temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
-            cache.set(request.query_string, temp_file_path, timeout=60*60)
+            current_app.cache.set(request.query_string, temp_file_path, timeout=60*60)
             #return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
         else:
             return "No subjects returned for the current query", 404
