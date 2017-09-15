@@ -28,3 +28,6 @@ megatrackvenv
 
 # a folder that suddenly appeared
 megatrack/bin/
+
+# file containing data on unit test coverage
+.coverage

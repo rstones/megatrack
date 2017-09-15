@@ -13,6 +13,8 @@ function TractSelect(containerId, parent) {
 	this._initColormapMin = 0.25;
 	this._initColormapopacity = 1.0;
 	
+	this._currentInfoTractCode = '';
+	
 	this._colormaps = {};
 	for (var key in this.colormapFunctions) {
 		this._colormaps[key] = this.colormapFunctions[key](this._colormapMin, this._colormapMax, 1);
@@ -257,6 +259,9 @@ function TractSelect(containerId, parent) {
 					break;
 				}
 			}
+			if (instance._currentInfoTractCode == tractCode) {
+				instance.populateTractInfo();
+			}
 		});
 		
 		// add event listener on settings icon
@@ -282,14 +287,13 @@ function TractSelect(containerId, parent) {
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
 			var tractCode = event.currentTarget.parentElement.id;
+			var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
 			$.ajax({
 				dataType: 'json',
-				url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
+				url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
 				success: function(data) {
-					// repopulate tract-info-container with info
-					$('#tract-info-name').html(data.tractName);
-					$('#tract-info-metrics').html('Volume: ' + data.volume + ' mm<sup>3</sup>');
-					$('#tract-info-description').html(data.description);
+					instance._currentInfoTractCode = data.tractCode;
+					instance.populateTractInfo(data);
 				}
 			});
 		});
@@ -307,6 +311,16 @@ function TractSelect(containerId, parent) {
 			$('#colormap-select').data('tractCode', event.data.tractCode);
 			// show colormap select
 			$('#colormap-select').show('blind');
+		});
+	});
+	
+	$(document).on('query-update', function(event, newQuery) {
+		$.ajax({
+			dataType: 'json',
+			url: instance._parent._rootPath + '/get_tract_info/'+instance._currentInfoTractCode+'?'+$.param(newQuery),
+			success: function(data) {
+				instance.populateTractInfo(data);
+			}
 		});
 	});
 	
@@ -434,4 +448,11 @@ TractSelect.prototype.generateXTKColormap = function(colormap) {
 		rgba.push(255*parseFloat(rgbaString[3]));
 		return rgba;
 	};
+}
+
+TractSelect.prototype.populateTractInfo = function(data) {
+	$('#tract-info-name').html(data ? data.tractName : '');
+	$('#tract-info-metrics').html(data ? ('Volume: ' + data.volume  + ' mm<sup>3</sup><br>'
+									+'Mean FA: ' + data.meanFA.toFixed(3)) : '');
+	$('#tract-info-description').html(data ? data.description : '');
 }

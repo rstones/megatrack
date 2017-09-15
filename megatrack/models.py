@@ -148,4 +148,21 @@ class Dataset(db.Model):
         except JSONDecodeError:
             raise ValueError('Dataset:query_params is not valid JSON string. See following: ' + query_params)
         
+class SubjectTractMetrics(db.Model):
+    subject_id = db.Column(db.String(12), db.ForeignKey('subject.subject_id'), primary_key=True)
+    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code'), primary_key=True)
+    mean = db.Column(db.Float(5), nullable=False)
+    std = db.Column(db.Float(5), nullable=False)
+    volume = db.Column(db.Float(5), nullable=False)
+    
+    def _init_(self, subject_id, tract_code, mean, std, volume):
+        self.subject_id = subject_id
+        self.tract_code = tract_code
+        self.mean = mean
+        self.std = std
+        self.volume = volume
+        
+    def __repr__(self):
+        return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.tract_code
+        
         

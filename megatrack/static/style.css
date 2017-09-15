@@ -7,13 +7,13 @@ body {
 
 #header-wrapper {
 	width: 100%;
-	height: 70px;
-	background: #45484d; /* Old browsers */
-	background: -moz-linear-gradient(top, #45484d 0%, #000000 100%); /* FF3.6-15 */
-	background: -webkit-linear-gradient(top, #45484d 0%,#000000 100%); /* Chrome10-25,Safari5.1-6 */
-	background: linear-gradient(to bottom, #45484d 0%,#000000 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
-	color: darkgrey;
+	height: 100px;
+	/*background: #45484d; /* Old browsers */
+	/*background: -moz-linear-gradient(top, #45484d 0%, #000000 100%); /* FF3.6-15 */
+	/*background: -webkit-linear-gradient(top, #45484d 0%,#000000 100%); /* Chrome10-25,Safari5.1-6 */
+	/*background: linear-gradient(to bottom, #45484d 0%,#000000 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	/*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
+	/*color: darkgrey;*/ 
 	text-align: center;
 }
 
@@ -22,18 +22,42 @@ body {
 	display: inline-block;
 }
 
-#logo {
-	width: 200px;
-	height: 60px;
+#title {
+	font-family: jura,sans-serif;
+	font-weight: bold;
+	width: 600px;
+	height: 100px;
 	float: left;
+}
+
+#title-logo {
+	width: 100px;
+	height: 100px;
+	background: url("images/header-logo.png") no-repeat white;
+	float: left;
+}
+
+#title-words {
+	width: 500px;
+	float: left;
+	font: normal normal bold 50px/1.4em Jura,sans-serif;
+	color: #333330;
+}
+
+nav {
+	position: absolute;
+	left: 460px;
+	top: 70px;
 }
 
 #header ul {
 	height: auto;
 	float: left;
 	list-style: none;
-	padding: 25px 0 0 0;
+	/*padding: 25px 0 0 0;*/
 	margin: 0px;
+	font: normal normal bold 20px/1.4em Jura,sans-serif;
+	color: #333330;
 }
 
 #header li {
