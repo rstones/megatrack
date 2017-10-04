@@ -148,10 +148,12 @@ def generate_average_density_map(file_paths, data_file_path, tract_code):
     '''Maybe binarizing didn't work well because setting the nonzero elements to 1 didn't match up with the 
     max intensities?
     '''
-#     data[np.nonzero(data)] = 1
+    
 #     masked_data = ma.masked_equal(data, 0)
 #     mean = ma.mean(masked_data, axis=0)
     
+    #data[np.nonzero(data)] = 1
+    data = np.where(data > 0, 1, 0)
     mean = np.mean(data, axis=0)
     # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
     template = nib.load(data_file_path+'Template_T1_2mm_new_RAS.nii.gz')
@@ -202,7 +204,11 @@ def get_dynamic_tract_info(tract_code, threshold):
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
     cached_data = current_app.cache.get(cache_key)
     
-    threshold = int(threshold) / 100 # fail gracefully here in case threshold can't be cast to int
+    try:
+        threshold = int(threshold) / 100 # fail gracefully here in case threshold can't be cast to int
+    except ValueError:
+        current_app.logger.info('Invalid threshold value applied returning 404...')
+        return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
     
     tract = Tract.query.filter(Tract.code == tract_code).first()
     if not tract:
@@ -242,13 +248,15 @@ def get_dynamic_tract_info(tract_code, threshold):
         current_app.logger.info('Putting file paths to averaged maps in cache for query\n' + json.dumps(request_query, indent=4))
         current_app.cache.set(cache_key, \
                               cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD, tract_code:tract_file_path}))
-
+        
+    current_app.logger.info('THRESHOLD: ' + str(threshold))
     FA_map_data = du.get_nifti_data(cached_data['FA'])
     MD_map_data = du.get_nifti_data(cached_data['MD'])
     tract_data = du.get_nifti_data(cached_data[tract_code])
+    current_app.logger.info('TRACT MAX: ' + str(np.amax(tract_data)))
     mean_FA, std_FA = du.averaged_tract_mean_std(FA_map_data, tract_data, threshold)
     mean_MD, std_MD = du.averaged_tract_mean_std(MD_map_data, tract_data, threshold)
-    vol = du.averaged_tract_volume(tract_data)
+    vol = du.averaged_tract_volume(tract_data, threshold)
     
     results = {}
     results['tractCode'] = tract_code
@@ -258,7 +266,7 @@ def get_dynamic_tract_info(tract_code, threshold):
     results['stdFA'] = std_FA
     results['meanMD'] = mean_MD
     results['stdMD'] = std_MD
-    results['description'] = tract.description
+    #results['description'] = tract.description
     
     return jsonify(results)
 

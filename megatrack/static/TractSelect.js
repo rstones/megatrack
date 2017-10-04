@@ -49,7 +49,7 @@ function TractSelect(containerId, parent) {
 			+'<div id="tract-info-container">'
 				+'<div id="tract-info-name"></div>'
 				+'<div id="tract-info-metrics"></div>'
-				+'<div id="tract-info-description"></div>'
+				//+'<div id="tract-info-description"></div>'
 			+'</div>');
 	
 	$('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
@@ -184,6 +184,7 @@ function TractSelect(containerId, parent) {
 		}
 		if (event.target.id.indexOf('tract-settings') == -1 
 				&& event.target.parentElement.id.indexOf('tract-settings') == -1) {
+			//instance.updateDynamicTractInfo();
 			$('#tract-settings-menu').hide();
 		}
 	});
@@ -192,6 +193,7 @@ function TractSelect(containerId, parent) {
 		$('#colormap-select').hide();
 	});
 	$('#tract-settings-close').click(function() {
+		instance.updateDynamicTractInfo();
 		$('#tract-settings-menu').hide();
 	});
 	
@@ -453,6 +455,24 @@ TractSelect.prototype.generateXTKColormap = function(colormap) {
 TractSelect.prototype.populateTractInfo = function(data) {
 	$('#tract-info-name').html(data ? data.tractName : '');
 	$('#tract-info-metrics').html(data ? ('Volume: ' + data.volume  + ' mm<sup>3</sup><br>'
-									+'Mean FA: ' + data.meanFA.toFixed(3)) : '');
-	$('#tract-info-description').html(data ? data.description : '');
+									+'Mean MD: ' + data.meanMD.toFixed(3) + '<br>'
+									+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
+									+'Mean FA: ' + data.meanFA.toFixed(3) + '<br>'
+									+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : '');
+	//$('#tract-info-description').html(data ? data.description : '');
 }
+
+TractSelect.prototype.updateDynamicTractInfo = function() {
+	var instance = this;
+	var tractCode = instance._currentInfoTractCode;
+	var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
+	$.ajax({
+		dataType: 'json',
+		url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
+		success: function(data) {
+			instance._currentInfoTractCode = data.tractCode;
+			instance.populateTractInfo(data);
+		}
+	});
+}
+
