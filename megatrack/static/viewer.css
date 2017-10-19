@@ -150,10 +150,10 @@ select::-ms-expand {
 }
 
 #tract-panel {
-	width: 56%;
+	width: 57%;
 	float: left;
 	padding-left: 10px;
-	padding-right: 10px;
+	/*padding-right: 2px;*/
 	margin-top: 10px;
 }
 
@@ -782,7 +782,7 @@ select::-ms-expand {
 }
 
 #tract-info-container {
-	width: 205px;
+	width: 210px;
 	height: 250px;
 	border: 1px solid darkgrey;
 	border-radius: 5px;
@@ -796,10 +796,11 @@ select::-ms-expand {
 	height: 12%;
 }
 
-#tract-info-metrics {
+.tract-info-metrics {
 	width: 100%;
-	height: 23%;
+	height: 45%;
 	font-size: 90%;
+	text-align: left;
 }
 
 #tract-info-description {
@@ -812,5 +813,47 @@ select::-ms-expand {
 	padding: 3px;
 }
 
+#tract-info-overlay {
+	/*width: inherit;*/
+	position: absolute;
+	width: 1199px;
+	height: 419px;
+	background: white;
+	opacity: 0.95;
+	border-radius: 10px;
+	left: 140px;
+	top: 121px;
+	z-index: 10;
+	border: 1px solid grey;
+	padding: 30px;
+}
 
+#tract-info-overlay-title {
+	width: 1150px;
+	text-align: left;
+	font-size: 130%;
+	float: left;
+}
+
+#tract-info-overlay-close {
+	float: left;
+	width: 20px;
+	height: 20px;
+}
+
+#tract-info-overlay-trk {
+	width: 350px;
+	height: 350px;
+	/*border: 1px solid lightgrey;*/
+	margin-top: 30px;
+	float: left;
+}
+
+#tract-info-overlay-description {
+	width: 750px;
+	float: left;
+	text-align: left;
+	margin-top: 30px;
+	margin-left: 50px;
+}
 

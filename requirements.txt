@@ -16,7 +16,7 @@ megatrack==0.0.0
 mock==2.0.0
 nibabel==2.1.0
 nose2==0.6.5
-numpy==1.11.2
+numpy==1.13.1
 pbr==3.1.1
 pylibmc==1.5.2
 PyMySQL==0.7.10

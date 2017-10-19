@@ -56,14 +56,15 @@ def averaged_tract_mean_std(mean_map_data, tract_data, threshold):
         return 0, 0
     
     masked_map = ma.masked_where(tract_data <= threshold, mean_map_data)
-    return ma.mean(masked_map), ma.std(masked_map)
+    average = ma.average(masked_map, weights=tract_data)
+    std = np.sqrt(ma.average((masked_map-average)**2, weights=tract_data)) # weighted std
+    return average, std
 
 ''' Theres a lot of loading going on in these functions...maybe have the args being optionally file name or data array
 so a tract can be loaded once and passed around to calculate various metrics?'''
 def averaged_tract_volume(tract_data, threshold):
-    masked_map = ma.masked_less(tract_data, threshold)
-    return masked_map.count() * 8.
-    #return np.count_nonzero(tract_data) * 8. # assuming the voxel size is 2x2x2mm, get this from the header?
+    masked_map = ma.masked_less_equal(tract_data, threshold)
+    return masked_map.count() * 8.e-3 # assuming voxel size is 2x2x2mm, this gives volume in ml (cm^3)
 
 def get_nifti_data(file_path):
     return nib.load(file_path).get_data()

@@ -72,6 +72,12 @@ function QueryBuilder(containerId, rootPath) {
 						$('#query-info').html('<div id="query-report-text">'+instance._queryInfoText+totalSubjects+'</div>');
 					} 
 				});
+				$.ajax({
+					url: instance._rootPath + '/generate_mean_maps?'+$.param(newQuery),
+					success: function(data) {
+						// do nothing
+					} 
+				});
 			}
 			instance._currentQuery = newQuery;
 			updateButton.removeClass('update-query-button-active');

@@ -29,4 +29,13 @@ def check_valid_filepaths_in_cache(cached_data, *args):
         except KeyError:
             return False
     return True
+
+def check_items_in_cache(cached_data, *args):
+    for arg in args:
+        try:
+            if not cached_data[arg]:
+                return False
+        except KeyError:
+            return False
+    return True
         
