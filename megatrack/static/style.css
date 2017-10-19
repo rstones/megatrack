@@ -33,7 +33,8 @@ body {
 #title-logo {
 	width: 100px;
 	height: 100px;
-	background: url("images/header-logo.png") no-repeat white;
+	background: url("images/megatrack-logo-small.png") no-repeat white;
+	background-size: contain;
 	float: left;
 }
 
