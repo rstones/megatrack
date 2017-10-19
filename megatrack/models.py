@@ -35,7 +35,7 @@ class Subject(db.Model):
     edinburgh_handedness_raw = db.Column(db.Integer) # takes values -100 to 100
     ravens_iq_raw = db.Column(db.Integer) # check, 0 < iq < 60?
     mmse = db.Column(db.Integer) # 0 < mmse < 30
-    file_path = db.Column(db.String(20), unique=True, nullable=False) # directory containing data for this subject
+    file_path = db.Column(db.String(20), unique=False, nullable=False) # directory containing data for this subject
     
     age_min = 18
     age_max = 99
@@ -108,24 +108,26 @@ class Tract(db.Model):
     code = db.Column(db.String(10), primary_key=True) # eg. CINGL
     name = db.Column(db.String(50), unique=True, nullable=False) # eg. Cingulum (L)
     file_path = db.Column(db.String(20), unique=True, nullable=False) # subdirectory within subject directory for this tract, eg. Left_Cingulum
+    description = db.Column(db.String(2000), unique=False, nullable=True) # some info about this tract
     
-    def __init__(self, code, name, file_path):
+    def __init__(self, code, name, file_path, description):
         self.code = code
         self.name = name
         self.file_path = file_path
+        self.description = description
         
     def __repr__(self):
         return '<Tract %r>' % self.name
     
     def __json__(self):
-        return ['code', 'name']
+        return ['code', 'name', 'description']
     
 class Dataset(db.Model):
     '''Model to store file path for each tractography dataset.'''
     #id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(12), primary_key=True) # eg. BRC or BRC_ATLAS
     name = db.Column(db.String(20), unique=True, nullable=False)
-    file_path = db.Column(db.String(20), unique=True, nullable=False) # eg. brc_atlas
+    file_path = db.Column(db.String(20), unique=False, nullable=False) # eg. brc_atlas
     query_params = db.Column(db.String(2000)) # json string defining the fields in Subject this dataset can be queried on 
     
     def _init_(self, code, file_path):
@@ -145,5 +147,26 @@ class Dataset(db.Model):
             return query_params
         except JSONDecodeError:
             raise ValueError('Dataset:query_params is not valid JSON string. See following: ' + query_params)
+        
+class SubjectTractMetrics(db.Model):
+    subject_id = db.Column(db.String(12), db.ForeignKey('subject.subject_id'), primary_key=True)
+    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code'), primary_key=True)
+    mean_MD = db.Column(db.Float(5), nullable=False)
+    std_MD = db.Column(db.Float(5), nullable=False)
+    mean_FA = db.Column(db.Float(5), nullable=False)
+    std_FA = db.Column(db.Float(5), nullable=False)
+    volume = db.Column(db.Float(5), nullable=False)
+    
+    def __init__(self, subject_id, tract_code, mean_MD, std_MD, mean_FA, std_FA, volume):
+        self.subject_id = subject_id
+        self.tract_code = tract_code
+        self.mean_MD = mean_MD
+        self.std_MD = std_MD
+        self.mean_FA = mean_FA
+        self.std_FA = std_FA
+        self.volume = volume
+        
+    def __repr__(self):
+        return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.tract_code
         
         

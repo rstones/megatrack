@@ -10,7 +10,7 @@ if not application.debug:
     application.logger.setLevel(logging.INFO)
 
 if __name__=='__main__':
-    application.debug = application.config['FLASK_DEBUG']
+    application.debug = application.config['FLASK_DEBUG']    
     application.logger.info('Starting application...')
     db.create_all(app=application)
     application.run()
