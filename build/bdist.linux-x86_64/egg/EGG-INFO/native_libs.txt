@@ -1,2 +1,0 @@
-megatrack/static/X/lib/selenium/selenium/webdriver/firefox/x86/x_ignore_nofocus.so
-megatrack/static/X/lib/selenium/selenium/webdriver/firefox/amd64/x_ignore_nofocus.so
