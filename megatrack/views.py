@@ -88,7 +88,8 @@ def generate_mean_maps():
         # construct query report and subject file paths again
         current_app.logger.info('Regenerating full subject file paths...')
         query_report, subject_file_paths = dbu.construct_subject_file_paths(request_query, data_file_path)
-        current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'query_report':query_report, 'subject_file_paths': subject_file_paths}))
+        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report, 'subject_file_paths': subject_file_paths})
+        current_app.cache.set(cache_key, cached_data)
     
     subject_file_paths = cached_data['subject_file_paths']
     
@@ -167,7 +168,8 @@ def get_tract(tract_code):
         if subject_file_paths:
             temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
-            current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path}))
+            cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
+            current_app.cache.set(cache_key, cached_data)
         else:
             return "No subjects returned for the current query", 404
     else:
@@ -226,8 +228,8 @@ def get_dynamic_tract_info(tract_code, threshold):
             tract_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
         
         current_app.logger.info('Putting file paths to averaged maps in cache for query\n' + json.dumps(request_query, indent=4))
-        current_app.cache.set(cache_key, \
-                              cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD, tract_code:tract_file_path}))
+        cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD, tract_code:tract_file_path})
+        current_app.cache.set(cache_key, cached_data)
         
     FA_map_data = du.get_nifti_data(cached_data['FA'])
     MD_map_data = du.get_nifti_data(cached_data['MD'])
@@ -271,7 +273,8 @@ def get_static_tract_info(tract_code):
         subject_file_paths, subject_file_names = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
         tract_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
         current_app.logger.info('Caching averaged density map ' + tract_code + ' for query\n' + json.dumps(request_query, indent=4))
-        current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path}))
+        cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+        current_app.cache.set(cache_key, cached_data)
     
     subject_ids = []
     for key in request_query:

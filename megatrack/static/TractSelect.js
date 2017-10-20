@@ -52,13 +52,16 @@ function TractSelect(containerId, parent) {
 			+'<ul id="colormap-select"></ul>'
 			+'</div>'
 			+'<div id="tract-info-container">'
+				+'<div id="tract-info-heading">Tract metrics:</div>'
 				+'<div id="tract-info-name"></div>'
 				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics"></div>'
 				+'<div id="tract-info-static-metrics" class="tract-info-metrics"></div>'
-				+'<div id="tract-info-button" class="clickable">View tract info</div>'
+				+'<div id="tract-info-button" class="clickable">View tract atlas</div>'
 				//+'<div id="tract-info-description"></div>'
 			+'</div>'
 			+'<div id="tract-info-overlay"></div>');
+	
+	$('#tract-info-container').hide();
 	
 	$('#tract-info-overlay').append('<div id="tract-info-overlay-title"></div>'
 			+'<div id="tract-info-overlay-close" class="clickable remove-icon"></div>'
@@ -88,8 +91,7 @@ function TractSelect(containerId, parent) {
 		
 		$('#tract-info-overlay-title').html(instance._tractMetrics[tractCode]['static'].name);
 		$('#tract-info-overlay-description').html(instance._tractMetrics[tractCode]['static'].description);
-		
-		console.log(renderer.camera.position);
+	
 		var c = 0
 		instance.cameraMotion = setInterval(function() {
 			//var y = 100 + 20*Math.sin(c*Math.PI);
@@ -282,7 +284,7 @@ function TractSelect(containerId, parent) {
 				+'<td id="tract-name" class="tract-table-cell">'+instance._availableTracts[tractCode].name+'</td>'
 				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
 				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
-				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable">i</div></td>'
+				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable metrics-icon" title="Tract metrics"></div></td>'
 				+'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
 				+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
 				+'</tr>'
@@ -315,9 +317,9 @@ function TractSelect(containerId, parent) {
 					break;
 				}
 			}
-//			if (instance._currentInfoTractCode == tractCode) {
-//				instance.populateDynamicTractInfo();
-//			}
+			if (instance._currentInfoTractCode == tractCode) {
+				$('#tract-info-container').hide();
+			}
 		});
 		
 		// add event listener on settings icon
@@ -370,7 +372,7 @@ function TractSelect(containerId, parent) {
 					}
 				});
 			}
-			
+			$('#tract-info-container').show();
 			
 
 		});
@@ -581,20 +583,22 @@ TractSelect.prototype.generateXTKColormap = function(colormap) {
 
 TractSelect.prototype.populateDynamicTractInfo = function(data) {
 	$('#tract-info-name').html(data ? data.tractName : '');
-	$('#tract-info-dynamic-metrics').html(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
+	$('#tract-info-dynamic-metrics').html('Probabilistic atlas metrics:<br>'
+									+(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
 									+'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
 									+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
 									+'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
-									+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : '');
+									+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
 	//$('#tract-info-description').html(data ? data.description : '');
 }
 
 TractSelect.prototype.populateStaticTractInfo = function(data) {
-	$('#tract-info-static-metrics').html(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
+	$('#tract-info-static-metrics').html('Population metrics:<br>'
+			+(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
 			+'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
 			+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
 			+'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
-			+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : '');
+			+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
 }
 
 TractSelect.prototype.updateDynamicTractInfo = function(tractCode) {
