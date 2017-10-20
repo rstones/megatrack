@@ -96,6 +96,12 @@ select::-ms-expand {
 	background: url("images/settings-icon.png") 96% / 12px no-repeat;
 }
 
+.metrics-icon {
+	width: 20px;
+	height: 20px;
+	background: url("images/metrics-icon.png") 96% / 12px no-repeat;
+}
+
 #viewer {
 	width: 1260px;
 	display: inline-block;
@@ -319,6 +325,7 @@ select::-ms-expand {
 #tract-info {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
+	padding-left: 6px;
 }
 
 #tract-remove {
@@ -791,16 +798,26 @@ select::-ms-expand {
 	float: right;
 }
 
+#tract-info-heading {
+	width: 100%;
+	height: 10%;
+	text-align: left;
+}
+
 #tract-info-name {
 	width: 100%;
-	height: 12%;
+	height: 10%;
+	text-align: left;
+	border-bottom: 1px solid lightgrey;
 }
 
 .tract-info-metrics {
 	width: 100%;
-	height: 45%;
+	height: 35%;
 	font-size: 90%;
 	text-align: left;
+	border-bottom: 1px solid lightgrey;
+	margin-bottom: 3px;
 }
 
 #tract-info-description {
