@@ -1,9 +1,0 @@
-flask
-flask_sqlalchemy
-flask_script
-flask_migrate
-flask_jsontools
-pymysql
-numpy
-nibabel
-jquery-unparam
