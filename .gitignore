@@ -18,7 +18,7 @@ data/
 log/
 
 # egg info
-megatrack.egg-info
+megatrack.egg-info/
 
 # development config file
 config.py
