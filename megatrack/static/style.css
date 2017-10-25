@@ -34,7 +34,7 @@ body {
 #title-logo {
 	width: 120px;
 	height: 100px;
-	background: url("images/header_logo.png") no-repeat white;
+	background: url("images/header-logo.png") no-repeat white;
 	background-size: contain;
 	float: left;
 }
