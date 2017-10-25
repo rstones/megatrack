@@ -18,7 +18,7 @@ body {
 }
 
 #header {
-	width: 1000px;
+	width: 1250px;
 	display: inline-block;
 }
 
@@ -28,10 +28,11 @@ body {
 	width: 600px;
 	height: 100px;
 	float: left;
+	margin-top: 4px;
 }
 
 #title-logo {
-	width: 100px;
+	width: 120px;
 	height: 100px;
 	background: url("images/header_logo.png") no-repeat white;
 	background-size: contain;
@@ -39,7 +40,7 @@ body {
 }
 
 #title-words {
-	width: 500px;
+	width: 450px;
 	float: left;
 	font: normal normal bold 50px/1.4em Jura,sans-serif;
 	color: #333330;
@@ -47,7 +48,7 @@ body {
 
 nav {
 	position: absolute;
-	left: 460px;
+	left: 330px;
 	top: 70px;
 }
 
