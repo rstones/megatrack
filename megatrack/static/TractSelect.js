@@ -56,7 +56,7 @@ function TractSelect(containerId, parent) {
 				+'<div id="tract-info-name"></div>'
 				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics"></div>'
 				+'<div id="tract-info-static-metrics" class="tract-info-metrics"></div>'
-				+'<div id="tract-info-button" class="clickable">View tract atlas</div>'
+				+'<div id="tract-info-button" class="clickable">View 3D tract</div>'
 				//+'<div id="tract-info-description"></div>'
 			+'</div>'
 			+'<div id="tract-info-overlay"></div>');
