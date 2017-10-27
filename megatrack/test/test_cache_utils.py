@@ -5,6 +5,7 @@ Created on 14 Sep 2017
 '''
 import unittest
 import mock
+from werkzeug.security import check_password_hash
 import megatrack.cache_utils as cu
 
 class CacheUtilsTestCase(unittest.TestCase):
@@ -55,11 +56,11 @@ class CacheUtilsTestCase(unittest.TestCase):
     
     def test_check_valid_filepaths_in_cache(self):
         '''Tests that values related to the provided keys are valid filepaths on the system'''
-        cached_data = {'key1': '../valid_filepath'}
+        cached_data = {'key1': './valid/file.path'}
         
         # monkey patch isfile method to avoid using filesystem
         unpatch = getattr(cu.os.path, 'isfile')
-        setattr(cu.os.path, 'isfile', lambda path : path == 'valid_filepath')
+        setattr(cu.os.path, 'isfile', lambda path : path == './valid/file.path')
         is_valid_file = cu.check_valid_filepaths_in_cache(cached_data, 'key1')
         assert is_valid_file
         setattr(cu.os.path, 'isfile', unpatch)

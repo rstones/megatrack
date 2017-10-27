@@ -12,7 +12,8 @@ def construct_cache_key(query_string):
     if del_idx > 0:
         query_string = query_string[:del_idx]
     # hash cache key to fix string size, since memcached max key length is 250
-    return generate_password_hash(query_string, method='pbkdf2:sha1:1', salt_length=1)
+    #return generate_password_hash(query_string, method='pbkdf2:sha1:1', salt_length=1)
+    return query_string
 
 def add_to_cache_dict(current_dict, items_to_add):
     if current_dict:
