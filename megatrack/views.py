@@ -10,6 +10,7 @@ import json
 import megatrack.cache_utils as cu
 import megatrack.data_utils as du
 import megatrack.database_utils as dbu
+import time
  
 megatrack = Blueprint('megatrack', __name__)
 
@@ -73,7 +74,7 @@ def query_report():
         
         cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report, 'subject_file_paths': subject_file_paths})
         current_app.cache.set(cache_key, cached_data)
-
+    
     return jsonify(cached_data['query_report'])
 
 @megatrack.route('/generate_mean_maps')

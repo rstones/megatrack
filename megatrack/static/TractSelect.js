@@ -54,6 +54,7 @@ function TractSelect(containerId, parent) {
 			+'<div id="tract-info-container">'
 				+'<div id="tract-info-heading">Tract metrics:</div>'
 				+'<div id="tract-info-name"></div>'
+				+'<hr>'
 				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics"></div>'
 				+'<div id="tract-info-static-metrics" class="tract-info-metrics"></div>'
 				+'<div id="tract-info-button" class="clickable">View 3D tract</div>'
@@ -282,7 +283,7 @@ function TractSelect(containerId, parent) {
 		// add row to table
 		$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
 				+'<td id="tract-name" class="tract-table-cell">'+instance._availableTracts[tractCode].name+'</td>'
-				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
+				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret"></div></div></td>'
 				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
 				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable metrics-icon" title="Tract metrics"></div></td>'
 				+'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
@@ -346,7 +347,16 @@ function TractSelect(containerId, parent) {
 		});
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id;
+			var tractCode = event.currentTarget.parentElement.id; 
+			
+			// change metrics icon to selected style
+			if (instance._currentInfoTractCode) {
+				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+			}
+			$('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+			$('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+			
 			var metrics = instance._tractMetrics[tractCode];
 			instance._currentInfoTractCode = tractCode;
 			if (metrics && metrics['dynamic'] && metrics['static']) {

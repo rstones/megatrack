@@ -5,7 +5,6 @@ Created on 14 Sep 2017
 '''
 import unittest
 import mock
-from werkzeug.security import check_password_hash
 import megatrack.cache_utils as cu
 
 class CacheUtilsTestCase(unittest.TestCase):

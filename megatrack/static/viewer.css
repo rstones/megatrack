@@ -1,3 +1,4 @@
+
 body {
 	background: white;
 }
@@ -102,6 +103,22 @@ select::-ms-expand {
 	background: url("images/metrics-icon.png") 96% / 12px no-repeat;
 }
 
+.metrics-icon-selected {
+	width: 20px;
+	height: 20px;
+	background: url("images/metrics-icon-selected.png") 100% 50% / 16px no-repeat;
+}
+
+.loading-gif {
+	width: 12px;
+	height: 12px;
+	background: url("images/loading.gif") 100% / 12px no-repeat;
+	float: right;
+	position: relative;
+	top: 5px;
+	left: -12px;
+}
+
 #viewer {
 	width: 1260px;
 	display: inline-block;
@@ -156,11 +173,15 @@ select::-ms-expand {
 }
 
 #tract-panel {
-	width: 57%;
+	width: 722px;
 	float: left;
-	padding-left: 10px;
+	/*padding-left: 10px;*/	
 	/*padding-right: 2px;*/
+	/*margin-top: 10px;*/
+	border: 1px solid darkgrey;
+	margin-left: 10px;
 	margin-top: 10px;
+	border-radius: 5px;
 }
 
 .tract-select-container {
@@ -257,8 +278,8 @@ select::-ms-expand {
 #table-div {
 	height: 250px;
 	width: 450px;
-	border: 1px solid darkgrey;
-	border-radius: 5px;
+	/*border: 1px solid darkgrey;
+	border-radius: 5px;*/
 	overflow: scrollable;
 	padding: 10px;
 	float: left;
@@ -359,6 +380,17 @@ select::-ms-expand {
 	float: right;
 	position: relative;
 	top: 2px;
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+	vertical-align: middle;
+	margin-top: -.25em;
+	position: relative;
+	text-indent: -99999px;
+	overflow: hidden;
+	/*background-repeat: no-repeat;*/
+	background: url("images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+	/*background-position: -65px 0;*/
 }
 
 #colormap-select {
@@ -789,35 +821,39 @@ select::-ms-expand {
 }
 
 #tract-info-container {
-	width: 210px;
+	width: 230px;
 	height: 250px;
-	border: 1px solid darkgrey;
+	/*border: 1px solid darkgrey;*/
 	border-radius: 5px;
 	/*overflow: scrollable;*/
-	padding: 10px;
-	float: right;
+	padding: 3px 10px 10px 10px;
+	float: left;
 }
 
 #tract-info-heading {
 	width: 100%;
-	height: 10%;
+	height: 8%;
 	text-align: left;
+	font-size: 90%;
 }
 
 #tract-info-name {
 	width: 100%;
-	height: 10%;
+	height: 9%;
 	text-align: left;
-	border-bottom: 1px solid lightgrey;
+	/*border-bottom: 1px solid lightgrey;*/
 }
 
 .tract-info-metrics {
-	width: 100%;
+	width: 220px;
 	height: 35%;
 	font-size: 90%;
 	text-align: left;
-	border-bottom: 1px solid lightgrey;
-	margin-bottom: 3px;
+	/*border-bottom: 1px solid lightgrey;*/
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	padding: 4px;
+	margin-bottom: 8px;
 }
 
 #tract-info-description {
