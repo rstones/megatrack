@@ -249,7 +249,7 @@ def get_dynamic_tract_info(tract_code, threshold):
     results['stdMD'] = std_MD
     
     current_app.logger.info('dynamics info for threshold ' + str(threshold) + ' \n' + str(results))
-    
+
     return jsonify(results)
 
 @jsonapi

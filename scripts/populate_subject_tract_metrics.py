@@ -12,38 +12,35 @@ application.app_context().push()
 '''
 Script to populate the subject_tract_metrics table
 
-- Get available subjects + get available tracts
-
 - if full_refresh is True
+
+- Get all available subjects + all available tracts
 
 - delete all from subject_tract_metrics
 
-- loop through each subject, loop through each tract available for that dataset, calculate metrics and insert
-
 - else
 
-- get current subject_tract_metrics
+- get all subjects + tracts that don't appear together in subject_tract_metrics
 
-- loop through each subject, loop through each tract available for that dataset,
-if subject-tract pair not in subject_tract_metrics calculate metrics and insert
+- then
+
+- loop through each subject, loop through each tract, check the tract is available for the dataset the subject belongs to
+ (maybe can check this during the db query, but need to define which tracts are available for which dataset), calculate metrics and insert
 
 - handle cases where nii.gz files (density maps, MD, FA) aren't available even though subject and tract are in the DB
 
 '''
 
-
-
-
 full_refresh = False
 
-# get subjects
-subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Subject.file_path, Dataset.file_path).all()
-
-# get tracts
-tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
-
-# get dataset file paths
-#dataset_file_paths = Dataset.query.with_entities(Dataset.dataset_code, Dataset.file_path).all()
+def get_data():
+    if full_refresh:
+        subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Subject.file_path, Dataset.file_path).all()
+        tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
+        #sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
+    else:
+        
+    return subject, tracts, sbjct_trct_mtrcs
 
 def calculate_metrics(subject, tract):
     subject_id = subject[0]
@@ -57,11 +54,7 @@ def calculate_metrics(subject, tract):
         print('Couldn\'t find maps for dataset ' + dataset_file_path + ' and subject file path ' + subject_file_path)
     tract_code = tract[0]
     tract_file_path = tract[1]
-    subject_tract_metric = []# SubjectTractMetrics.query.filter(SubjectTractMetrics.subject_id == subject_id and SubjectTractMetrics.tract_code == tract_code).first()
-    if subject_tract_metric and not total_refresh:
-        print('Metrics already exist')
-        print(subject_tract_metric)
-        continue
+
     tract_data = nib.load('data/'+dataset_file_path+'/'+tract_file_path+'/'+subject_file_path+tract_file_path[tract_file_path.index('_')+1:]+'_2mm.nii.gz').get_data()
     masked_MD = ma.masked_where(tract_data == 0, MD)
     mean_MD = ma.mean(masked_MD)
@@ -76,12 +69,16 @@ def calculate_metrics(subject, tract):
     volume = np.count_nonzero(tract_data) * 8.e-3
     return SubjectTractMetrics(subject_id, tract_code, float(mean_MD), float(std_MD), float(mean_FA), float(std_FA), float(volume))
 
-
-for subject in subjects:
-    for tract in tracts:
-        subject_tract_metrics = calculate_metrics(subject, tract)
-        db.session.add(subject_tract_metrics)
-db.session.commit()
+def run():
+    for subject in subjects:
+        for tract in tracts:
+            if subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1] and not full_refresh:
+                print('M')
+            subject_tract_metrics = calculate_metrics(subject, tract)
+            db.session.add(subject_tract_metrics)
+    db.session.commit()
+    
+run()
 
 
 # use multiprocessing lib to map function to workers

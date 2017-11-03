@@ -97,6 +97,12 @@ select::-ms-expand {
 	background: url("images/settings-icon.png") 96% / 12px no-repeat;
 }
 
+.atlas-icon {
+	width: 20px;
+	height: 20px;
+	background: url("images/3d-icon.png") 96% / 18px no-repeat;
+}
+
 .metrics-icon {
 	width: 20px;
 	height: 20px;
@@ -117,6 +123,7 @@ select::-ms-expand {
 	position: relative;
 	top: 5px;
 	left: -12px;
+	margin: 0 auto;
 }
 
 #viewer {
@@ -347,6 +354,12 @@ select::-ms-expand {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
 	padding-left: 6px;
+}
+
+#tract-atlas {
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	padding-left: 12px;
 }
 
 #tract-remove {
@@ -854,6 +867,20 @@ select::-ms-expand {
 	border-radius: 5px;
 	padding: 4px;
 	margin-bottom: 8px;
+}
+
+.metrics-display {
+	width: 220px;
+	height: 70px;
+}
+
+.tract-metrics-loading-gif {
+	width: 12px;
+	height: 12px;
+	background: url("images/loading.gif") 100% / 12px no-repeat;
+	position: relative;
+	margin: 0 auto;
+	top: 27px;
 }
 
 #tract-info-description {
