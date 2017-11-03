@@ -54,14 +54,21 @@ function TractSelect(containerId, parent) {
 			+'<div id="tract-info-container">'
 				+'<div id="tract-info-heading">Tract metrics:</div>'
 				+'<div id="tract-info-name"></div>'
-				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics"></div>'
-				+'<div id="tract-info-static-metrics" class="tract-info-metrics"></div>'
-				+'<div id="tract-info-button" class="clickable">View tract atlas</div>'
+				+'<hr>'
+				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics">'
+					+'<div>Probabilistic atlas metrics:</div>'
+					+'<div id="prob-atlas-metrics" class="metrics-display"></div>'
+				+'</div>'
+				+'<div id="tract-info-static-metrics" class="tract-info-metrics">'
+					+'<div>Population metrics:</div>'
+					+'<div id="pop-metrics" class="metrics-display"></div>'
+				+'</div>'
+				//+'<div id="tract-info-button" class="clickable">View 3D tract</div>'
 				//+'<div id="tract-info-description"></div>'
 			+'</div>'
 			+'<div id="tract-info-overlay"></div>');
 	
-	$('#tract-info-container').hide();
+	//$('#tract-info-container').hide();
 	
 	$('#tract-info-overlay').append('<div id="tract-info-overlay-title"></div>'
 			+'<div id="tract-info-overlay-close" class="clickable remove-icon"></div>'
@@ -75,34 +82,6 @@ function TractSelect(containerId, parent) {
 	this._trkRenderer.config.PICKING_ENABLED = false;
 	this._trkRenderer.init();
 	this._trk = new X.fibers();
-	
-	$('#tract-info-button').on('click', function(event) {
-		
-		var tractCode = instance._currentInfoTractCode;
-		
-		var renderer = instance._trkRenderer;
-		renderer.remove(instance._trk);
-		
-		instance._trk.file = instance._parent._rootPath + '/get_trk/'+instance._currentInfoTractCode+'?.trk';
-		instance._trk.opacity = 1.0;
-		
-		renderer.add(instance._trk);
-		renderer.render();
-		
-		$('#tract-info-overlay-title').html(instance._tractMetrics[tractCode]['static'].name);
-		$('#tract-info-overlay-description').html(instance._tractMetrics[tractCode]['static'].description);
-	
-		var c = 0
-		instance.cameraMotion = setInterval(function() {
-			//var y = 100 + 20*Math.sin(c*Math.PI);
-			//renderer.camera.position = [0, y, 0];
-			renderer.camera.rotate([3,0]);
-			//console.log(renderer.camera.position);
-			//c += 0.01;
-		}, 50);
-		
-		$('#tract-info-overlay').show('slow');
-	});
 	
 	$('#tract-info-overlay-close').on('click', function(event) {
 		clearInterval(instance.cameraMotion);
@@ -226,7 +205,7 @@ function TractSelect(containerId, parent) {
 		success: function(data) {
 			for (var i in data) {
 				$('#add-tract-select').append('<option id="'+data[i].code+'" value="'+data[i].code+'">'+data[i].name+'</option>');
-				instance._availableTracts[data[i].code] = {"code": data[i].code, "name": data[i].name};
+				instance._availableTracts[data[i].code] = {"code": data[i].code, "name": data[i].name, "description":data[i].description};
 			}
 		}
 	});
@@ -257,6 +236,13 @@ function TractSelect(containerId, parent) {
 		instance._tractMetrics[tractCode] = {};
 		
 		instance._selectedTracts[tractCode] = instance._availableTracts[tractCode];
+		
+		// check if this is the first tract to be added, if so we want to show tract info immediately
+		var showTractInfo = Object.keys(instance._selectedTracts).length == 1;
+		if (showTractInfo) {
+			instance._currentInfoTractCode = tractCode;
+		}
+		
 		var map = new X.labelmap(instance._parent._volume);
 		map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
 		if (instance._parent._currentQuery) {
@@ -282,9 +268,10 @@ function TractSelect(containerId, parent) {
 		// add row to table
 		$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
 				+'<td id="tract-name" class="tract-table-cell">'+instance._availableTracts[tractCode].name+'</td>'
-				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret ui-icon ui-icon-caret-1-s"></div></div></td>'
+				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret"></div></div></td>'
 				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
-				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable metrics-icon" title="Tract metrics"></div></td>'
+				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
+				+'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
 				+'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
 				+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
 				+'</tr>'
@@ -301,6 +288,23 @@ function TractSelect(containerId, parent) {
 		// add event listener on remove icon
 		$('#'+tractCode+' > #tract-remove').on('click', function(event) {
 			var tractCode = event.currentTarget.parentElement.id;
+			
+			// change tract info if this tracts metrics are being displayed
+			var selectedTractCodes = Object.keys(instance._selectedTracts);
+			if (selectedTractCodes.length == 1) {
+				// no more tracts displayed so clear tract info
+				$('#tract-info-name').html('');
+				$('#prob-atlas-metrics').html('');
+				$('#pop-metrics').html('');
+			} else if (instance._currentInfoTractCode == tractCode) {
+				// show metrics for tract below or above in table
+				// simulate a click on the tract-info button of tract we want to select
+				var tractCodeIdx = selectedTractCodes.indexOf(tractCode);
+				var newTractInfoCode = tractCodeIdx == 0 ? selectedTractCodes[1] : selectedTractCodes[tractCodeIdx-1];
+				$('#'+newTractInfoCode+' > #tract-info').trigger('click');
+			}
+			
+			// remove stuff
 			$('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
 			event.currentTarget.parentElement.remove();
 			$('#'+tractCode+'-spacer').remove();
@@ -316,9 +320,6 @@ function TractSelect(containerId, parent) {
 					instance._parent.removeLabelmapSlices(i);
 					break;
 				}
-			}
-			if (instance._currentInfoTractCode == tractCode) {
-				$('#tract-info-container').hide();
 			}
 		});
 		
@@ -346,7 +347,16 @@ function TractSelect(containerId, parent) {
 		});
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id;
+			var tractCode = event.currentTarget.parentElement.id; 
+			
+			// change metrics icon to selected style
+			if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
+				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+			}
+			$('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+			$('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+			
 			var metrics = instance._tractMetrics[tractCode];
 			instance._currentInfoTractCode = tractCode;
 			if (metrics && metrics['dynamic'] && metrics['static']) {
@@ -355,6 +365,7 @@ function TractSelect(containerId, parent) {
 			} else {
 				// get the metric data
 				var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
+				$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 				$.ajax({
 					dataType: 'json',
 					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
@@ -363,6 +374,7 @@ function TractSelect(containerId, parent) {
 						instance.populateDynamicTractInfo(data);
 					}
 				});
+				$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 				$.ajax({
 					dataType: 'json',
 					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
@@ -372,9 +384,29 @@ function TractSelect(containerId, parent) {
 					}
 				});
 			}
-			$('#tract-info-container').show();
+		});
+		
+		$('#'+tractCode+' > #tract-atlas').on('click', function(event) {
+			var tractCode = event.currentTarget.parentElement.id; 
 			
-
+			$('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
+			$('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
+			$('#tract-info-overlay').show('slow');
+			
+			var renderer = instance._trkRenderer;
+			renderer.remove(instance._trk);
+			renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
+			
+			instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
+			instance._trk.opacity = 1.0;
+			
+			renderer.add(instance._trk);
+			renderer.render();
+			
+			instance.cameraMotion = setInterval(function() {
+				renderer.camera.rotate([3,0]);
+			}, 50);
+			
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
@@ -394,14 +426,18 @@ function TractSelect(containerId, parent) {
 		
 		// pre-fetch the tract metrics and put in cache
 		var initThreshold = parseInt(instance._initColormapMin * 100);
+		if (showTractInfo) {
+			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+		}
 		$.ajax({
 			dataType: 'json',
 			url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(instance._parent._currentQuery),
 			success: function(data) {
 				instance._tractMetrics[data.tractCode]['dynamic'] = data;
-				// trigger update of the tract info panel if it being displayed for this tract?
-				// will it be possible to open tract info before the metric data has loaded?
-				// maybe trigger an event to check whether tract info is visible and update display if so
+				if (showTractInfo) {
+					instance.populateDynamicTractInfo(data);
+				}
 			}
 		});
 		$.ajax({
@@ -409,6 +445,9 @@ function TractSelect(containerId, parent) {
 			url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
 			success: function(data) {
 				instance._tractMetrics[data.tractCode]['static'] = data;
+				if (showTractInfo) {
+					instance.populateStaticTractInfo(data);
+				}
 			}
 		});
 	});
@@ -417,6 +456,7 @@ function TractSelect(containerId, parent) {
 		var currentInfoTractCode = instance._currentInfoTractCode;
 		if (currentInfoTractCode && instance._tractSettings[currentInfoTractCode]) {
 			var threshold = parseInt(100*instance._tractSettings[currentInfoTractCode]["colormapMin"]);
+			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 			$.ajax({
 				dataType: 'json',
 				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'/'+threshold+'?'+$.param(newQuery),
@@ -425,6 +465,7 @@ function TractSelect(containerId, parent) {
 					instance.populateDynamicTractInfo(data);
 				}
 			});
+			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 			$.ajax({
 				dataType: 'json',
 				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'?'+$.param(newQuery),
@@ -583,8 +624,7 @@ TractSelect.prototype.generateXTKColormap = function(colormap) {
 
 TractSelect.prototype.populateDynamicTractInfo = function(data) {
 	$('#tract-info-name').html(data ? data.tractName : '');
-	$('#tract-info-dynamic-metrics').html('Probabilistic atlas metrics:<br>'
-									+(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
+	$('#prob-atlas-metrics').html((data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
 									+'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
 									+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
 									+'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
@@ -593,12 +633,11 @@ TractSelect.prototype.populateDynamicTractInfo = function(data) {
 }
 
 TractSelect.prototype.populateStaticTractInfo = function(data) {
-	$('#tract-info-static-metrics').html('Population metrics:<br>'
-			+(data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
-			+'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
-			+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
-			+'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
-			+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
+	$('#pop-metrics').html((data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
+							+'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
+							+'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
+							+'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
+							+'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
 }
 
 TractSelect.prototype.updateDynamicTractInfo = function(tractCode) {
@@ -607,6 +646,9 @@ TractSelect.prototype.updateDynamicTractInfo = function(tractCode) {
 	var tractSettings = instance._tractSettings[tractCode];
 	if (tractSettings && tractSettings["colormapMin"] != tractSettings["colormapMinUpdate"]) {
 		var threshold = parseInt(100*tractSettings["colormapMin"]);
+		if (tractCode == instance._currentInfoTractCode) {
+			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+		}
 		$.ajax({
 			dataType: 'json',
 			url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
@@ -626,6 +668,7 @@ TractSelect.prototype.updateStaticTractInfo = function() {
 	var instance = this;
 	var tractCode = instance._currentInfoTractCode;
 	var tractSettings = instance._tractSettings[tractCode];
+	$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 	$.ajax({
 		dataType: 'json',
 		url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?' + $.param(instance._parent._currentQuery),

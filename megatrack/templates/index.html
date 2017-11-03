@@ -2,22 +2,25 @@
 {% block head %}
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='viewer.css') }}">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <script src="{{ url_for('static', filename='jquery.js') }}"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script src="{{ url_for('static', filename='colormaps.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='external/jquery-ui.css') }}">
+  <script src="{{ url_for('static', filename='external/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='external/jquery-ui.js') }}"></script>
+  <script src="{{ url_for('static', filename='external/colormaps.js') }}"></script>
   
   <!--<script src="{{ url_for('static', filename='X/utils/xtk.js') }}"></script> -->
   <script src="{{ url_for('static', filename='X/lib/google-closure-library/closure/goog/base.js') }}"></script>
   <script src="{{ url_for('static', filename='X/xtk-deps.js') }}"></script>
   <script>goog.require('X.renderer2D'); goog.require('X.volume'); goog.require('X.renderer3D'); goog.require('X.fibers');</script>
   
-  <!-- <script src="{{ url_for('static', filename='QueryReport.js') }}"></script> -->
   <script src="{{ url_for('static', filename='TractSelect.js') }}"></script>
   <script src="{{ url_for('static', filename='QueryBuilder.js') }}"></script>
-  <script src="{{ url_for('static', filename='TractInfo.js') }}"></script>
   <script src="{{ url_for('static', filename='View.js') }}"></script>
   <script src="{{ url_for('static', filename='viewer.js') }}"></script>
+  
+  <link rel="prefetch" href="{{ url_for('static', filename='images/loading.gif') }}" />
+  <link rel="prefetch" href="{{ url_for('static', filename='images/settings-icon.png') }}" />
+  <link rel="prefetch" href="{{ url_for('static', filename='images/metrics-icon.png') }}" />
+  <link rel="prefetch" href="{{ url_for('static', filename='images/download-icon.png') }}" />
   
 {% endblock %}
 {% block content %}

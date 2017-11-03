@@ -61,6 +61,8 @@ function QueryBuilder(containerId, rootPath) {
 			var newQuery = instance.buildQueryObject();
 			if (JSON.stringify(newQuery) != JSON.stringify(instance._currentQuery)) {
 				$.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
+				// show loading gif in #query-info div here
+				$('#query-info').html('<div id="query-report-text">'+instance._queryInfoText+'<div class="loading-gif"></div></div>');
 				$.ajax({
 					dataType: 'json',
 					url: instance._rootPath + '/query_report?'+$.param(newQuery),

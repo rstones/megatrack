@@ -52,7 +52,7 @@ class DataUtilsTestCase(unittest.TestCase):
         assert std == 0
         
         # test nonzero std
-        mean_map_data[:self.nifti_dim[0]/2, :self.nifti_dim[1]/2, self.nifti_dim[2]/2] = 2.
+        mean_map_data[:int(self.nifti_dim[0]/2), :int(self.nifti_dim[1]/2), int(self.nifti_dim[2]/2)] = 2.
         tract_data = np.ones(self.nifti_dim, dtype=np.float64)
         mean, std = du.averaged_tract_mean_std(mean_map_data, tract_data, 0)
         assert mean == np.mean(mean_map_data)
@@ -73,12 +73,12 @@ class DataUtilsTestCase(unittest.TestCase):
         tract_data = np.ones(self.nifti_dim, dtype=np.float64)
         
         # test trivial case with all tract data elements ones
-        vol = du.averaged_tract_volume(tract_data)
-        assert vol == tract_data.size * 8. # assuming voxel size is 2x2x2mm
+        vol = du.averaged_tract_volume(tract_data, 0.1)
+        assert vol == tract_data.size * 8.e-3 # assuming voxel size is 2x2x2mm
         
         # test 2D case with some zero elements
-        vol = du.averaged_tract_volume(np.eye(10))
-        assert vol == 10 * 8.
+        vol = du.averaged_tract_volume(np.eye(10), 0.1)
+        assert vol == 10 * 8.e-3
         
     def test_get_nifti_data(self):
         test_file_path = 'test_file_path.nii.gz'
