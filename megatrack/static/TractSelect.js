@@ -389,8 +389,13 @@ function TractSelect(containerId, parent) {
 		$('#'+tractCode+' > #tract-atlas').on('click', function(event) {
 			var tractCode = event.currentTarget.parentElement.id; 
 			
+			$('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
+			$('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
+			$('#tract-info-overlay').show('slow');
+			
 			var renderer = instance._trkRenderer;
 			renderer.remove(instance._trk);
+			renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
 			
 			instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
 			instance._trk.opacity = 1.0;
@@ -398,19 +403,10 @@ function TractSelect(containerId, parent) {
 			renderer.add(instance._trk);
 			renderer.render();
 			
-			$('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
-			$('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
-		
-			var c = 0
 			instance.cameraMotion = setInterval(function() {
-				//var y = 100 + 20*Math.sin(c*Math.PI);
-				//renderer.camera.position = [0, y, 0];
 				renderer.camera.rotate([3,0]);
-				//console.log(renderer.camera.position);
-				//c += 0.01;
 			}, 50);
 			
-			$('#tract-info-overlay').show('slow');
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
