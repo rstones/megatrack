@@ -22,6 +22,7 @@ def file_path_relative_to_root_path(file_path):
 
 @megatrack.route('/')
 def index():
+    user_agent = request.headers['User-Agent']
     return render_template('index.html')
 
 @megatrack.route('/about')

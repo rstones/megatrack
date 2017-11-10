@@ -21,6 +21,7 @@ select {
 	appearance: none;
 	height: 28px;
 	background: url("images/select-caret.png") 96% / 10px no-repeat white;
+	padding-left: 3px;
 }
 
 select:hover {
@@ -47,6 +48,7 @@ select[disabled]:hover {
 
 select > option {
 	background: white;
+	padding-left: 3px;
 }
 
 select > option:hover {
@@ -76,42 +78,56 @@ select::-ms-expand {
 .remove-icon {
 	width: 10px;
 	height: 10px;
-	background: url("images/remove-icon.png") 96% / 8px no-repeat;
+	position: relative;
+	top: -0.2em;
+	background: url("images/remove-icon.png") 96% / 9px no-repeat;
 }
 
 .remove-icon-disabled {
 	width: 10px;
 	height: 10px;
-	background: url("images/remove-icon-disabled.png") 96% / 8px no-repeat;
+	position: relative;
+	top: -0.2em;
+	background: url("images/remove-icon-disabled.png") 96% / 9px no-repeat;
 }
 
 .download-icon {
 	width: 20px;
 	height: 20px;
-	background: url("images/download-icon.png") 96% / 22px no-repeat;
+	position: relative;
+	top: 0.09em;
+	background: url("images/download-icon.png") 96% / 27px no-repeat;
 }
 
 .settings-icon {
 	width: 20px;
 	height: 20px;
+	position: relative;
+	top: 0.09em;
 	background: url("images/settings-icon.png") 96% / 12px no-repeat;
 }
 
 .atlas-icon {
 	width: 20px;
 	height: 20px;
+	position: relative;
+	top: 0.13em;
 	background: url("images/3d-icon.png") 96% / 18px no-repeat;
 }
 
 .metrics-icon {
 	width: 20px;
 	height: 20px;
+	position: relative;
+	top: 0.09em;
 	background: url("images/metrics-icon.png") 96% / 12px no-repeat;
 }
 
 .metrics-icon-selected {
 	width: 20px;
 	height: 20px;
+	position: relative;
+	top: 0.09em;
 	background: url("images/metrics-icon-selected.png") 100% 50% / 16px no-repeat;
 }
 
@@ -133,6 +149,7 @@ select::-ms-expand {
 	border: 1px solid darkgrey;
 	border-radius: 10px;
 	padding: 10px;
+	position: relative;
 }
 
 #view-container {
@@ -201,30 +218,41 @@ select::-ms-expand {
 	width: 100%;	
 }
 
-#add-tract-disabled-message {
-	color: #F00202;
-	font-size: 80%;
+#tract-disabled-msg-container {
 	width: 50%;
 	float: left;
 	text-align: left;
 	padding-left: 10px;
 	position: relative;
-	top: 4px;
+	top: 2px;
 }
 
-#add-tract-button {
+#tract-disabled-msg-text {
+	color: #F00202;
+	font-size: 80%;
+	/*width: 50%;
+	float: left;
+	text-align: left;
+	padding-left: 10px;
+	position: relative;
+	top: 4px;*/
+	vertical-align: middle;
+	vertical-align: -webkit-baseline-middle;
+}
+
+/*#add-tract-button {
 	border: 1px solid lightgrey;
 	border-radius: 5px;
 	width: 40%;
-	/*margin-top: 4px;
-	margin-bottom: 6px;*/
+	margin-top: 4px;
+	margin-bottom: 6px;
 	float: left;
-}
+}*/
 
-#add-tract-button:hover {
+/*#add-tract-button:hover {
 	cursor: pointer;
 	background: rgb(225,225,225);
-}
+}*/
 
 #query-panel {
 	width: 40%;
@@ -260,8 +288,11 @@ select::-ms-expand {
 	position: relative;
 }
 
-#query-report-text {
+#query-info-text {
 	padding-left: 15px;
+	vertical-align: middle;
+	vertical-align: -webkit-baseline-middle;
+	
 }
 
 .range-label {
@@ -327,39 +358,40 @@ select::-ms-expand {
 	width: 45%;
 	font-size: 85%;
 	text-align: left;
-	padding-left: 20px;
+	padding-left: 10px;
+	vertical-align: middle;
 }
 
 #tract-colormap {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	width: 25%;
+	width: 22%;
 	margin-right: 3px;
+	vertical-align: middle;
 }
 
 #tract-settings {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	width: 8%;
 	padding-left: 8px;
 }
 
 #tract-download {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	width: 8%;
+	padding-left: 3px;
 }
 
 #tract-info {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	padding-left: 6px;
+	padding-left: 9px;
 }
 
 #tract-atlas {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	padding-left: 12px;
+	padding-left: 9px;
 }
 
 #tract-remove {
@@ -368,7 +400,8 @@ select::-ms-expand {
 	border-right: 1px solid lightgrey;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
-	width: 8%;
+	padding-left: 12px;
+	padding-right: 8px;
 }
 
 .tract-icon {
@@ -392,18 +425,12 @@ select::-ms-expand {
 .colormap-indicator-caret {
 	float: right;
 	position: relative;
-	top: 2px;
+	top: 0.08em;
 	width: 16px;
 	height: 16px;
 	display: inline-block;
-	vertical-align: middle;
 	margin-top: -.25em;
-	position: relative;
-	text-indent: -99999px;
-	overflow: hidden;
-	/*background-repeat: no-repeat;*/
 	background: url("images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
-	/*background-position: -65px 0;*/
 }
 
 #colormap-select {
@@ -458,9 +485,6 @@ select::-ms-expand {
 	z-index: 3;
 }
 
-.dataset-query-row {
-	
-}
 
 .dataset-spacer-row {
 	height: 6px;
@@ -492,7 +516,7 @@ select::-ms-expand {
 
 .dataset-exclude-label {
 	position: relative;
-	vertical-align: text-bottom;
+	/*vertical-align: text-bottom;*/
 	bottom: 4px;
 	padding-right: 10px;
 	font-size: 85%;
@@ -554,7 +578,7 @@ select::-ms-expand {
 
 .query-constraint-checkbox-label {
 	position: relative;
-	vertical-align: text-bottom;
+	/*vertical-align: text-bottom;*/
 	bottom: 4px;
 	padding-right: 10px;
 }
@@ -567,13 +591,15 @@ select::-ms-expand {
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
 	text-align: left;
-	padding-left: 20px;
+	padding-left: 10px;
+	vertical-align: middle;
 }
 
 #query-control {
 	width: 50%;
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
+	vertical-align: middle;
 }
 
 #query-remove {
@@ -584,6 +610,8 @@ select::-ms-expand {
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
 	padding-left: 25px;
+	vertical-align: middle;
+	padding-top: 6px;
 }
 
 .query-constraint-table-cell {
@@ -624,7 +652,7 @@ select::-ms-expand {
 }
 
 #add-dataset-select {
-	width: 100%;	
+	width: 100%;
 }
 
 #add-dataset-button {
@@ -650,15 +678,18 @@ select::-ms-expand {
 }
 
 #update-query-button {
-	/*border: 1px solid lightgrey;*/
 	border-radius: 5px;
 	width: 30%;
 	margin-top: 1px;
 	margin-left: 8px;
 	margin-bottom: 7px;
-	/*background: lightgrey;*/
 	float: left;
 	height: 25px;
+}
+
+#update-query-button-text {
+	vertical-align: middle;
+	vertical-align: -webkit-baseline-middle;
 }
 
 /*#update-query-button:hover {
@@ -841,6 +872,7 @@ select::-ms-expand {
 	/*overflow: scrollable;*/
 	padding: 3px 10px 10px 10px;
 	float: left;
+	line-height: 21px;
 }
 
 #tract-info-heading {
@@ -894,15 +926,16 @@ select::-ms-expand {
 }
 
 #tract-info-overlay {
-	/*width: inherit;*/
+	/* The #viewer element is positioned relative so this element can be positioned
+	absolutely relative to it.*/
 	position: absolute;
+	left: 10px;
+	top: 10px;
 	width: 1199px;
 	height: 419px;
 	background: white;
 	opacity: 0.95;
 	border-radius: 10px;
-	left: 140px;
-	top: 121px;
 	z-index: 9;
 	border: 1px solid grey;
 	padding: 30px;
@@ -935,5 +968,6 @@ select::-ms-expand {
 	text-align: left;
 	margin-top: 30px;
 	margin-left: 50px;
+	line-height: 25px;
 }
 

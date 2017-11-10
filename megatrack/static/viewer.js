@@ -108,7 +108,7 @@ function Viewer(elementId, rootPath) {
 		}
 		if ($('#add-tract-select').prop('disabled')) {
 			$('#add-tract-select').prop('disabled', false);
-			$('#add-tract-disabled-message').hide();
+			$('#tract-disabled-msg-text').hide();
 		}
 	});
 };

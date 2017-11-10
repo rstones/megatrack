@@ -10,8 +10,12 @@ function QueryBuilder(containerId, rootPath) {
 		
 		// insert div for query builder
 		$('#'+containerId).append('<div id="query-builder-container">'
-									+'<div class="dataset-select-container"><select id="add-dataset-select"><option value="default" disabled selected>Add dataset...</option></select></div>'
-									+'<div id="update-query-button">Update</div>'
+									+'<div class="dataset-select-container">'
+										+'<select id="add-dataset-select">'
+											+'<option value="default" disabled selected>Add dataset...</option>'
+										+'</select>'
+									+'</div>'
+									+'<div id="update-query-button"><span id="update-query-button-text">Update</span></div>'
 									+'<div id="query-info"></div>'
 									+'<div class="clear"></div>'
 									+'<hr>'
@@ -21,7 +25,7 @@ function QueryBuilder(containerId, rootPath) {
 									+'</table>'
 									+'</div>');
 		
-		$('#query-info').html('<div id="query-report-text">'+instance._queryInfoText+'0</div>');
+		$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+'0</span>');
 		
 		// ajax call to get available datasets and associated query params
 		$.ajax({
@@ -62,7 +66,7 @@ function QueryBuilder(containerId, rootPath) {
 			if (JSON.stringify(newQuery) != JSON.stringify(instance._currentQuery)) {
 				$.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
 				// show loading gif in #query-info div here
-				$('#query-info').html('<div id="query-report-text">'+instance._queryInfoText+'<div class="loading-gif"></div></div>');
+				$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+'<div class="loading-gif"></div></span>');
 				$.ajax({
 					dataType: 'json',
 					url: instance._rootPath + '/query_report?'+$.param(newQuery),
@@ -71,7 +75,7 @@ function QueryBuilder(containerId, rootPath) {
 						for (var key in data.dataset) {
 							totalSubjects += data.dataset[key];
 						}
-						$('#query-info').html('<div id="query-report-text">'+instance._queryInfoText+totalSubjects+'</div>');
+						$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+totalSubjects+'</span>');
 					} 
 				});
 				$.ajax({
