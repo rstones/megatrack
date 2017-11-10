@@ -130,9 +130,11 @@ class Dataset(db.Model):
     file_path = db.Column(db.String(20), unique=False, nullable=False) # eg. brc_atlas
     query_params = db.Column(db.String(2000)) # json string defining the fields in Subject this dataset can be queried on 
     
-    def _init_(self, code, file_path):
+    def __init__(self, code, name, file_path, query_params):
         self.code = code
+        self.name = name
         self.file_path = file_path
+        self.query_params = query_params
         
     def __repr__(self):
         return '<Dataset %r>' % self.code

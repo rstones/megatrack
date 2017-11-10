@@ -4,10 +4,7 @@ from multiprocessing import Pool
 import nibabel as nib
 import numpy as np
 import numpy.ma as ma
-
-db.create_all(app=application)
-application.app_context().push()
-
+import sys
 
 '''
 Script to populate the subject_tract_metrics table
@@ -34,13 +31,10 @@ Script to populate the subject_tract_metrics table
 full_refresh = False
 
 def get_data():
-    if full_refresh:
-        subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Subject.file_path, Dataset.file_path).all()
-        tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
-        #sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
-    else:
-        
-    return subject, tracts, sbjct_trct_mtrcs
+    subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Subject.file_path, Dataset.file_path).all()
+    tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
+    sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
+    return subjects, tracts, sbjct_trct_mtrcs
 
 def calculate_metrics(subject, tract):
     subject_id = subject[0]
@@ -70,30 +64,29 @@ def calculate_metrics(subject, tract):
     return SubjectTractMetrics(subject_id, tract_code, float(mean_MD), float(std_MD), float(mean_FA), float(std_FA), float(volume))
 
 def run():
+
+    if full_refresh:
+        num_rows_deleted = SubjectTractMetrics.query.delete()
+        response = input(str(num_rows_deleted) + ' will be deleted from subject_tract_metrics for a full refresh. Continue? [Y/n]')
+        if response in ['Y', 'y']:
+            db.session.commit()
+            print(str(num_rows_deleted) + ' rows deleted')
+        else:
+            sys.exit('Exiting script as full refresh was cancelled')
+    
+    print('Calculating new subject tract metrics...')
+    subjects, tracts, sbjct_trct_mtrcs = get_data()
+    print(subjects)
     for subject in subjects:
         for tract in tracts:
-            if subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1] and not full_refresh:
-                print('M')
+            if not full_refresh and (subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1]):
+                continue
             subject_tract_metrics = calculate_metrics(subject, tract)
             db.session.add(subject_tract_metrics)
     db.session.commit()
-    
-run()
 
 
-# use multiprocessing lib to map function to workers
-
-
-# for each subject, loop over tracts available in their dataset
-
-# load the individual MD/FA maps
-
-# check if there is already an entry in SubjectTractMetrics for this subject/tract combination (possibly override this with a flag if a complete refresh is required)
-
-# if no entry in SubjectTractMetrics...
-
-# load tract density map
-
-# calculate mean/std MD, mean/std FA and volume using the subject's individual MD/FA maps and and tract density maps
-
-# insert row per subject per tract in SubjectTractMetrics table 
+if __name__ == '__main__':
+    db.create_all(app=application)
+    application.app_context().push()
+    run()
