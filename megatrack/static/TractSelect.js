@@ -41,7 +41,7 @@ function TractSelect(containerId, parent) {
 	
 	$('#'+this._containerId).append('<div id="table-div">'
 			+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
-			+'<div id="add-tract-disabled-message">Query a dataset before selecting a tract</div>'
+			+'<div id="tract-disabled-msg-container"><span id="tract-disabled-msg-text">Query a dataset before selecting a tract</span></div>'
 			+'<div class="clear"></div>'
 			+'<hr>'
 			+'<table id="tract-table">'
@@ -268,7 +268,7 @@ function TractSelect(containerId, parent) {
 		// add row to table
 		$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
 				+'<td id="tract-name" class="tract-table-cell">'+instance._availableTracts[tractCode].name+'</td>'
-				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator">&nbsp&nbsp&nbsp<div class="colormap-indicator-caret"></div></div></td>'
+				+'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
 				+'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
 				+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
 				+'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
