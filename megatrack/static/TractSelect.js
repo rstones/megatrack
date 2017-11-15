@@ -203,9 +203,9 @@ function TractSelect(containerId, parent) {
 		dataType: 'json',
 		url: instance._parent._rootPath + '/tract_select',
 		success: function(data) {
-			for (var i in data) {
-				$('#add-tract-select').append('<option id="'+data[i].code+'" value="'+data[i].code+'">'+data[i].name+'</option>');
-				instance._availableTracts[data[i].code] = {"code": data[i].code, "name": data[i].name, "description":data[i].description};
+			for (var tractCode in data) {
+				$('#add-tract-select').append('<option id="'+tractCode+'" value="'+tractCode+'">'+data[tractCode].name+'</option>');
+				instance._availableTracts[tractCode] = data[tractCode];
 			}
 		}
 	});
