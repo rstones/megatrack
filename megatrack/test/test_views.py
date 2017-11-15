@@ -9,7 +9,7 @@ import unittest
 import mock
 from flask_testing import TestCase
 from megatrack.models import db, AlchemyEncoder, Tract, Dataset, Subject
-from megatrack.views import megatrack, construct_subject_file_paths, construct_subject_query_filter
+from megatrack.views import megatrack, construct_subject_file_paths
 import megatrack.views as views
 from .cache_mock import CacheMock
         
@@ -246,33 +246,6 @@ class MegatrackTestCase(TestCase):
         resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?')
         assert resp.mimetype == 'application/octet-stream'
         assert 'attachment;' in resp.headers.get('Content-Disposition')
-        
-    def test_construct_subject_query_filter(self):
-        test_query = {
-                        "BRC_ATLAS": {
-                                    "gender": {"type": "radio", "value": "M"},
-                                    "age": {"type": "range", "min": "20", "max": "40"}
-                                    }
-                      }
-        query_filter = construct_subject_query_filter(test_query['BRC_ATLAS'])
-        print(query_filter)
-        assert len(query_filter) == 3 # 1 constraint for radio, 2 constraints for range
-        
-    def test_construct_subject_query_filter_nonexistent_constraint_type(self):
-        '''
-        Not sure a ValueError is the correct way to go here. Maybe a warning instead.
-        '''
-        test_query = {
-                        "BRC_ATLAS": {
-                                    "gender": {"type": "nonexistent_type", "value": "M"},
-                                    "age": {"type": "range", "min": "20", "max": "40"}
-                                    }
-                      }
-        try:
-            query_filter = construct_subject_query_filter(test_query['BRC_ATLAS'])
-            assert False
-        except ValueError:
-            assert True
         
     def test_construct_subject_file_paths(self):
         self.setup_query_data()

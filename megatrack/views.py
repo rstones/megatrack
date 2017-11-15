@@ -1,4 +1,4 @@
-from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics
+from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify
 from flask_jsontools import jsonapi
 import numpy as np
@@ -22,7 +22,6 @@ def file_path_relative_to_root_path(file_path):
 
 @megatrack.route('/')
 def index():
-    user_agent = request.headers['User-Agent']
     return render_template('index.html')
 
 @megatrack.route('/about')
@@ -47,15 +46,17 @@ def get_template():
 @megatrack.route('/tract_select')
 def populate_tract_select():
     current_app.logger.info('Getting available tracts...')
-    tracts = Tract.query.all() # can order them in a certain way here
-    return jsonify(tracts)
+    #result = Tract.query.all() # can order them in a certain way here
+    result, ignored_tracts = dbu.get_tract_select_info()
+    if ignored_tracts:
+        current_app.logger.info('Ignoring tracts ' + str(ignored_tracts) + ' as they are not assigned to any datasets in dataset_tracts table')
+    return jsonify(result)
 
 @jsonapi
 @megatrack.route('/dataset_select')
 def populate_dataset_select():
     current_app.logger.info('Getting available datasets...')
-    datasets = Dataset.query.all()
-    return jsonify(datasets)
+    return jsonify(dbu.get_dataset_select_info())
 
 @jsonapi
 @megatrack.route('/query_report')

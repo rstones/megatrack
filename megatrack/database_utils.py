@@ -3,7 +3,31 @@ Created on 14 Sep 2017
 
 @author: richard
 '''
-from megatrack.models import Tract, Subject, Dataset
+from megatrack.models import Tract, Subject, Dataset, DatasetTracts
+import numpy as np
+
+def get_dataset_select_info():
+    return Dataset.query.all()
+
+def get_tract_select_info():
+    result = {}
+    ignored_tracts = []
+    
+    tracts = Tract.query.all() # can order them in a certain way here
+    dataset_tracts = DatasetTracts.query.with_entities(DatasetTracts.dataset_code, DatasetTracts.tract_code).all()
+    
+    if dataset_tracts:
+        dataset_tracts = np.array(dataset_tracts)
+        for tract in tracts:
+            if tract.code in dataset_tracts[:,1]:
+                dataset_idx = np.where(dataset_tracts[:,1] == tract.code)[0]
+                result[tract.code] = {"name": tract.name,
+                                       "description": tract.description,
+                                       "datasets": dataset_tracts[:,0][dataset_idx].tolist()}
+            else:
+                ignored_tracts.append(tract.code)
+            
+    return result, ignored_tracts
 
 
 def construct_subject_query_filter(dataset_constraints):

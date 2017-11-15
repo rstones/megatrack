@@ -171,4 +171,16 @@ class SubjectTractMetrics(db.Model):
     def __repr__(self):
         return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.tract_code
         
+class DatasetTracts(db.Model):
+    dataset_code = db.Column(db.String(12), db.ForeignKey('dataset.code'), primary_key=True)
+    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code'), primary_key=True)
+    
+    def __init__(self, dataset_code, tract_code):
+        self.dataset_code = dataset_code
+        self.tract_code = tract_code
         
+    def __repr__(self):
+        return '<DatasetTracts %r>' % self.dataset_code + ' ' + self.tract_code
+    
+    
+    
