@@ -109,7 +109,7 @@ function TractSelect(containerId, parent) {
 			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1) {
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](min, max, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](min, max, opacity));
 					instance._parent.resetSlicesForColormapChange();
 					break;
 				}
@@ -137,7 +137,7 @@ function TractSelect(containerId, parent) {
 			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1) {
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](min, max, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](min, max, opacity));
 					instance._parent.resetSlicesForColormapChange();
 					break;
 				}
@@ -161,7 +161,7 @@ function TractSelect(containerId, parent) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1 && instance._tractSettings[tractCode].color != color) {
 					instance._tractSettings[tractCode]["color"] = color;
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](colormapMin, colormapMax, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](colormapMin, colormapMax, opacity));
 					$('#'+tractCode+'-colormap-indicator').removeClass(instance._parent._labelmapColors[i]+'-colormap');
 					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 					instance._parent._labelmapColors[i] = color;
@@ -276,8 +276,8 @@ function TractSelect(containerId, parent) {
 		
 		// add event listener on settings icon
 		$('#'+tractCode+' > #tract-settings').on('click', function(event) {
+		    var tractCode = event.currentTarget.parentElement.id;
 		    if (!instance._selectedTracts[tractCode].disabled) {
-    		    var tractCode = event.currentTarget.parentElement.id;
     			var settings_menu = $('#tract-settings-menu');
     			settings_menu.data('tractCode', tractCode);
     			$('#tract-settings-title').html('Settings:<br>'+instance._availableTracts[tractCode].name);
@@ -300,9 +300,9 @@ function TractSelect(containerId, parent) {
 		});
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
+		    var tractCode = event.currentTarget.parentElement.id; 
 		    if (!instance._selectedTracts[tractCode].disabled) {
-		        var tractCode = event.currentTarget.parentElement.id; 
-            
+		        
                 // change metrics icon to selected style
                 if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
                     $('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
@@ -343,8 +343,8 @@ function TractSelect(containerId, parent) {
 		});
 		
 		$('#'+tractCode+' > #tract-atlas').on('click', function(event) {
+		    var tractCode = event.currentTarget.parentElement.id; 
 		    if (!instance._selectedTracts[tractCode].disabled) {
-                var tractCode = event.currentTarget.parentElement.id; 
             
                 $('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
                 $('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
@@ -514,129 +514,6 @@ function TractSelect(containerId, parent) {
 	
 }
 TractSelect.prototype.constructor = TractSelect;
-
-TractSelect.prototype.checkColormapMinMax = function(min, max) {
-	if (min < 0.01) { // cutoff for nifti density maps
-		min = 0.01;
-	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
-		throw TypeError("Invalid min/max values passed to colormap function");
-	}
-	return {"min":min, "max":max};
-}
-
-/*
- * @param min Minimum probability cutoff for density map
- * @param max Value above which probability saturates
- * @param alpha opacity of the colormap
- */
-TractSelect.prototype.redColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 160+(i*95/numSegments);
-		var g = (i*100/numSegments);
-		var b = 0;
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,180,0,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.blueColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 0;
-		var g = (i*200/numSegments);
-		var b = 160+(i*95/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [0,200,255,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.greenColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 0;
-		var g = 120+(i*135/numSegments);
-		var b = (i*180/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [180,255,180,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.purpleColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 120+(i*135/numSegments);
-		var g = 0;
-		var b = 120+(i*135/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,180,255,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.yellowColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 150+(i*105/numSegments);
-		var g = 150+(i*105/numSegments);
-		var b = 0;
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,255,180,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.colormapFunctions = {"red": TractSelect.prototype.redColormap,
-									  "blue": TractSelect.prototype.blueColormap,
-									  "green": TractSelect.prototype.greenColormap,
-									  "purple": TractSelect.prototype.purpleColormap,
-									  "yellow": TractSelect.prototype.yellowColormap} // object of colormap functions
-
-TractSelect.prototype.generateXTKColormap = function(colormap) {
-	var cmapShades = 100;
-	var cmap = Colormaps({
-		colormap: colormap,
-		alpha: [0,1],
-		nshades: cmapShades,
-		format: 'rgbaString'
-	});
-	return function(normpixval) {
-		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
-		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
-		var rgba = [];
-		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
-		rgba.push(255*parseFloat(rgbaString[3]));
-		return rgba;
-	};
-}
 
 TractSelect.prototype.populateDynamicTractInfo = function(data) {
 	$('#tract-info-name').html(data ? data.tractName : '');

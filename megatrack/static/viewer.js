@@ -136,7 +136,7 @@ function Viewer(elementId, rootPath) {
 			$('#tract-disabled-msg-text').hide();
 		}
 	});
-};
+}
 Viewer.prototype.constructor = Viewer;
 
 //Viewer.prototype.constructTractURL = function(tractCode) {
@@ -158,7 +158,7 @@ Viewer.prototype.checkColormapMinMax = function(min, max) {
  * @param alpha opacity of the colormap
  */
 Viewer.prototype.redColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
 	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
@@ -175,7 +175,7 @@ Viewer.prototype.redColormap = function(min, max, alpha) {
 }
 
 Viewer.prototype.blueColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
 	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
@@ -192,7 +192,7 @@ Viewer.prototype.blueColormap = function(min, max, alpha) {
 }
 
 Viewer.prototype.greenColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
 	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
@@ -209,7 +209,7 @@ Viewer.prototype.greenColormap = function(min, max, alpha) {
 }
 
 Viewer.prototype.purpleColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
 	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
@@ -226,7 +226,7 @@ Viewer.prototype.purpleColormap = function(min, max, alpha) {
 }
 
 Viewer.prototype.yellowColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	var minMax = Viewer.prototype.checkColormapMinMax(min, max);
 	min = minMax["min"], max = minMax["max"];
 	var numSegments = 5;
 	var segmentLength = (max - min) / numSegments;
