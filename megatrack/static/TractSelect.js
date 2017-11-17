@@ -264,9 +264,11 @@ function TractSelect(containerId, parent) {
 		$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 		
 		$('#'+tractCode+' > #tract-download').on('click', function(event) {
-			event.preventDefault();
-			var tractCode = event.currentTarget.parentElement.id;
-			window.location.href = 'tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
+		    var tractCode = event.currentTarget.parentElement.id;
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    		    event.preventDefault();
+                window.location.href = 'tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
+		    }
 		});
 		
 		// add event listener on remove icon
@@ -300,87 +302,94 @@ function TractSelect(containerId, parent) {
 		
 		// add event listener on settings icon
 		$('#'+tractCode+' > #tract-settings').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id;
-			var settings_menu = $('#tract-settings-menu');
-			settings_menu.data('tractCode', tractCode);
-			$('#tract-settings-title').html('Settings:<br>'+instance._availableTracts[tractCode].name);
-			var min = 100*instance._tractSettings[tractCode]["colormapMin"];
-			var max = 100*instance._tractSettings[tractCode]["colormapMax"];
-			var opacity = 100*instance._tractSettings[tractCode]["opacity"];
-			$('#tract-prob-range-slider').slider('values', [min, max]);
-			$('#tract-prob-range-min-handle').text(Math.floor(min));
-			$('#tract-prob-range-max-handle').text(Math.floor(max));
-			$('#tract-opacity-slider').slider('value', opacity);
-			$('#tract-opacity-slider-handle').text(Math.floor(opacity));
-			
-			// position menu at settings button or mouse click?
-			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
-			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
-			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
-			
-			instance._tractSettingsVisible = true;
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    		    var tractCode = event.currentTarget.parentElement.id;
+    			var settings_menu = $('#tract-settings-menu');
+    			settings_menu.data('tractCode', tractCode);
+    			$('#tract-settings-title').html('Settings:<br>'+instance._availableTracts[tractCode].name);
+    			var min = 100*instance._tractSettings[tractCode]["colormapMin"];
+    			var max = 100*instance._tractSettings[tractCode]["colormapMax"];
+    			var opacity = 100*instance._tractSettings[tractCode]["opacity"];
+    			$('#tract-prob-range-slider').slider('values', [min, max]);
+    			$('#tract-prob-range-min-handle').text(Math.floor(min));
+    			$('#tract-prob-range-max-handle').text(Math.floor(max));
+    			$('#tract-opacity-slider').slider('value', opacity);
+    			$('#tract-opacity-slider-handle').text(Math.floor(opacity));
+    			
+    			// position menu at settings button or mouse click?
+    			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
+    			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
+    			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
+    			
+    			instance._tractSettingsVisible = true;
+		    }
 		});
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id; 
+		    if (!instance._selectedTracts[tractCode].disabled) {
+		        var tractCode = event.currentTarget.parentElement.id; 
+            
+                // change metrics icon to selected style
+                if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
+                    $('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+                    $('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+                }
+                $('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+                $('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+                
+                var metrics = instance._tractMetrics[tractCode];
+                instance._currentInfoTractCode = tractCode;
+                if (metrics && metrics['dynamic'] && metrics['static']) {
+                    instance.populateDynamicTractInfo(metrics['dynamic']);
+                    instance.populateStaticTractInfo(metrics['static']);
+                } else {
+                    // get the metric data
+                    var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
+                    $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                    $.ajax({
+                        dataType: 'json',
+                        url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
+                        success: function(data) {
+                            instance._tractMetrics[data.tractCode]['dynamic'] = data;
+                            instance.populateDynamicTractInfo(data);
+                        }
+                    });
+                    $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                    $.ajax({
+                        dataType: 'json',
+                        url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
+                        success: function(data) {
+                            instance._tractMetrics[data.tractCode]['static'] = data;
+                            instance.populateStaticTractInfo(data);
+                        }
+                    });
+                }
+		    }
 			
-			// change metrics icon to selected style
-			if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
-				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
-				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
-			}
-			$('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
-			$('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
-			
-			var metrics = instance._tractMetrics[tractCode];
-			instance._currentInfoTractCode = tractCode;
-			if (metrics && metrics['dynamic'] && metrics['static']) {
-				instance.populateDynamicTractInfo(metrics['dynamic']);
-				instance.populateStaticTractInfo(metrics['static']);
-			} else {
-				// get the metric data
-				var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
-				$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-				$.ajax({
-					dataType: 'json',
-					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
-					success: function(data) {
-						instance._tractMetrics[data.tractCode]['dynamic'] = data;
-						instance.populateDynamicTractInfo(data);
-					}
-				});
-				$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-				$.ajax({
-					dataType: 'json',
-					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
-					success: function(data) {
-						instance._tractMetrics[data.tractCode]['static'] = data;
-						instance.populateStaticTractInfo(data);
-					}
-				});
-			}
 		});
 		
 		$('#'+tractCode+' > #tract-atlas').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id; 
-			
-			$('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
-			$('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
-			$('#tract-info-overlay').show('slow');
-			
-			var renderer = instance._trkRenderer;
-			renderer.remove(instance._trk);
-			renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
-			
-			instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
-			instance._trk.opacity = 1.0;
-			
-			renderer.add(instance._trk);
-			renderer.render();
-			
-			instance.cameraMotion = setInterval(function() {
-				renderer.camera.rotate([3,0]);
-			}, 50);
+		    if (!instance._selectedTracts[tractCode].disabled) {
+                var tractCode = event.currentTarget.parentElement.id; 
+            
+                $('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
+                $('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
+                $('#tract-info-overlay').show('slow');
+                
+                var renderer = instance._trkRenderer;
+                renderer.remove(instance._trk);
+                renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
+                
+                instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
+                instance._trk.opacity = 1.0;
+                
+                renderer.add(instance._trk);
+                renderer.render();
+                
+                instance.cameraMotion = setInterval(function() {
+                    renderer.camera.rotate([3,0]);
+                }, 50);
+            }
 			
 		});
 		
@@ -451,11 +460,36 @@ function TractSelect(containerId, parent) {
 			if (disable) {
 				instance._parent.removeLabelmapFromVolume(tractCode);
 				// disable tract row
+				$('#'+tractCode+' > #tract-name').addClass('tract-disabled');
+				$('#'+tractCode+' > #tract-settings').children().removeClass('settings-icon clickable');
+				$('#'+tractCode+' > #tract-settings').children().addClass('settings-icon-disabled');
+				$('#'+tractCode+' > #tract-info').children().removeClass('metrics-icon clickable');
+                $('#'+tractCode+' > #tract-info').children().addClass('metrics-icon-disabled');
+                $('#'+tractCode+' > #tract-atlas').children().removeClass('atlas-icon clickable');
+                $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon-disabled');
+                $('#'+tractCode+' > #tract-download').children().removeClass('download-icon clickable');
+                $('#'+tractCode+' > #tract-download').children().addClass('download-icon-disabled');
+//                 $('#'+tractCode+' > #tract-remove').children().removeClass('remove-icon clickable');
+//                 $('#'+tractCode+' > #tract-remove').children().addClass('remove-icon-disabled');
 			} else {
 				if (instance._availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
 					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode);
 					var color = instance._tractSettings[tractCode].color;
 					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+					
+					// reenable the tract row
+					$('#'+tractCode+' > #tract-name').removeClass('tract-disabled');
+					$('#'+tractCode+' > #tract-settings').children().removeClass('settings-icon-disabled');
+					$('#'+tractCode+' > #tract-settings').children().addClass('settings-icon clickable');
+                    $('#'+tractCode+' > #tract-info').children().removeClass('metrics-icon-disabled');
+                    $('#'+tractCode+' > #tract-info').children().addClass('metrics-icon clickable');
+                    $('#'+tractCode+' > #tract-atlas').children().removeClass('atlas-icon-disabled');
+                    $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon clickable');
+                    $('#'+tractCode+' > #tract-download').children().removeClass('download-icon-disabled');
+                    $('#'+tractCode+' > #tract-download').children().addClass('download-icon clickable');
+//                     $('#'+tractCode+' > #tract-remove').children().removeClass('remove-icon-disabled');
+//                     $('#'+tractCode+' > #tract-remove').children().addClass('remove-icon clickable');
+					
 				} else { // if previously active, update labelmap
 					instance._parent.updateLabelmapFile(tractCode, newQuery);
 				}
