@@ -18,7 +18,32 @@ function Viewer(elementId, rootPath) {
 	container.append('<div id="query-panel"></div>');
 	container.append('<div id="tract-panel"></div>');
 	
-	this._currentQueryData = {};
+	//this._currentQueryData = {};
+	
+	this._initColormapMax = 1.0;
+	this._initColormapMin = 0.25;
+	this._initColormapOpacity = 1.0;
+//	this._colormapMin = 0.25;
+//	this._colormapMax = 1.0;
+	
+	this._colormaps = {};
+	for (var key in this.colormapFunctions) {
+		this._colormaps[key] = this.colormapFunctions[key](this._initColormapMin, this._initColormapMax, 1);
+		// insert colormap css classes
+		var rgbaColors = [];
+		var n = 8;
+		for (var i=3; i<n-1; i++) {
+			var color = this._colormaps[key][i].rgb;
+			rgbaColors.push('rgba('+color[0]+','+color[1]+','+color[2]+','+color[3]+')');
+		}
+		$('head').append('<style>'
+							+'.'+key+'-colormap {'
+							+'background:-moz-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
+							+'background:-webkit-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
+							+'}'
+							+'</style>');
+	}
+	this._numColormaps = Object.keys(this._colormaps).length;
 
 	this._volume = new X.volume();
 	this._volume.lowerThreshold = 1000; // threshold to remove grey background of template
@@ -114,8 +139,131 @@ function Viewer(elementId, rootPath) {
 };
 Viewer.prototype.constructor = Viewer;
 
-Viewer.prototype.constructTractURL = function(tractCode) {
-	return '/get_density_map?' + $.param(viewer._currentQueryData) + '&tract='+tractCode+'&.nii.gz';
+//Viewer.prototype.constructTractURL = function(tractCode) {
+//	return '/get_density_map?' + $.param(viewer._currentQueryData) + '&tract='+tractCode+'&.nii.gz';
+//}
+
+Viewer.prototype.checkColormapMinMax = function(min, max) {
+	if (min < 0.01) { // cutoff for nifti density maps
+		min = 0.01;
+	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
+		throw TypeError("Invalid min/max values passed to colormap function");
+	}
+	return {"min":min, "max":max};
+}
+
+/*
+ * @param min Minimum probability cutoff for density map
+ * @param max Value above which probability saturates
+ * @param alpha opacity of the colormap
+ */
+Viewer.prototype.redColormap = function(min, max, alpha) {
+	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 160+(i*95/numSegments);
+		var g = (i*100/numSegments);
+		var b = 0;
+		//var a = 1.0; //0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
+	}
+	colormap.push({"index": 1, "rgb": [255,180,0,alpha]});
+	return colormap;
+}
+
+Viewer.prototype.blueColormap = function(min, max, alpha) {
+	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 0;
+		var g = (i*200/numSegments);
+		var b = 160+(i*95/numSegments);
+		//var a = 1.0; //0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
+	}
+	colormap.push({"index": 1, "rgb": [0,200,255,alpha]});
+	return colormap;
+}
+
+Viewer.prototype.greenColormap = function(min, max, alpha) {
+	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 0;
+		var g = 120+(i*135/numSegments);
+		var b = (i*180/numSegments);
+		//var a = 1.0; //0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
+	}
+	colormap.push({"index": 1, "rgb": [180,255,180,alpha]});
+	return colormap;
+}
+
+Viewer.prototype.purpleColormap = function(min, max, alpha) {
+	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 120+(i*135/numSegments);
+		var g = 0;
+		var b = 120+(i*135/numSegments);
+		//var a = 1.0; //0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
+	}
+	colormap.push({"index": 1, "rgb": [255,180,255,alpha]});
+	return colormap;
+}
+
+Viewer.prototype.yellowColormap = function(min, max, alpha) {
+	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
+	min = minMax["min"], max = minMax["max"];
+	var numSegments = 5;
+	var segmentLength = (max - min) / numSegments;
+	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
+	for (var i=0; i<numSegments+1; i++) {
+		var r = 150+(i*105/numSegments);
+		var g = 150+(i*105/numSegments);
+		var b = 0;
+		//var a = 1.0; //0.6+(i*0.4/numSegments);
+		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
+	}
+	colormap.push({"index": 1, "rgb": [255,255,180,alpha]});
+	return colormap;
+}
+
+Viewer.prototype.colormapFunctions = {"red": Viewer.prototype.redColormap,
+									  "blue": Viewer.prototype.blueColormap,
+									  "green": Viewer.prototype.greenColormap,
+									  "purple": Viewer.prototype.purpleColormap,
+									  "yellow": Viewer.prototype.yellowColormap} // object of colormap functions
+
+Viewer.prototype.generateXTKColormap = function(colormap) {
+	var cmapShades = 100;
+	var cmap = Colormaps({
+		colormap: colormap,
+		alpha: [0,1],
+		nshades: cmapShades,
+		format: 'rgbaString'
+	});
+	return function(normpixval) {
+		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
+		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
+		var rgba = [];
+		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
+		rgba.push(255*parseFloat(rgbaString[3]));
+		return rgba;
+	};
 }
 
 /*
@@ -172,6 +320,55 @@ Viewer.prototype.centreInMNISpace = function() {
 		var centre = Math.round(this._volume.RASCenter[view._dimIdx] / 2);
 		this._volume[view._idx] -= centre;
 		idx++;
+	}
+}
+
+Viewer.prototype.removeLabelmapFromVolume = function(tractCode) {
+	for (var i=0; i<this._volume.labelmap.length; i++) {
+		var map = this._volume.labelmap[i];
+		if (map.tractCode == tractCode) {
+			this._volume.labelmap.splice(i, 1);
+			this._labelmapColors.splice(i, 1);
+			this.removeLabelmapSlices(i);
+			break;
+		}
+	}
+}
+
+Viewer.prototype.addLabelmapToVolume = function(tractCode) {
+	var map = new X.labelmap(this._volume);
+	map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
+	if (this._currentQuery) {
+		map.file = this._rootPath + '/tract/'+tractCode+'?'+$.param(this._currentQuery)+'&file_type=.nii.gz';
+	} else {
+		map.file = this._rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
+	}
+	var color = Object.keys(this._colormaps)[Math.floor(Math.random()*this._numColormaps)];
+	var tractSettings = {
+			"colormapMax": this._initColormapMax,
+			"colormapMin": this._initColormapMin,
+			"opacity": this._initColormapOpacity,
+			"color": color,
+			"colormapMinUpdate": 0
+		};
+	map.colormap = this.generateXTKColormap(this._colormaps[color]);
+	this._volume.labelmap.push(map);
+	this._labelmapColors.push(color);
+	
+	// re-render
+	this.resetSlicesForDirtyFiles();
+	
+	return tractSettings;
+}
+
+Viewer.prototype.updateLabelmapFile = function(tractCode, newQuery) {
+	for (var i=0; i<this._volume.labelmap.length; i++) {
+		var map = this._volume.labelmap[i];
+		if (map.tractCode == tractCode) {
+			map.file = this._rootPath + '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
+			this.resetSlicesForDirtyFiles();
+			break;
+		}
 	}
 }
 

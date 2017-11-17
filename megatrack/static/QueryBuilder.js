@@ -62,32 +62,35 @@ function QueryBuilder(containerId, rootPath) {
 		var updateButton = $('#update-query-button');
 		updateButton.addClass('update-query-button-disabled');
 		updateButton.on('click', function() {
-			var newQuery = instance.buildQueryObject();
-			if (JSON.stringify(newQuery) != JSON.stringify(instance._currentQuery)) {
-				$.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
-				// show loading gif in #query-info div here
-				$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+'<div class="loading-gif"></div></span>');
-				$.ajax({
-					dataType: 'json',
-					url: instance._rootPath + '/query_report?'+$.param(newQuery),
-					success: function(data) {
-						var totalSubjects = 0
-						for (var key in data.dataset) {
-							totalSubjects += data.dataset[key];
-						}
-						$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+totalSubjects+'</span>');
-					} 
-				});
-				$.ajax({
-					url: instance._rootPath + '/generate_mean_maps?'+$.param(newQuery),
-					success: function(data) {
-						// do nothing
-					} 
-				});
+			if (updateButton.hasClass('update-query-button-active')) {
+				var newQuery = instance.buildQueryObject();
+				if (JSON.stringify(newQuery) != JSON.stringify(instance._currentQuery)) {
+					$.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
+					// show loading gif in #query-info div here
+					$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+'<div class="loading-gif"></div></span>');
+					$.ajax({
+						dataType: 'json',
+						url: instance._rootPath + '/query_report?'+$.param(newQuery),
+						success: function(data) {
+							var totalSubjects = 0
+							for (var key in data.dataset) {
+								totalSubjects += data.dataset[key];
+							}
+							$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+totalSubjects+'</span>');
+						} 
+					});
+					$.ajax({
+						url: instance._rootPath + '/generate_mean_maps?'+$.param(newQuery),
+						success: function(data) {
+							// do nothing
+						} 
+					});
+				}
+				instance._currentQuery = newQuery;
+				updateButton.removeClass('update-query-button-active');
+				updateButton.removeClass('clickable');
+				updateButton.addClass('update-query-button-disabled');
 			}
-			instance._currentQuery = newQuery;
-			updateButton.removeClass('update-query-button-active');
-			updateButton.addClass('update-query-button-disabled');
 		});
 		
 		updateButton.on('query:change', function() {
@@ -96,10 +99,12 @@ function QueryBuilder(containerId, rootPath) {
 			// but ordered differently
 			if ($.isEmptyObject(newQuery)) {
 				updateButton.removeClass('update-query-button-active');
+				updateButton.removeClass('clickable');
 				updateButton.addClass('update-query-button-disabled');
 			} else if (JSON.stringify(newQuery) != JSON.stringify(instance._currentQuery)) {
 				updateButton.removeClass('update-query-button-disabled');
 				updateButton.addClass('update-query-button-active');
+				updateButton.addClass('clickable');
 			}
 		});
 		
@@ -115,17 +120,17 @@ QueryBuilder.prototype.buildQueryObject = function() {
 	var queries = this._datasetQueries;
 	for (var i=0; i<queries.length; i++) {
 		if (Object.keys(queries[i]._constraints).length > 0 && !queries[i]._excluded) {
-			newQuery[queries[i]._datasetId] = {};
+			newQuery[queries[i]._datasetCode] = {};
 			for (var key in queries[i]._constraints) {
 				var constraint = queries[i]._constraints[key];
-				newQuery[queries[i]._datasetId][key] = {"type": queries[i]._constraints[key]._type};
-				switch (newQuery[queries[i]._datasetId][key].type) {
+				newQuery[queries[i]._datasetCode][key] = {"type": queries[i]._constraints[key]._type};
+				switch (newQuery[queries[i]._datasetCode][key].type) {
 					case "radio":
-						newQuery[queries[i]._datasetId][key]["value"] = constraint._queryRow.find('input[name="'+key+'"]:checked').val();
+						newQuery[queries[i]._datasetCode][key]["value"] = constraint._queryRow.find('input[name="'+key+'"]:checked').val();
 						break;
 					case "range":
-						newQuery[queries[i]._datasetId][key]["min"] = $(constraint._sliderDiv).slider('values',0);
-						newQuery[queries[i]._datasetId][key]["max"] = $(constraint._sliderDiv).slider('values',1);
+						newQuery[queries[i]._datasetCode][key]["min"] = $(constraint._sliderDiv).slider('values',0);
+						newQuery[queries[i]._datasetCode][key]["max"] = $(constraint._sliderDiv).slider('values',1);
 						break;
 					case "checkbox":
 						// not sure if the following selector + .val() gets all the vals or just one. need to check.
@@ -134,7 +139,7 @@ QueryBuilder.prototype.buildQueryObject = function() {
 																							vals.push($(this).val());
 																						});
 						if (vals.length > 0) {
-							newQuery[queries[i]._datasetId][key]["values"] = vals;
+							newQuery[queries[i]._datasetCode][key]["values"] = vals;
 						} else {
 							// This is a bit of a hack to get round if there are no checkboxes selected.
 							// I've got a bit of a dilemma about what's most logical for users when
@@ -142,7 +147,7 @@ QueryBuilder.prototype.buildQueryObject = function() {
 							// remove constraint when they want to include all values. Or checkboxes and have
 							// all checked and none checked meaning the same thing of include all values. Or all
 							// checkboxes empty meaning no query?
-							delete newQuery[queries[i]._datasetId][key];
+							delete newQuery[queries[i]._datasetCode][key];
 						}
 						break;
 				}
@@ -155,15 +160,15 @@ QueryBuilder.prototype.buildQueryObject = function() {
 
 /**
  * @param tableId is the id of the table in which to insert a row
- * @param datasetId the dataset code
+ * @param datasetCode the dataset code
  * @param dataset is object defining the dataset code, name and possible query types
  * @param the parent of this query object which should be the QueryBuilder object
  * @returns
  */
-function DatasetQuery(tableId, datasetId, dataset, parent) {
+function DatasetQuery(tableId, datasetCode, dataset, parent) {
 	
 	var instance = this;
-	this._datasetId = datasetId;
+	this._datasetCode = datasetCode;
 	this._dataset = dataset;
 	this._parent = parent;
 	this._constraints = {};
@@ -246,7 +251,7 @@ function DatasetQuery(tableId, datasetId, dataset, parent) {
 		$('#add-dataset-select option[value='+instance._dataset.code+']').prop('disabled', false);
 		var datasetQueries = instance._parent._datasetQueries;
 		for (var i=0; i<datasetQueries.length; i++) {
-			if (datasetQueries[i].code == this._datasetId) {
+			if (datasetQueries[i]._datasetCode == instance._datasetCode) {
 				datasetQueries.splice(i, 1);
 				break;
 			}

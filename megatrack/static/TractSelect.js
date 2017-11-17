@@ -10,9 +10,9 @@ function TractSelect(containerId, parent) {
 	this._colormapMin = 0.25;
 	this._colormapMax = 1.0;
 	
-	this._initColormapMax = 1.0;
-	this._initColormapMin = 0.25;
-	this._initColormapopacity = 1.0;
+//	this._initColormapMax = 1.0;
+//	this._initColormapMin = 0.25;
+//	this._initColormapOpacity = 1.0;
 	
 	this._currentInfoTractCode = '';
 	this._tractMetrics = {};
@@ -205,7 +205,9 @@ function TractSelect(containerId, parent) {
 		success: function(data) {
 			for (var tractCode in data) {
 				$('#add-tract-select').append('<option id="'+tractCode+'" value="'+tractCode+'">'+data[tractCode].name+'</option>');
+				data[tractCode]['disabled'] = false;
 				instance._availableTracts[tractCode] = data[tractCode];
+				
 			}
 		}
 	});
@@ -243,27 +245,9 @@ function TractSelect(containerId, parent) {
 			instance._currentInfoTractCode = tractCode;
 		}
 		
-		var map = new X.labelmap(instance._parent._volume);
-		map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
-		if (instance._parent._currentQuery) {
-			map.file = instance._parent._rootPath + '/tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
-		} else {
-			map.file = instance._parent._rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
-		}
-		var color = Object.keys(instance._colormaps)[Math.floor(Math.random()*instance._numColormaps)];
-		instance._tractSettings[tractCode] = {
-				"colormapMax": instance._initColormapMax,
-				"colormapMin": instance._initColormapMin,
-				"opacity": instance._initColormapopacity,
-				"color": color,
-				"colormapMinUpdate": 0
-			}
-		map.colormap = instance.generateXTKColormap(instance._colormaps[color]);
-		instance._parent._volume.labelmap.push(map);
-		instance._parent._labelmapColors.push(color);
-		
-		// re-render
-		instance._parent.resetSlicesForDirtyFiles();
+		// add the tract to the viewer
+		instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode);
+		var color = instance._tractSettings[tractCode].color;
 		
 		// add row to table
 		$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
@@ -310,17 +294,8 @@ function TractSelect(containerId, parent) {
 			$('#'+tractCode+'-spacer').remove();
 			delete instance._selectedTracts[tractCode];
 			delete instance._tractMetrics[tractCode];
-			// remove labelmap from X.volume.labelmap
-			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
-				var map = instance._parent._volume.labelmap[i];
-				var filepath = map.file;
-				if (filepath.indexOf(tractCode) !== -1) {
-					instance._parent._volume.labelmap.splice(i, 1);
-					instance._parent._labelmapColors.splice(i, 1);
-					instance._parent.removeLabelmapSlices(i);
-					break;
-				}
-			}
+			// remove labelmap from the viewer
+			instance._parent.removeLabelmapFromVolume(tractCode);
 		});
 		
 		// add event listener on settings icon
@@ -425,7 +400,7 @@ function TractSelect(containerId, parent) {
 		});
 		
 		// pre-fetch the tract metrics and put in cache
-		var initThreshold = parseInt(instance._initColormapMin * 100);
+		var initThreshold = parseInt(instance._parent._initColormapMin * 100);
 		if (showTractInfo) {
 			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
@@ -453,47 +428,80 @@ function TractSelect(containerId, parent) {
 	});
 	
 	$(document).on('query-update', function(event, newQuery) {
+		
+		// remove the disabled tract select message
+		if ($('#add-tract-select').prop('disabled')) {
+			$('#add-tract-select').prop('disabled', false);
+			$('#tract-disabled-msg-text').hide();
+		}
+		
+		var datasets = Object.keys(newQuery);
 		var currentInfoTractCode = instance._currentInfoTractCode;
-		if (currentInfoTractCode && instance._tractSettings[currentInfoTractCode]) {
-			var threshold = parseInt(100*instance._tractSettings[currentInfoTractCode]["colormapMin"]);
-			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-			$.ajax({
-				dataType: 'json',
-				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'/'+threshold+'?'+$.param(newQuery),
-				success: function(data) {
-					instance._tractMetrics[data.tractCode]['dynamic'] = data;
-					instance.populateDynamicTractInfo(data);
-				}
-			});
-			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-			$.ajax({
-				dataType: 'json',
-				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'?'+$.param(newQuery),
-				success: function(data) {
-					instance._tractMetrics[data.tractCode]['static'] = data;
-					instance.populateStaticTractInfo(data);
-				}
-			});
-			for (var tractCode in instance._selectedTracts) {
-				if (tractCode != instance._currentInfoTractCode) {
-					var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
-					$.ajax({
-						dataType: 'json',
-						url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
-						success: function(data) {
-							instance._tractMetrics[data.tractCode]['dynamic'] = data;
-						}
-					});
-					$.ajax({
-						dataType: 'json',
-						url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
-						success: function(data) {
-							instance._tractMetrics[data.tractCode]['static'] = data;
-						}
-					});
+
+		for (var tractCode in instance._selectedTracts) {
+			// check to see if we want to disable the tract
+			var disable = false;
+			for (var i=0; i<datasets.length; i++) {
+				if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
+					disable = true;
+					break;
 				}
 			}
-		}
+			
+			if (disable) {
+				instance._parent.removeLabelmapFromVolume(tractCode);
+				// disable tract row
+			} else {
+				if (instance._availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
+					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode);
+					var color = instance._tractSettings[tractCode].color;
+					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+				} else { // if previously active, update labelmap
+					instance._parent.updateLabelmapFile(tractCode, newQuery);
+				}
+				
+				// update metrics
+				var threshold = parseInt(100*instance._tractSettings[currentInfoTractCode]["colormapMin"]);
+				if (tractCode == currentInfoTractCode) {
+					$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+					$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+				}
+				$.ajax({
+					dataType: 'json',
+					url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
+					success: function(data) {
+						instance._tractMetrics[data.tractCode]['dynamic'] = data;
+						if (data.tractCode == currentInfoTractCode) {
+							instance.populateDynamicTractInfo(data);
+						}
+					}
+				});
+				$.ajax({
+					dataType: 'json',
+					url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
+					success: function(data) {
+						instance._tractMetrics[data.tractCode]['static'] = data;
+						if (data.tractCode == currentInfoTractCode) {
+							instance.populateStaticTractInfo(data);
+						}
+					}
+				});
+			}
+			instance._availableTracts[tractCode].disabled = disable;
+		}		
+		
+		// also loop through all the options in the tract select and disable the the required tracts 
+		$('#add-tract-select option[value!=default]').each(function(idx) {
+			var tractCode = $(this).val();
+			var disable = false;
+			for (var i=0; i<datasets.length; i++) {
+				if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
+					disable = true;
+					break;
+				}
+			}
+			$(this).prop('disabled', disable);
+		});
 	});
 	
 }
@@ -687,4 +695,6 @@ TractSelect.prototype.closeTractSettings = function() {
 		this._tractSettingsVisible = false;
 	}
 }
+
+
 
