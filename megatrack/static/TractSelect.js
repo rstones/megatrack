@@ -7,37 +7,11 @@ function TractSelect(containerId, parent) {
 	this._tractSettings = {};
 	this._tractSettingsVisible = false;
 	
-	this._colormapMin = 0.25;
-	this._colormapMax = 1.0;
-	
-//	this._initColormapMax = 1.0;
-//	this._initColormapMin = 0.25;
-//	this._initColormapOpacity = 1.0;
-	
 	this._currentInfoTractCode = '';
 	this._tractMetrics = {};
 	
 	this._availableTracts = {};
 	this._selectedTracts = {};
-	
-	this._colormaps = {};
-	for (var key in this.colormapFunctions) {
-		this._colormaps[key] = this.colormapFunctions[key](this._colormapMin, this._colormapMax, 1);
-		// insert colormap css classes
-		var rgbaColors = [];
-		var n = 8;
-		for (var i=3; i<n-1; i++) {
-			var color = this._colormaps[key][i].rgb;
-			rgbaColors.push('rgba('+color[0]+','+color[1]+','+color[2]+','+color[3]+')');
-		}
-		$('head').append('<style>'
-							+'.'+key+'-colormap {'
-							+'background:-moz-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
-							+'background:-webkit-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
-							+'}'
-							+'</style>');
-	}
-	this._numColormaps = Object.keys(this._colormaps).length;
 	
 	$('#'+this._containerId).append('<div id="table-div">'
 			+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
@@ -173,7 +147,7 @@ function TractSelect(containerId, parent) {
 	});
 	$('#tract-settings-menu').hide();
 	
-	for (var key in this._colormaps) {
+	for (var key in this._parent._colormaps) {
 		$('#colormap-select').append('<div id="'+key+'-colormap-select-item" class="colormap-select-item clickable '+key+'-colormap">&nbsp&nbsp&nbsp</div>');
 		$('#'+key+'-colormap-select-item').on('click', {color: key}, function(event) {
 			// fetch selected tract code from colormap select
