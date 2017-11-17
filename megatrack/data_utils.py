@@ -27,14 +27,11 @@ def subject_averaged_MD(file_paths, data_file_path):
     return file_path
 
 def subject_averaged_map(file_paths, map_code):
-    '''This is hardcoded to be specific to brc_atlas, need to make it general for all data sets and subjects
-    
-    arg: map_code Currently should be either FA or MD
-    '''
+    '''arg: map_code Currently should be either FA or MD'''
     subject_averaged_map = np.zeros((len(file_paths), 91, 109, 91), dtype=np.float64)
     try:
         for i,file_name in enumerate(file_paths):
-            subject_averaged_map[i] = nib.load(file_name+'_'+map_code+'.nii.gz').get_data()
+            subject_averaged_map[i] = nib.load(file_name+'_'+map_code+'_MNI.nii.gz').get_data()
     except IOError:
         print(file_name)
         raise IOError('No files found for map code ' + map_code + '. (Or possibly for the subject file names passed in)')

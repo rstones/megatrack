@@ -217,7 +217,7 @@ def get_dynamic_tract_info(tract_code, threshold):
             subject_file_paths = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()[0]
             dataset_file_path = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.file_path == key).first()[0]            
             for path in subject_file_paths:
-                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/native/' + path[:-5])
+                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + path[:-5])
                 
         current_app.logger.info('Generating mean FA map...')
         mean_FA = du.subject_averaged_FA(all_file_paths, data_file_path)
