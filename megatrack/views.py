@@ -117,13 +117,13 @@ def construct_subject_file_paths(request_query, data_file_path, tract_dir, tract
             dataset_filter.append(Subject.dataset_code == key)
             subject_file_names = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()
             for i in range(len(subject_file_names)):
-                subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/' + subject_file_names[i][0] + tract_file_name + '_2mm.nii.gz')
+                subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/mni/' + subject_file_names[i][0] + tract_file_name + '_2mm.nii.gz')
     else: # average all the density maps for this tract if no query selected
         subject_dataset_file_names = Subject.query.join(Dataset).with_entities(Subject.file_path, Dataset.file_path).all()
         for i in range(len(subject_dataset_file_names)):
             subject_file_name = subject_dataset_file_names[i][0] 
             dataset_dir = subject_dataset_file_names[i][1]
-            subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/' + subject_file_name + tract_file_name + '_2mm.nii.gz')
+            subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/mni/' + subject_file_name + tract_file_name + '_2mm.nii.gz')
             subject_file_names.append(subject_file_name)
     return subject_file_paths, subject_file_names
 
@@ -217,7 +217,7 @@ def get_dynamic_tract_info(tract_code, threshold):
             subject_file_paths = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()[0]
             dataset_file_path = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.file_path == key).first()[0]            
             for path in subject_file_paths:
-                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/' + path[:-5])
+                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/native/' + path[:-5])
                 
         current_app.logger.info('Generating mean FA map...')
         mean_FA = du.subject_averaged_FA(all_file_paths, data_file_path)
