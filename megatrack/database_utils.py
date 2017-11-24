@@ -53,11 +53,11 @@ def construct_subject_file_paths(request_query, data_file_path):
     for key in request_query:
         dataset_filter = construct_subject_query_filter(request_query[key])
         dataset_filter.append(Subject.dataset_code == key)
-        subject_file_paths = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()
+        subject_ids = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()
         dataset_file_path = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.file_path == key).first()[0]            
-        for path in subject_file_paths:
-            full_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + path[0][:-5])
-        results['dataset'][key] = len(subject_file_paths)
+        for id in subject_ids:
+            full_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + id[0])
+        results['dataset'][key] = len(subject_ids)
         
     return results, full_file_paths
     

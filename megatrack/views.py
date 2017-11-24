@@ -103,9 +103,8 @@ def generate_mean_maps():
     
     return 'Success!', 202
 
-def construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name):
+def construct_subject_file_paths(request_query, data_file_path, tract):
     subject_file_paths = []
-    subject_file_names = []
     if request_query:
         for key in request_query:
             # get file path for the datasets
@@ -115,37 +114,36 @@ def construct_subject_file_paths(request_query, data_file_path, tract_dir, tract
             dataset_dir = dataset.file_path
             dataset_filter = dbu.construct_subject_query_filter(request_query[key])
             dataset_filter.append(Subject.dataset_code == key)
-            subject_file_names = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()
-            for i in range(len(subject_file_names)):
-                subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/mni/' + subject_file_names[i][0] + tract_file_name + '_2mm.nii.gz')
+            subject_ids = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()
+            for id in subject_ids:
+                subject_file_paths.append(data_file_path + dataset_dir + '/' + tract.file_path + '/mni/' + id[0] + '_MNI_' + tract.code + '.nii.gz')
     else: # average all the density maps for this tract if no query selected
-        subject_dataset_file_names = Subject.query.join(Dataset).with_entities(Subject.file_path, Dataset.file_path).all()
-        for i in range(len(subject_dataset_file_names)):
-            subject_file_name = subject_dataset_file_names[i][0] 
-            dataset_dir = subject_dataset_file_names[i][1]
-            subject_file_paths.append(data_file_path + dataset_dir + '/' + tract_dir + '/mni/' + subject_file_name + tract_file_name + '_2mm.nii.gz')
-            subject_file_names.append(subject_file_name)
-    return subject_file_paths, subject_file_names
+        subject_dataset_paths = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).all()
+        for i in range(len(subject_dataset_paths)):
+            subject_id = subject_dataset_paths[i][0] 
+            dataset_dir = subject_dataset_paths[i][1]
+            subject_file_paths.append(data_file_path + dataset_dir + '/' + tract.file_path + '/mni/' + subject_id + '_MNI_' + tract.code + '.nii.gz')
+    return subject_file_paths
 
-def generate_average_density_map(file_paths, data_file_path, tract_code):
-    '''Loads and averages the tract density maps in the file_paths list.
-    Then saves averaged density map in data/temp folder so it can be sent in
-    response later.
-    '''
-    data = np.zeros((len(file_paths), 91, 109, 91), dtype=np.int16)
-    for i in range(len(file_paths)):
-        data[i] = nib.load(file_paths[i]).get_data()
-    
-    data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
-    mean = np.mean(data, axis=0)
-    
-    # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
-    template = nib.load(data_file_path+'Template_T1_2mm_new_RAS.nii.gz')
-    new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
-    temp_file_path = 'data/temp/'+tract_code+'_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
-    # is there a better way to return the averaged nifti without having to save it first?
-    nib.save(new_img, temp_file_path)
-    return temp_file_path
+# def generate_average_density_map(file_paths, data_file_path, tract_code):
+#     '''Loads and averages the tract density maps in the file_paths list.
+#     Then saves averaged density map in data/temp folder so it can be sent in
+#     response later.
+#     '''
+#     data = np.zeros((len(file_paths), 91, 109, 91), dtype=np.int16)
+#     for i in range(len(file_paths)):
+#         data[i] = nib.load(file_paths[i]).get_data()
+#     
+#     data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
+#     mean = np.mean(data, axis=0)
+#     
+#     # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
+#     template = nib.load(data_file_path+'Template_T1_2mm_new_RAS.nii.gz')
+#     new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
+#     temp_file_path = 'data/temp/'+tract_code+'_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
+#     # is there a better way to return the averaged nifti without having to save it first?
+#     nib.save(new_img, temp_file_path)
+#     return temp_file_path
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
@@ -158,18 +156,18 @@ def get_tract(tract_code):
         current_app.logger.info('No density map in cache so calculating average from scratch')
         if not tract:
             return 'The requested tract ' + tract_code + ' does not exist', 404
-        tract_dir = tract.file_path
-        tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
+        #tract_dir = tract.file_path
+        #tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
         
         data_file_path = current_app.config['DATA_FILE_PATH'] # file path to data folder
         
         request_query = jquery_unparam(request.query_string.decode('utf-8'))
         request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
         
-        subject_file_paths, subject_file_names = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
+        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
         
         if subject_file_paths:
-            temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+            temp_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
             current_app.cache.set(cache_key, cached_data)
@@ -206,29 +204,27 @@ def get_dynamic_tract_info(tract_code, threshold):
         tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
         request_query = jquery_unparam(request.query_string.decode('utf-8'))
         data_file_path = current_app.config['DATA_FILE_PATH']
-#         subject_file_paths, subject_file_names = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
-#         temp_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
         
         all_file_paths = []
         
         for key in request_query:
             dataset_filter = dbu.construct_subject_query_filter(request_query[key])
             dataset_filter.append(Subject.dataset_code == key)
-            subject_file_paths = Subject.query.with_entities(Subject.file_path).filter(*dataset_filter).all()[0]
+            subject_file_paths = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()[0]
             dataset_file_path = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.file_path == key).first()[0]            
             for path in subject_file_paths:
-                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + path[:-5])
+                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + path)
                 
         current_app.logger.info('Generating mean FA map...')
         mean_FA = du.subject_averaged_FA(all_file_paths, data_file_path)
         current_app.logger.info('Generating mean MD map...')
         mean_MD = du.subject_averaged_MD(all_file_paths, data_file_path)
         
-        subject_file_paths, subject_file_names = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
-        
+        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
+        print(subject_file_paths)
         if subject_file_paths:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+            tract_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
         
         current_app.logger.info('Putting file paths to averaged maps in cache for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD, tract_code:tract_file_path})
@@ -273,8 +269,8 @@ def get_static_tract_info(tract_code):
         tract_dir = tract.file_path
         tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
         data_file_path = current_app.config['DATA_FILE_PATH']
-        subject_file_paths, subject_file_names = construct_subject_file_paths(request_query, data_file_path, tract_dir, tract_file_name)
-        tract_file_path = generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
+        tract_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
         current_app.logger.info('Caching averaged density map ' + tract_code + ' for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
         current_app.cache.set(cache_key, cached_data)

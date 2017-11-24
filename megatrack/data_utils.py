@@ -12,6 +12,26 @@ from nibabel.nifti1 import Nifti1Image
 
 TEMPLATE_FILE_NAME = 'Template_T1_2mm_new_RAS.nii.gz'
 
+def generate_average_density_map(file_paths, data_file_path, tract_code):
+    '''Loads and averages the tract density maps in the file_paths list.
+    Then saves averaged density map in data/temp folder so it can be sent in
+    response later.
+    '''
+    data = np.zeros((len(file_paths), 91, 109, 91), dtype=np.int16)
+    for i in range(len(file_paths)):
+        data[i] = nib.load(file_paths[i]).get_data()
+    
+    data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
+    mean = np.mean(data, axis=0)
+    
+    # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
+    # maybe cache the template affine and header on startup so we don't need to do this load here?
+    template = nib.load(data_file_path+TEMPLATE_FILE_NAME)
+    new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
+    temp_file_path = data_file_path + 'temp/' + tract_code + '_' + '{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now()) + '.nii.gz'
+    nib.save(new_img, temp_file_path)
+    return temp_file_path
+
 def subject_averaged_FA(file_paths, data_file_path):
     template = nib.load(data_file_path+TEMPLATE_FILE_NAME)
     new_img = Nifti1Image(subject_averaged_map(file_paths, 'FA'), template.affine, template.header)
@@ -31,9 +51,8 @@ def subject_averaged_map(file_paths, map_code):
     subject_averaged_map = np.zeros((len(file_paths), 91, 109, 91), dtype=np.float64)
     try:
         for i,file_name in enumerate(file_paths):
-            subject_averaged_map[i] = nib.load(file_name+'_'+map_code+'_MNI.nii.gz').get_data()
+            subject_averaged_map[i] = nib.load(file_name+'_MNI_'+map_code+'.nii.gz').get_data()
     except IOError:
-        print(file_name)
         raise IOError('No files found for map code ' + map_code + '. (Or possibly for the subject file names passed in)')
     return np.mean(subject_averaged_map, axis=0)
 

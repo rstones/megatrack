@@ -151,8 +151,8 @@ class Dataset(db.Model):
             raise ValueError('Dataset:query_params is not valid JSON string. See following: ' + query_params)
         
 class SubjectTractMetrics(db.Model):
-    subject_id = db.Column(db.String(12), db.ForeignKey('subject.subject_id'), primary_key=True)
-    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code'), primary_key=True)
+    subject_id = db.Column(db.String(12), db.ForeignKey('subject.subject_id', onupdate='CASCADE'), primary_key=True)
+    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code', onupdate='CASCADE'), primary_key=True)
     mean_MD = db.Column(db.Float(5), nullable=False)
     std_MD = db.Column(db.Float(5), nullable=False)
     mean_FA = db.Column(db.Float(5), nullable=False)
@@ -172,8 +172,8 @@ class SubjectTractMetrics(db.Model):
         return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.tract_code
         
 class DatasetTracts(db.Model):
-    dataset_code = db.Column(db.String(12), db.ForeignKey('dataset.code'), primary_key=True)
-    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code'), primary_key=True)
+    dataset_code = db.Column(db.String(12), db.ForeignKey('dataset.code', onupdate='CASCADE'), primary_key=True)
+    tract_code = db.Column(db.String(10), db.ForeignKey('tract.code', onupdate='CASCADE'), primary_key=True)
     
     def __init__(self, dataset_code, tract_code):
         self.dataset_code = dataset_code

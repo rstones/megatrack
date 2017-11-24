@@ -42,14 +42,14 @@ def calculate_metrics(subject, tract):
     subject_file_path = subject[1]
     dataset_file_path = subject[2]
     try:
-        MD = nib.load('data/'+dataset_file_path + '/full_brain_maps/'+subject_file_path[:-5]+'_MD.nii.gz').get_data()
-        FA = nib.load('data/'+dataset_file_path+'/full_brain_maps/'+subject_file_path[:-5]+'_FA.nii.gz').get_data()
+        MD = nib.load('data/'+dataset_file_path + '/full_brain_maps/native/'+subject_file_path[:-5]+'_MD.nii.gz').get_data()
+        FA = nib.load('data/'+dataset_file_path+'/full_brain_maps/native/'+subject_file_path[:-5]+'_FA.nii.gz').get_data()
     except FileNotFoundError:
         print('Couldn\'t find maps for dataset ' + dataset_file_path + ' and subject file path ' + subject_file_path)
     tract_code = tract[0]
     tract_file_path = tract[1]
 
-    tract_data = nib.load('data/'+dataset_file_path+'/'+tract_file_path+'/'+subject_file_path+tract_file_path[tract_file_path.index('_')+1:]+'_2mm.nii.gz').get_data()
+    tract_data = nib.load('data/'+dataset_file_path+'/'+tract_file_path+'/native/'+subject_file_path+tract_file_path[tract_file_path.index('_')+1:]+'_2mm.nii.gz').get_data()
     masked_MD = ma.masked_where(tract_data == 0, MD)
     mean_MD = ma.mean(masked_MD)
     mean_MD = 0 if np.isnan(mean_MD) else mean_MD
