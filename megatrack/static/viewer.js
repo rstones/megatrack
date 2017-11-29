@@ -18,8 +18,6 @@ function Viewer(elementId, rootPath) {
 	container.append('<div id="query-panel"></div>');
 	container.append('<div id="tract-panel"></div>');
 	
-	//this._currentQueryData = {};
-	
 	this._initColormapMax = 1.0;
 	this._initColormapMin = 0.25;
 	this._initColormapOpacity = 1.0;
@@ -117,31 +115,9 @@ function Viewer(elementId, rootPath) {
 	
 	var tractSelect = new TractSelect('tract-panel', this);
 	
-	/*
-	 * Loop through all the currently selected tracts and update the associated labelmaps
-	 * Also enable tract select if not already enabled
-	 */
 	this._currentQuery = null;
-	$(document).on('query-update', function(event, newQuery) {
-		viewer._currentQuery = newQuery;
-		for (var i=0; i<viewer._volume.labelmap.length; i++) {
-			var map = viewer._volume.labelmap[i];
-			var tractCode = map.tractCode;
-			map.file = viewer._rootPath + '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
-			// may need to set file to dirty to initiate reloading
-			viewer.resetSlicesForDirtyFiles();
-		}
-		if ($('#add-tract-select').prop('disabled')) {
-			$('#add-tract-select').prop('disabled', false);
-			$('#tract-disabled-msg-text').hide();
-		}
-	});
 }
 Viewer.prototype.constructor = Viewer;
-
-//Viewer.prototype.constructTractURL = function(tractCode) {
-//	return '/get_density_map?' + $.param(viewer._currentQueryData) + '&tract='+tractCode+'&.nii.gz';
-//}
 
 Viewer.prototype.checkColormapMinMax = function(min, max) {
 	if (min < 0.01) { // cutoff for nifti density maps
@@ -335,11 +311,11 @@ Viewer.prototype.removeLabelmapFromVolume = function(tractCode) {
 	}
 }
 
-Viewer.prototype.addLabelmapToVolume = function(tractCode) {
+Viewer.prototype.addLabelmapToVolume = function(tractCode, newQuery) {
 	var map = new X.labelmap(this._volume);
 	map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
-	if (this._currentQuery) {
-		map.file = this._rootPath + '/tract/'+tractCode+'?'+$.param(this._currentQuery)+'&file_type=.nii.gz';
+    if (newQuery) {
+		map.file = this._rootPath + '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
 	} else {
 		map.file = this._rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
 	}
@@ -366,7 +342,7 @@ Viewer.prototype.updateLabelmapFile = function(tractCode, newQuery) {
 		var map = this._volume.labelmap[i];
 		if (map.tractCode == tractCode) {
 			map.file = this._rootPath + '/tract/'+tractCode+'?'+$.param(newQuery)+'&file_type=.nii.gz';
-			this.resetSlicesForDirtyFiles();
+			//this.resetSlicesForDirtyFiles();
 			break;
 		}
 	}

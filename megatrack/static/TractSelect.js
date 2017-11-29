@@ -220,7 +220,7 @@ function TractSelect(containerId, parent) {
 		}
 		
 		// add the tract to the viewer
-		instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode);
+		instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, instance._parent._currentQuery);
 		var color = instance._tractSettings[tractCode].color;
 		
 		// add row to table
@@ -411,6 +411,8 @@ function TractSelect(containerId, parent) {
 	});
 	
 	$(document).on('query-update', function(event, newQuery) {
+	
+	   instance._parent._currentQuery = newQuery;
 		
 		// remove the disabled tract select message
 		if ($('#add-tract-select').prop('disabled')) {
@@ -443,11 +445,9 @@ function TractSelect(containerId, parent) {
                 $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon-disabled');
                 $('#'+tractCode+' > #tract-download').children().removeClass('download-icon clickable');
                 $('#'+tractCode+' > #tract-download').children().addClass('download-icon-disabled');
-//                 $('#'+tractCode+' > #tract-remove').children().removeClass('remove-icon clickable');
-//                 $('#'+tractCode+' > #tract-remove').children().addClass('remove-icon-disabled');
 			} else {
 				if (instance._availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
-					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode);
+					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, newQuery);
 					var color = instance._tractSettings[tractCode].color;
 					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 					
@@ -461,11 +461,10 @@ function TractSelect(containerId, parent) {
                     $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon clickable');
                     $('#'+tractCode+' > #tract-download').children().removeClass('download-icon-disabled');
                     $('#'+tractCode+' > #tract-download').children().addClass('download-icon clickable');
-//                     $('#'+tractCode+' > #tract-remove').children().removeClass('remove-icon-disabled');
-//                     $('#'+tractCode+' > #tract-remove').children().addClass('remove-icon clickable');
 					
 				} else { // if previously active, update labelmap
 					instance._parent.updateLabelmapFile(tractCode, newQuery);
+					
 				}
 				
 				// update metrics
@@ -496,7 +495,10 @@ function TractSelect(containerId, parent) {
 				});
 			}
 			instance._availableTracts[tractCode].disabled = disable;
-		}		
+		}
+		if (Object.keys(instance._selectedTracts).length) {
+		    instance._parent.resetSlicesForDirtyFiles();
+		}
 		
 		// also loop through all the options in the tract select and disable the the required tracts 
 		$('#add-tract-select option[value!=default]').each(function(idx) {
