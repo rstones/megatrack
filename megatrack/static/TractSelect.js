@@ -501,14 +501,16 @@ function TractSelect(containerId, parent) {
 		// also loop through all the options in the tract select and disable the the required tracts 
 		$('#add-tract-select option[value!=default]').each(function(idx) {
 			var tractCode = $(this).val();
-			var disable = false;
-			for (var i=0; i<datasets.length; i++) {
-				if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
-					disable = true;
-					break;
-				}
+			if (!instance._selectedTracts[tractCode]) {
+			    var disable = false;
+			    for (var i=0; i<datasets.length; i++) {
+                if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
+                    disable = true;
+                    break;
+                }
+            }
+            $(this).prop('disabled', disable);
 			}
-			$(this).prop('disabled', disable);
 		});
 	});
 	
