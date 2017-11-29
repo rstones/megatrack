@@ -180,7 +180,7 @@ class DatasetTracts(db.Model):
         self.tract_code = tract_code
         
     def __repr__(self):
-        return '<DatasetTracts %r>' % self.dataset_code + ' ' + self.tract_code
+        return '<DatasetTracts %r>' % (self.dataset_code + ' ' + self.tract_code)
     
     
     

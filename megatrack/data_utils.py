@@ -76,7 +76,6 @@ def generate_average_density_map(data_dir, subject_ids_dataset_paths, tract, spa
 def subject_averaged_FA(subject_ids_dataset_paths, data_dir):
     template = nib.load(data_dir+'/'+TEMPLATE_FILE_NAME)
     new_img = Nifti1Image(subject_averaged_map(subject_ids_dataset_paths, 'FA', data_dir), template.affine, template.header)
-    #file_path = data_file_path+'temp/mean_FA_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
     file_path = temp_file(data_dir, 'FA', '.nii.gz')
     nib.save(new_img, file_path)
     return file_path
@@ -84,7 +83,6 @@ def subject_averaged_FA(subject_ids_dataset_paths, data_dir):
 def subject_averaged_MD(subject_ids_dataset_paths, data_dir):
     template = nib.load(data_dir+'/'+TEMPLATE_FILE_NAME)
     new_img = Nifti1Image(subject_averaged_map(subject_ids_dataset_paths, 'MD', data_dir), template.affine, template.header)
-    #file_path = data_file_path+'temp/mean_MD_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
     file_path = temp_file(data_dir, 'MD', '.nii.gz')
     nib.save(new_img, file_path)
     return file_path
