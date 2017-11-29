@@ -35,10 +35,9 @@ def contact():
 @megatrack.route('/get_template')
 def get_template():
     current_app.logger.info('Loading template...')
-    file_name = 'Template_T1_2mm_new_RAS.nii.gz'
-    data_file_path = current_app.config['DATA_FILE_PATH']
-    file_path = file_path_relative_to_root_path(data_file_path+file_name)
-    r = send_file(file_path, as_attachment=True, attachment_filename=file_name, conditional=True, add_etags=True)
+    data_dir = current_app.config['DATA_FILE_PATH']
+    file_path = file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME)
+    r = send_file(file_path, as_attachment=True, attachment_filename=du.TEMPLATE_FILE_NAME, conditional=True, add_etags=True)
     r.make_conditional(request)
     return r
 
@@ -46,7 +45,6 @@ def get_template():
 @megatrack.route('/tract_select')
 def populate_tract_select():
     current_app.logger.info('Getting available tracts...')
-    #result = Tract.query.all() # can order them in a certain way here
     result, ignored_tracts = dbu.get_tract_select_info()
     if ignored_tracts:
         current_app.logger.info('Ignoring tracts ' + str(ignored_tracts) + ' as they are not assigned to any datasets in dataset_tracts table')
@@ -72,102 +70,58 @@ def query_report():
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
         current_app.logger.info('Calculating cache stuff...')
         request_query = jquery_unparam(query_string_decoded)
-        query_report, subject_file_paths = dbu.construct_subject_file_paths(request_query, current_app.config['DATA_FILE_PATH'])
+        query_report = dbu.subjects_per_dataset(request_query)
         
-        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report, 'subject_file_paths': subject_file_paths})
+        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
         current_app.cache.set(cache_key, cached_data)
     
     return jsonify(cached_data['query_report'])
 
 @megatrack.route('/generate_mean_maps')
 def generate_mean_maps():
-    current_app.logger.info('Generating mean MD and FA maps...')
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
     cached_data = current_app.cache.get(cache_key)
-    data_file_path = current_app.config['DATA_FILE_PATH']
+    data_dir = current_app.config['DATA_FILE_PATH']
     request_query = jquery_unparam(query_string_decoded)
-    if not cached_data or cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
+    if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report'):
         # construct query report and subject file paths again
         current_app.logger.info('Regenerating full subject file paths...')
-        query_report, subject_file_paths = dbu.construct_subject_file_paths(request_query, data_file_path)
-        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report, 'subject_file_paths': subject_file_paths})
+        query_report = dbu.subjects_per_dataset(request_query)
+        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
         current_app.cache.set(cache_key, cached_data)
     
-    subject_file_paths = cached_data['subject_file_paths']
     
-    mean_FA = du.subject_averaged_FA(subject_file_paths, data_file_path)
-    mean_MD = du.subject_averaged_MD(subject_file_paths, data_file_path)
-    current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
-    current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
+    if not cu.check_items_in_cache(cached_data, 'FA', 'MD'):
+        current_app.logger.info('Generating mean MD and FA maps...')
+        subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+        
+        mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+        mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+        current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
+        current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
     
     return 'Success!', 202
-
-def construct_subject_file_paths(request_query, data_file_path, tract):
-    subject_file_paths = []
-    if request_query:
-        for key in request_query:
-            # get file path for the datasets
-            dataset = Dataset.query.filter(Dataset.code == key).first()
-            if not dataset:
-                continue # this dataset doesn't exist, try next one
-            dataset_dir = dataset.file_path
-            dataset_filter = dbu.construct_subject_query_filter(request_query[key])
-            dataset_filter.append(Subject.dataset_code == key)
-            subject_ids = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()
-            for id in subject_ids:
-                subject_file_paths.append(data_file_path + dataset_dir + '/' + tract.file_path + '/mni/' + id[0] + '_MNI_' + tract.code + '.nii.gz')
-    else: # average all the density maps for this tract if no query selected
-        subject_dataset_paths = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).all()
-        for i in range(len(subject_dataset_paths)):
-            subject_id = subject_dataset_paths[i][0] 
-            dataset_dir = subject_dataset_paths[i][1]
-            subject_file_paths.append(data_file_path + dataset_dir + '/' + tract.file_path + '/mni/' + subject_id + '_MNI_' + tract.code + '.nii.gz')
-    return subject_file_paths
-
-# def generate_average_density_map(file_paths, data_file_path, tract_code):
-#     '''Loads and averages the tract density maps in the file_paths list.
-#     Then saves averaged density map in data/temp folder so it can be sent in
-#     response later.
-#     '''
-#     data = np.zeros((len(file_paths), 91, 109, 91), dtype=np.int16)
-#     for i in range(len(file_paths)):
-#         data[i] = nib.load(file_paths[i]).get_data()
-#     
-#     data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
-#     mean = np.mean(data, axis=0)
-#     
-#     # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
-#     template = nib.load(data_file_path+'Template_T1_2mm_new_RAS.nii.gz')
-#     new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
-#     temp_file_path = 'data/temp/'+tract_code+'_'+'{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now())+'.nii.gz'
-#     # is there a better way to return the averaged nifti without having to save it first?
-#     nib.save(new_img, temp_file_path)
-#     return temp_file_path
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     
-    tract = Tract.query.filter(Tract.code == tract_code).first()
+    tract = dbu.get_tract(tract_code)
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
     cached_data = current_app.cache.get(cache_key)
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code): # either request not cached or associated density map doesn't exist
         current_app.logger.info('No density map in cache so calculating average from scratch')
         if not tract:
             return 'The requested tract ' + tract_code + ' does not exist', 404
-        #tract_dir = tract.file_path
-        #tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
         
-        data_file_path = current_app.config['DATA_FILE_PATH'] # file path to data folder
-        
+        data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
         request_query = jquery_unparam(request.query_string.decode('utf-8'))
         request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
+        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
         
-        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
-        
-        if subject_file_paths:
-            temp_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+        if len(subject_ids_dataset_path) > 0:
+            temp_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
             current_app.cache.set(cache_key, cached_data)
@@ -186,6 +140,8 @@ def get_dynamic_tract_info(tract_code, threshold):
     current_app.logger.info('Getting dynamic info for tract ' + tract_code)
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
     cached_data = current_app.cache.get(cache_key)
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    data_dir = current_app.config['DATA_FILE_PATH']
     
     try:
         threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
@@ -193,41 +149,32 @@ def get_dynamic_tract_info(tract_code, threshold):
         current_app.logger.info('Invalid threshold value applied returning 404...')
         return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
     
-    tract = Tract.query.filter(Tract.code == tract_code).first()
+    tract = dbu.get_tract(tract_code)
     if not tract:
         return 'The requested tract ' + tract_code + ' does not exist', 404
-    
-    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, 'FA', 'MD', tract_code):
-        # recalculate everything: mean FA/MD etc..
-        current_app.logger.info('Recalculating mean FA/MD and averaged density map for ' + tract_code)
-        tract_dir = tract.file_path
-        tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
-        request_query = jquery_unparam(request.query_string.decode('utf-8'))
-        data_file_path = current_app.config['DATA_FILE_PATH']
+
+    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
+        # recalculate average density map for tract
+        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
         
-        all_file_paths = []
-        
-        for key in request_query:
-            dataset_filter = dbu.construct_subject_query_filter(request_query[key])
-            dataset_filter.append(Subject.dataset_code == key)
-            subject_file_paths = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()[0]
-            dataset_file_path = Dataset.query.with_entities(Dataset.file_path).filter(Dataset.file_path == key).first()[0]            
-            for path in subject_file_paths:
-                all_file_paths.append(data_file_path + dataset_file_path + '/full_brain_maps/mni/' + path)
-                
-        current_app.logger.info('Generating mean FA map...')
-        mean_FA = du.subject_averaged_FA(all_file_paths, data_file_path)
-        current_app.logger.info('Generating mean MD map...')
-        mean_MD = du.subject_averaged_MD(all_file_paths, data_file_path)
-        
-        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
-        print(subject_file_paths)
-        if subject_file_paths:
+        if len(subject_ids_dataset_path) > 0:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
+            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
         
-        current_app.logger.info('Putting file paths to averaged maps in cache for query\n' + json.dumps(request_query, indent=4))
-        cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD, tract_code:tract_file_path})
+        current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
+        cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+        current_app.cache.set(cache_key, cached_data)
+    
+    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, 'FA', 'MD'):
+        # recalculate mean FA/MD etc..
+        current_app.logger.info('Recalculating mean FA/MD maps for  query\n' + json.dumps(request_query, indent=4))
+        
+        subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+        mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+        mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+        
+        current_app.logger.info('Caching MD/FA file paths for query\n' + json.dumps(request_query, indent=4))
+        cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD})
         current_app.cache.set(cache_key, cached_data)
         
     FA_map_data = du.get_nifti_data(cached_data['FA'])
@@ -245,8 +192,6 @@ def get_dynamic_tract_info(tract_code, threshold):
     results['stdFA'] = std_FA
     results['meanMD'] = mean_MD
     results['stdMD'] = std_MD
-    
-    current_app.logger.info('dynamics info for threshold ' + str(threshold) + ' \n' + str(results))
 
     return jsonify(results)
 
@@ -258,42 +203,29 @@ def get_static_tract_info(tract_code):
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
     cached_data = current_app.cache.get(cache_key)
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    
-    tract = Tract.query.filter(Tract.code == tract_code).first()
-    if not tract:
-        return 'The requested tract ' + tract_code + ' does not exist', 404
+    data_dir = current_app.config['DATA_FILE_PATH']
     
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
-        # need to generate averaged density map again
-        current_app.logger.info('Recalculating averaged density map for ' + tract_code)
-        tract_dir = tract.file_path
-        tract_file_name = tract_dir[tract_dir.index("_")+1:] # strips Left_ or Right_ from front of tract dir name
-        data_file_path = current_app.config['DATA_FILE_PATH']
-        subject_file_paths = construct_subject_file_paths(request_query, data_file_path, tract)
-        tract_file_path = du.generate_average_density_map(subject_file_paths, data_file_path, tract_code)
-        current_app.logger.info('Caching averaged density map ' + tract_code + ' for query\n' + json.dumps(request_query, indent=4))
+        # recalculate average density map for tract
+        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        tract = dbu.get_tract(tract_code)
+        if not tract:
+            return 'The requested tract ' + tract_code + ' does not exist', 404
+        
+        if len(subject_ids_dataset_path) > 0:
+            current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
+            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+        
+        current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
         current_app.cache.set(cache_key, cached_data)
     
-    subject_ids = []
-    for key in request_query:
-        dataset_filter = dbu.construct_subject_query_filter(request_query[key])
-        dataset_filter.append(Subject.dataset_code == key)
-        ids = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()
-        subject_ids += np.array(ids).squeeze().tolist()
-
-    subject_tract_metrics = SubjectTractMetrics.query.with_entities(
-                                                            SubjectTractMetrics.volume, SubjectTractMetrics.mean_FA, 
-                                                            SubjectTractMetrics.mean_MD, SubjectTractMetrics.std_FA,
-                                                            SubjectTractMetrics.std_MD
-                                                        ).filter(SubjectTractMetrics.tract_code == tract_code, \
-                                                             SubjectTractMetrics.subject_id.in_(subject_ids)).all()
-                                    
-    subject_tract_metrics = np.array(subject_tract_metrics).astype(np.float)
+    tract = dbu.get_tract(tract_code)
+    subject_tract_metrics = dbu.subject_tract_metrics(request_query, tract.code)
     averaged_metrics = np.mean(subject_tract_metrics, axis=0)
     
     results = {}
-    results['tractCode'] = tract_code
+    results['tractCode'] = tract.code
     results['volume'] = averaged_metrics[0]
     results['meanFA'] = averaged_metrics[1]
     results['meanMD'] = averaged_metrics[2]
@@ -306,9 +238,9 @@ def get_static_tract_info(tract_code):
 
 @megatrack.route('/get_trk/<tract_code>')
 def get_trk(tract_code):
-    tract_file_path = Tract.query.with_entities(Tract.file_path).filter(Tract.code == tract_code).first()[0]
-    data_file_path = current_app.config['DATA_FILE_PATH']
-    return send_file('../'+data_file_path+'trk/'+tract_file_path+'.trk', as_attachment=True, attachment_filename=tract_code+'.trk', conditional=True, add_etags=True)
+    tract = dbu.get_tract(tract_code)
+    data_dir = current_app.config['DATA_FILE_PATH']
+    return send_file('../'+data_dir+'/trk/'+tract.file_path+'.trk', as_attachment=True, attachment_filename=tract.code+'.trk', conditional=True, add_etags=True)
     
 @megatrack.route('/_test_viewer')
 def _test_viewer():

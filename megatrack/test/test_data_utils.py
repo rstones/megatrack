@@ -23,6 +23,38 @@ class DataUtilsTestCase(unittest.TestCase):
     
     test_affine = np.eye(4)
     nifti_dim = (91,109,91)
+    
+    def test_file_path(self):
+        mni_file_path = 'data/test_dataset/test_tract/mni/TEST001_MNI_TRACT_CODE.nii.gz'
+        native_file_path = 'data/test_dataset/test_tract/native/TEST001_Native_TRACT_CODE.nii.gz'
+        
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'MNI', 'TRACT_CODE', 'nii.gz')
+        assert file_path == mni_file_path
+        
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'mni', 'TRACT_CODE', 'nii.gz')
+        assert file_path == mni_file_path
+        
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'Native', 'TRACT_CODE', 'nii.gz')
+        assert file_path == native_file_path
+        
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'native', 'TRACT_CODE', 'nii.gz')
+        assert file_path == native_file_path
+        
+        try:
+            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'UNEXPECTED_SPACE_CODE', 'TRACT_CODE', 'nii.gz')
+        except ValueError:
+            assert True
+            
+        try:
+            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'mni', 'TRACT_CODE', '.exe')
+        except ValueError:
+            assert True
+            
+    def test_temp_file(self):
+        assert False
+        
+    def test_generate_average_density_map(self):
+        assert False
 
     def test_subject_averaged_map(self):
         test_filepath_1 = 'test_filepath_1_FA.nii.gz'
