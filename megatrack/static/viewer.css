@@ -96,7 +96,15 @@ select::-ms-expand {
 	height: 20px;
 	position: relative;
 	top: 0.09em;
-	background: url("images/download-icon.png") 96% / 27px no-repeat;
+	background: url("images/download-icon.png") 96% / 13px no-repeat;
+}
+
+.download-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("images/download-icon-disabled.png") 96% / 13px no-repeat;
 }
 
 .settings-icon {
@@ -107,12 +115,28 @@ select::-ms-expand {
 	background: url("images/settings-icon.png") 96% / 12px no-repeat;
 }
 
+.settings-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("images/settings-icon-disabled.png") 96% / 12px no-repeat;
+}
+
 .atlas-icon {
 	width: 20px;
 	height: 20px;
 	position: relative;
 	top: 0.13em;
 	background: url("images/3d-icon.png") 96% / 18px no-repeat;
+}
+
+.atlas-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.13em;
+    background: url("images/3d-icon-disabled.png") 96% / 18px no-repeat;
 }
 
 .metrics-icon {
@@ -129,6 +153,14 @@ select::-ms-expand {
 	position: relative;
 	top: 0.09em;
 	background: url("images/metrics-icon-selected.png") 100% 50% / 16px no-repeat;
+}
+
+.metrics-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("images/metrics-icon-disabled.png") 96% / 12px no-repeat;
 }
 
 .loading-gif {
@@ -349,6 +381,10 @@ select::-ms-expand {
 	height: 25px;
 }
 
+.tract-disabled {
+    color: lightgrey;
+}
+
 #tract-name {
 	border-left: 1px solid lightgrey;
 	border-top: 1px solid lightgrey;
@@ -431,6 +467,24 @@ select::-ms-expand {
 	display: inline-block;
 	margin-top: -.25em;
 	background: url("images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+}
+
+.colormap-indicator-disabled {
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 12px;
+    background-color: lightgrey;
+}
+
+.colormap-indicator-caret-disabled {
+    float: right;
+    position: relative;
+    top: 0.08em;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: -.25em;
+    background: url("images/select-caret-disabled.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
 }
 
 #colormap-select {

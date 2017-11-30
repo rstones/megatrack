@@ -1,13 +1,10 @@
 from megatrack import application, db
-from megatrack.models import Subject, Tract, Dataset, SubjectTractMetrics
+from megatrack.models import Subject, Tract, Dataset, SubjectTractMetrics, DatasetTracts
 from multiprocessing import Pool
 import nibabel as nib
 import numpy as np
 import numpy.ma as ma
-
-db.create_all(app=application)
-application.app_context().push()
-
+import sys
 
 '''
 Script to populate the subject_tract_metrics table
@@ -31,69 +28,74 @@ Script to populate the subject_tract_metrics table
 
 '''
 
-full_refresh = False
+full_refresh = True
 
 def get_data():
-    if full_refresh:
-        subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Subject.file_path, Dataset.file_path).all()
-        tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
-        #sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
-    else:
-        
-    return subject, tracts, sbjct_trct_mtrcs
+    subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path, Dataset.code).all()
+    tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
+    sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
+    return subjects, tracts, sbjct_trct_mtrcs
 
 def calculate_metrics(subject, tract):
     subject_id = subject[0]
-    print('Calculating metrics for subject ' + subject_id)
-    subject_file_path = subject[1]
-    dataset_file_path = subject[2]
-    try:
-        MD = nib.load('data/'+dataset_file_path + '/full_brain_maps/'+subject_file_path[:-5]+'_MD.nii.gz').get_data()
-        FA = nib.load('data/'+dataset_file_path+'/full_brain_maps/'+subject_file_path[:-5]+'_FA.nii.gz').get_data()
-    except FileNotFoundError:
-        print('Couldn\'t find maps for dataset ' + dataset_file_path + ' and subject file path ' + subject_file_path)
+    dataset_file_path = subject[1]
     tract_code = tract[0]
     tract_file_path = tract[1]
-
-    tract_data = nib.load('data/'+dataset_file_path+'/'+tract_file_path+'/'+subject_file_path+tract_file_path[tract_file_path.index('_')+1:]+'_2mm.nii.gz').get_data()
-    masked_MD = ma.masked_where(tract_data == 0, MD)
-    mean_MD = ma.mean(masked_MD)
-    mean_MD = 0 if np.isnan(mean_MD) else mean_MD
-    std_MD = ma.std(masked_MD)
-    std_MD = 0 if np.isnan(std_MD) else std_MD
-    masked_FA = ma.masked_where(tract_data == 0, FA)
-    mean_FA = ma.mean(masked_FA)
-    mean_FA = 0 if np.isnan(mean_FA) else mean_FA
-    std_FA = ma.std(masked_FA)
-    std_FA = 0 if np.isnan(std_FA) else std_FA
-    volume = np.count_nonzero(tract_data) * 8.e-3
-    return SubjectTractMetrics(subject_id, tract_code, float(mean_MD), float(std_MD), float(mean_FA), float(std_FA), float(volume))
+    print('Calculating metrics for subject ' + subject_id + ' and tract ' + tract_code)
+    
+    try:
+        MD = nib.load('data/'+dataset_file_path + '/full_brain_maps/native/'+subject_id+'_Native_MD.nii.gz').get_data()
+        FA = nib.load('data/'+dataset_file_path+'/full_brain_maps/native/'+subject_id+'_Native_FA.nii.gz').get_data()
+    except FileNotFoundError:
+        print('Couldn\'t find maps for dataset ' + dataset_file_path + ' and subject file path ' + subject_file_path)
+    
+    fp = 'data/'+dataset_file_path+'/'+tract_file_path+'/native/'+subject_id+'_Native_'+tract_code+'.nii.gz'
+    tract_data = nib.load(fp).get_data()
+    if np.any(tract_data.nonzero()):
+        
+        masked_MD = ma.masked_where(tract_data == 0, MD)
+        av_MD = ma.average(masked_MD, weights=tract_data)
+        av_MD = 0 if np.isnan(av_MD) else av_MD
+        std_MD = np.sqrt(ma.average((masked_MD-av_MD)**2, weights=tract_data)) # weighted std
+        std_MD = 0 if np.isnan(std_MD) else std_MD
+        
+        masked_FA = ma.masked_where(tract_data == 0, FA)
+        av_FA = ma.average(masked_FA, weights=tract_data)
+        av_FA = 0 if np.isnan(av_FA) else av_FA
+        std_FA = np.sqrt(ma.average((masked_FA-av_FA)**2, weights=tract_data)) # weighted std
+        std_FA = 0 if np.isnan(std_FA) else std_FA
+        
+        volume = np.count_nonzero(tract_data) * 8.e-3
+    else:
+        av_MD = std_MD = av_FA = std_FA = volume = 0
+    return SubjectTractMetrics(subject_id, tract_code, float(av_MD), float(std_MD), float(av_FA), float(std_FA), float(volume))
 
 def run():
+
+    if full_refresh:
+        num_rows_deleted = SubjectTractMetrics.query.delete()
+        response = input(str(num_rows_deleted) + ' rows will be deleted from subject_tract_metrics for a full refresh. Continue? [Y/n] ')
+        if response in ['Y', 'y']:
+            db.session.commit()
+            print(str(num_rows_deleted) + ' rows deleted')
+        else:
+            sys.exit('Exiting script as full refresh was cancelled')
+    
+    print('Calculating new subject tract metrics...')
+    subjects, tracts, sbjct_trct_mtrcs = get_data()
+    
     for subject in subjects:
         for tract in tracts:
-            if subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1] and not full_refresh:
-                print('M')
+            dataset_tracts = DatasetTracts.query.filter(DatasetTracts.dataset_code==subject[2], DatasetTracts.tract_code==tract[0]).all()
+            if (not full_refresh and (subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1])) \
+                    or not dataset_tracts:
+                continue
             subject_tract_metrics = calculate_metrics(subject, tract)
             db.session.add(subject_tract_metrics)
     db.session.commit()
-    
-run()
 
 
-# use multiprocessing lib to map function to workers
-
-
-# for each subject, loop over tracts available in their dataset
-
-# load the individual MD/FA maps
-
-# check if there is already an entry in SubjectTractMetrics for this subject/tract combination (possibly override this with a flag if a complete refresh is required)
-
-# if no entry in SubjectTractMetrics...
-
-# load tract density map
-
-# calculate mean/std MD, mean/std FA and volume using the subject's individual MD/FA maps and and tract density maps
-
-# insert row per subject per tract in SubjectTractMetrics table 
+if __name__ == '__main__':
+    db.create_all(app=application)
+    application.app_context().push()
+    run()

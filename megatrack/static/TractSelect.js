@@ -7,37 +7,11 @@ function TractSelect(containerId, parent) {
 	this._tractSettings = {};
 	this._tractSettingsVisible = false;
 	
-	this._colormapMin = 0.25;
-	this._colormapMax = 1.0;
-	
-	this._initColormapMax = 1.0;
-	this._initColormapMin = 0.25;
-	this._initColormapopacity = 1.0;
-	
 	this._currentInfoTractCode = '';
 	this._tractMetrics = {};
 	
 	this._availableTracts = {};
 	this._selectedTracts = {};
-	
-	this._colormaps = {};
-	for (var key in this.colormapFunctions) {
-		this._colormaps[key] = this.colormapFunctions[key](this._colormapMin, this._colormapMax, 1);
-		// insert colormap css classes
-		var rgbaColors = [];
-		var n = 8;
-		for (var i=3; i<n-1; i++) {
-			var color = this._colormaps[key][i].rgb;
-			rgbaColors.push('rgba('+color[0]+','+color[1]+','+color[2]+','+color[3]+')');
-		}
-		$('head').append('<style>'
-							+'.'+key+'-colormap {'
-							+'background:-moz-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
-							+'background:-webkit-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
-							+'}'
-							+'</style>');
-	}
-	this._numColormaps = Object.keys(this._colormaps).length;
 	
 	$('#'+this._containerId).append('<div id="table-div">'
 			+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
@@ -135,7 +109,7 @@ function TractSelect(containerId, parent) {
 			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1) {
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](min, max, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](min, max, opacity));
 					instance._parent.resetSlicesForColormapChange();
 					break;
 				}
@@ -163,7 +137,7 @@ function TractSelect(containerId, parent) {
 			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1) {
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](min, max, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](min, max, opacity));
 					instance._parent.resetSlicesForColormapChange();
 					break;
 				}
@@ -173,7 +147,7 @@ function TractSelect(containerId, parent) {
 	});
 	$('#tract-settings-menu').hide();
 	
-	for (var key in this._colormaps) {
+	for (var key in this._parent._colormaps) {
 		$('#colormap-select').append('<div id="'+key+'-colormap-select-item" class="colormap-select-item clickable '+key+'-colormap">&nbsp&nbsp&nbsp</div>');
 		$('#'+key+'-colormap-select-item').on('click', {color: key}, function(event) {
 			// fetch selected tract code from colormap select
@@ -187,7 +161,7 @@ function TractSelect(containerId, parent) {
 				var map = instance._parent._volume.labelmap[i];
 				if (map.file.indexOf(tractCode) != -1 && instance._tractSettings[tractCode].color != color) {
 					instance._tractSettings[tractCode]["color"] = color;
-					map.colormap = instance.generateXTKColormap(instance.colormapFunctions[color](colormapMin, colormapMax, opacity));
+					map.colormap = instance._parent.generateXTKColormap(instance._parent.colormapFunctions[color](colormapMin, colormapMax, opacity));
 					$('#'+tractCode+'-colormap-indicator').removeClass(instance._parent._labelmapColors[i]+'-colormap');
 					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 					instance._parent._labelmapColors[i] = color;
@@ -203,9 +177,11 @@ function TractSelect(containerId, parent) {
 		dataType: 'json',
 		url: instance._parent._rootPath + '/tract_select',
 		success: function(data) {
-			for (var i in data) {
-				$('#add-tract-select').append('<option id="'+data[i].code+'" value="'+data[i].code+'">'+data[i].name+'</option>');
-				instance._availableTracts[data[i].code] = {"code": data[i].code, "name": data[i].name, "description":data[i].description};
+			for (var tractCode in data) {
+				$('#add-tract-select').append('<option id="'+tractCode+'" value="'+tractCode+'">'+data[tractCode].name+'</option>');
+				data[tractCode]['disabled'] = false;
+				instance._availableTracts[tractCode] = data[tractCode];
+				
 			}
 		}
 	});
@@ -243,27 +219,9 @@ function TractSelect(containerId, parent) {
 			instance._currentInfoTractCode = tractCode;
 		}
 		
-		var map = new X.labelmap(instance._parent._volume);
-		map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
-		if (instance._parent._currentQuery) {
-			map.file = instance._parent._rootPath + '/tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
-		} else {
-			map.file = instance._parent._rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
-		}
-		var color = Object.keys(instance._colormaps)[Math.floor(Math.random()*instance._numColormaps)];
-		instance._tractSettings[tractCode] = {
-				"colormapMax": instance._initColormapMax,
-				"colormapMin": instance._initColormapMin,
-				"opacity": instance._initColormapopacity,
-				"color": color,
-				"colormapMinUpdate": 0
-			}
-		map.colormap = instance.generateXTKColormap(instance._colormaps[color]);
-		instance._parent._volume.labelmap.push(map);
-		instance._parent._labelmapColors.push(color);
-		
-		// re-render
-		instance._parent.resetSlicesForDirtyFiles();
+		// add the tract to the viewer
+		instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, instance._parent._currentQuery);
+		var color = instance._tractSettings[tractCode].color;
 		
 		// add row to table
 		$('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
@@ -280,9 +238,11 @@ function TractSelect(containerId, parent) {
 		$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 		
 		$('#'+tractCode+' > #tract-download').on('click', function(event) {
-			event.preventDefault();
-			var tractCode = event.currentTarget.parentElement.id;
-			window.location.href = 'tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
+		    var tractCode = event.currentTarget.parentElement.id;
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    		    event.preventDefault();
+                window.location.href = 'tract/'+tractCode+'?'+$.param(instance._parent._currentQuery)+'&file_type=.nii.gz';
+		    }
 		});
 		
 		// add event listener on remove icon
@@ -310,122 +270,122 @@ function TractSelect(containerId, parent) {
 			$('#'+tractCode+'-spacer').remove();
 			delete instance._selectedTracts[tractCode];
 			delete instance._tractMetrics[tractCode];
-			// remove labelmap from X.volume.labelmap
-			for (var i=0; i<instance._parent._volume.labelmap.length; i++) {
-				var map = instance._parent._volume.labelmap[i];
-				var filepath = map.file;
-				if (filepath.indexOf(tractCode) !== -1) {
-					instance._parent._volume.labelmap.splice(i, 1);
-					instance._parent._labelmapColors.splice(i, 1);
-					instance._parent.removeLabelmapSlices(i);
-					break;
-				}
-			}
+			// remove labelmap from the viewer
+			instance._parent.removeLabelmapFromVolume(tractCode);
 		});
 		
 		// add event listener on settings icon
 		$('#'+tractCode+' > #tract-settings').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id;
-			var settings_menu = $('#tract-settings-menu');
-			settings_menu.data('tractCode', tractCode);
-			$('#tract-settings-title').html('Settings:<br>'+instance._availableTracts[tractCode].name);
-			var min = 100*instance._tractSettings[tractCode]["colormapMin"];
-			var max = 100*instance._tractSettings[tractCode]["colormapMax"];
-			var opacity = 100*instance._tractSettings[tractCode]["opacity"];
-			$('#tract-prob-range-slider').slider('values', [min, max]);
-			$('#tract-prob-range-min-handle').text(Math.floor(min));
-			$('#tract-prob-range-max-handle').text(Math.floor(max));
-			$('#tract-opacity-slider').slider('value', opacity);
-			$('#tract-opacity-slider-handle').text(Math.floor(opacity));
-			
-			// position menu at settings button or mouse click?
-			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
-			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
-			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
-			
-			instance._tractSettingsVisible = true;
+		    var tractCode = event.currentTarget.parentElement.id;
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    			var settings_menu = $('#tract-settings-menu');
+    			settings_menu.data('tractCode', tractCode);
+    			$('#tract-settings-title').html('Settings:<br>'+instance._availableTracts[tractCode].name);
+    			var min = 100*instance._tractSettings[tractCode]["colormapMin"];
+    			var max = 100*instance._tractSettings[tractCode]["colormapMax"];
+    			var opacity = 100*instance._tractSettings[tractCode]["opacity"];
+    			$('#tract-prob-range-slider').slider('values', [min, max]);
+    			$('#tract-prob-range-min-handle').text(Math.floor(min));
+    			$('#tract-prob-range-max-handle').text(Math.floor(max));
+    			$('#tract-opacity-slider').slider('value', opacity);
+    			$('#tract-opacity-slider-handle').text(Math.floor(opacity));
+    			
+    			// position menu at settings button or mouse click?
+    			var button_offset = $('#'+tractCode+' > #tract-settings').offset();
+    			settings_menu.show(); // show before setting offset as can't set offset of hidden elements
+    			settings_menu.offset({top: button_offset.top - settings_menu.height(), left: button_offset.left - 30});
+    			
+    			instance._tractSettingsVisible = true;
+		    }
 		});
 		
 		$('#'+tractCode+' > #tract-info').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id; 
+		    var tractCode = event.currentTarget.parentElement.id; 
+		    if (!instance._selectedTracts[tractCode].disabled) {
+		        
+                // change metrics icon to selected style
+                if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
+                    $('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+                    $('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+                }
+                $('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+                $('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+                
+                var metrics = instance._tractMetrics[tractCode];
+                instance._currentInfoTractCode = tractCode;
+                if (metrics && metrics['dynamic'] && metrics['static']) {
+                    instance.populateDynamicTractInfo(metrics['dynamic']);
+                    instance.populateStaticTractInfo(metrics['static']);
+                } else {
+                    // get the metric data
+                    var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
+                    $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                    $.ajax({
+                        dataType: 'json',
+                        url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
+                        success: function(data) {
+                            instance._tractMetrics[data.tractCode]['dynamic'] = data;
+                            instance.populateDynamicTractInfo(data);
+                        }
+                    });
+                    $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                    $.ajax({
+                        dataType: 'json',
+                        url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
+                        success: function(data) {
+                            instance._tractMetrics[data.tractCode]['static'] = data;
+                            instance.populateStaticTractInfo(data);
+                        }
+                    });
+                }
+		    }
 			
-			// change metrics icon to selected style
-			if (instance._currentInfoTractCode && instance._currentInfoTractCode != tractCode) {
-				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
-				$('#'+instance._currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
-			}
-			$('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
-			$('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
-			
-			var metrics = instance._tractMetrics[tractCode];
-			instance._currentInfoTractCode = tractCode;
-			if (metrics && metrics['dynamic'] && metrics['static']) {
-				instance.populateDynamicTractInfo(metrics['dynamic']);
-				instance.populateStaticTractInfo(metrics['static']);
-			} else {
-				// get the metric data
-				var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
-				$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-				$.ajax({
-					dataType: 'json',
-					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(instance._parent._currentQuery),
-					success: function(data) {
-						instance._tractMetrics[data.tractCode]['dynamic'] = data;
-						instance.populateDynamicTractInfo(data);
-					}
-				});
-				$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-				$.ajax({
-					dataType: 'json',
-					url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
-					success: function(data) {
-						instance._tractMetrics[data.tractCode]['static'] = data;
-						instance.populateStaticTractInfo(data);
-					}
-				});
-			}
 		});
 		
 		$('#'+tractCode+' > #tract-atlas').on('click', function(event) {
-			var tractCode = event.currentTarget.parentElement.id; 
-			
-			$('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
-			$('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
-			$('#tract-info-overlay').show('slow');
-			
-			var renderer = instance._trkRenderer;
-			renderer.remove(instance._trk);
-			renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
-			
-			instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
-			instance._trk.opacity = 1.0;
-			
-			renderer.add(instance._trk);
-			renderer.render();
-			
-			instance.cameraMotion = setInterval(function() {
-				renderer.camera.rotate([3,0]);
-			}, 50);
+		    var tractCode = event.currentTarget.parentElement.id; 
+		    if (!instance._selectedTracts[tractCode].disabled) {
+            
+                $('#tract-info-overlay-title').html(instance._selectedTracts[tractCode].name);
+                $('#tract-info-overlay-description').html(instance._selectedTracts[tractCode].description);
+                $('#tract-info-overlay').show('slow');
+                
+                var renderer = instance._trkRenderer;
+                renderer.remove(instance._trk);
+                renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
+                
+                instance._trk.file = instance._parent._rootPath + '/get_trk/'+tractCode+'?.trk';
+                instance._trk.opacity = 1.0;
+                
+                renderer.add(instance._trk);
+                renderer.render();
+                
+                instance.cameraMotion = setInterval(function() {
+                    renderer.camera.rotate([3,0]);
+                }, 50);
+            }
 			
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
-			// hide first in case colormap-select is already open for another tract
-			$('#colormap-select').hide();
-			
-			// work out position of colormap indicator for current tract
-			var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
-			$('#colormap-select').css('top', indicatorPos.top);
-			$('#colormap-select').css('left', indicatorPos.left - 6);
-			
-			// attach selected tract code to colormap select
-			$('#colormap-select').data('tractCode', event.data.tractCode);
-			// show colormap select
-			$('#colormap-select').show('blind');
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    			// hide first in case colormap-select is already open for another tract
+    			$('#colormap-select').hide();
+    			
+    			// work out position of colormap indicator for current tract
+    			var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
+    			$('#colormap-select').css('top', indicatorPos.top);
+    			$('#colormap-select').css('left', indicatorPos.left - 6);
+    			
+    			// attach selected tract code to colormap select
+    			$('#colormap-select').data('tractCode', event.data.tractCode);
+    			// show colormap select
+    			$('#colormap-select').show('blind');
+			}
 		});
 		
 		// pre-fetch the tract metrics and put in cache
-		var initThreshold = parseInt(instance._initColormapMin * 100);
+		var initThreshold = parseInt(instance._parent._initColormapMin * 100);
 		if (showTractInfo) {
 			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
@@ -453,174 +413,124 @@ function TractSelect(containerId, parent) {
 	});
 	
 	$(document).on('query-update', function(event, newQuery) {
+	
+	   instance._parent._currentQuery = newQuery;
+		
+		// remove the disabled tract select message
+		if ($('#add-tract-select').prop('disabled')) {
+			$('#add-tract-select').prop('disabled', false);
+			$('#tract-disabled-msg-text').hide();
+		}
+		
+		var datasets = Object.keys(newQuery);
 		var currentInfoTractCode = instance._currentInfoTractCode;
-		if (currentInfoTractCode && instance._tractSettings[currentInfoTractCode]) {
-			var threshold = parseInt(100*instance._tractSettings[currentInfoTractCode]["colormapMin"]);
-			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-			$.ajax({
-				dataType: 'json',
-				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'/'+threshold+'?'+$.param(newQuery),
-				success: function(data) {
-					instance._tractMetrics[data.tractCode]['dynamic'] = data;
-					instance.populateDynamicTractInfo(data);
-				}
-			});
-			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-			$.ajax({
-				dataType: 'json',
-				url: instance._parent._rootPath + '/get_tract_info/'+currentInfoTractCode+'?'+$.param(newQuery),
-				success: function(data) {
-					instance._tractMetrics[data.tractCode]['static'] = data;
-					instance.populateStaticTractInfo(data);
-				}
-			});
-			for (var tractCode in instance._selectedTracts) {
-				if (tractCode != instance._currentInfoTractCode) {
-					var threshold = parseInt(100*instance._tractSettings[tractCode]["colormapMin"]);
-					$.ajax({
-						dataType: 'json',
-						url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
-						success: function(data) {
-							instance._tractMetrics[data.tractCode]['dynamic'] = data;
-						}
-					});
-					$.ajax({
-						dataType: 'json',
-						url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
-						success: function(data) {
-							instance._tractMetrics[data.tractCode]['static'] = data;
-						}
-					});
+
+		for (var tractCode in instance._selectedTracts) {
+			// check to see if we want to disable the tract
+			var disable = false;
+			for (var i=0; i<datasets.length; i++) {
+				if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
+					disable = true;
+					break;
 				}
 			}
+			
+			if (disable) {
+				instance._parent.removeLabelmapFromVolume(tractCode);
+				// disable tract row
+				$('#'+tractCode+' > #tract-name').addClass('tract-disabled');
+				$('#'+tractCode+' > #tract-settings').children().removeClass('settings-icon clickable');
+				$('#'+tractCode+' > #tract-settings').children().addClass('settings-icon-disabled');
+				$('#'+tractCode+' > #tract-info').children().removeClass('metrics-icon clickable');
+                $('#'+tractCode+' > #tract-info').children().addClass('metrics-icon-disabled');
+                $('#'+tractCode+' > #tract-atlas').children().removeClass('atlas-icon clickable');
+                $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon-disabled');
+                $('#'+tractCode+' > #tract-download').children().removeClass('download-icon clickable');
+                $('#'+tractCode+' > #tract-download').children().addClass('download-icon-disabled');
+                var color = instance._tractSettings[tractCode]["color"];
+                $('#'+tractCode+'-colormap-indicator').removeClass(color+'-colormap');
+                $('#'+tractCode+'-colormap-indicator').removeClass('colormap-indicator');
+                $('#'+tractCode+'-colormap-indicator').removeClass('clickable');
+                $('#'+tractCode+'-colormap-indicator').addClass('colormap-indicator-disabled');
+                $('#'+tractCode+'-colormap-indicator').children().removeClass('colormap-indicator-caret');
+                $('#'+tractCode+'-colormap-indicator').children().addClass('colormap-indicator-caret-disabled');
+			} else {
+				if (instance._availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
+					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, newQuery);
+					
+					// reenable the tract row
+					$('#'+tractCode+' > #tract-name').removeClass('tract-disabled');
+					$('#'+tractCode+' > #tract-settings').children().removeClass('settings-icon-disabled');
+					$('#'+tractCode+' > #tract-settings').children().addClass('settings-icon clickable');
+                    $('#'+tractCode+' > #tract-info').children().removeClass('metrics-icon-disabled');
+                    $('#'+tractCode+' > #tract-info').children().addClass('metrics-icon clickable');
+                    $('#'+tractCode+' > #tract-atlas').children().removeClass('atlas-icon-disabled');
+                    $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon clickable');
+                    $('#'+tractCode+' > #tract-download').children().removeClass('download-icon-disabled');
+                    $('#'+tractCode+' > #tract-download').children().addClass('download-icon clickable');
+                    $('#'+tractCode+' > #tract-colormap').children().removeClass('colormap-indicator-disabled');
+                    var color = instance._tractSettings[tractCode]["color"];
+                    $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+                    $('#'+tractCode+'-colormap-indicator').addClass('colormap-indicator');
+                    $('#'+tractCode+'-colormap-indicator').addClass('clickable');
+                    $('#'+tractCode+'-colormap-indicator').children().removeClass('colormap-indicator-caret-disabled');
+                    $('#'+tractCode+'-colormap-indicator').children().addClass('colormap-indicator-caret');
+                    
+				} else { // if previously active, update labelmap
+					instance._parent.updateLabelmapFile(tractCode, newQuery);
+				}
+				
+				// update metrics
+				var threshold = parseInt(100*instance._tractSettings[currentInfoTractCode]["colormapMin"]);
+				if (tractCode == currentInfoTractCode) {
+					$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+					$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+				}
+				$.ajax({
+					dataType: 'json',
+					url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
+					success: function(data) {
+						instance._tractMetrics[data.tractCode]['dynamic'] = data;
+						if (data.tractCode == currentInfoTractCode) {
+							instance.populateDynamicTractInfo(data);
+						}
+					}
+				});
+				$.ajax({
+					dataType: 'json',
+					url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
+					success: function(data) {
+						instance._tractMetrics[data.tractCode]['static'] = data;
+						if (data.tractCode == currentInfoTractCode) {
+							instance.populateStaticTractInfo(data);
+						}
+					}
+				});
+			}
+			instance._availableTracts[tractCode].disabled = disable;
 		}
+		if (Object.keys(instance._selectedTracts).length) {
+		    instance._parent.resetSlicesForDirtyFiles();
+		}
+		
+		// also loop through all the options in the tract select and disable the the required tracts 
+		$('#add-tract-select option[value!=default]').each(function(idx) {
+			var tractCode = $(this).val();
+			if (!instance._selectedTracts[tractCode]) {
+			    var disable = false;
+			    for (var i=0; i<datasets.length; i++) {
+                if (instance._availableTracts[tractCode]['datasets'].indexOf(datasets[i]) < 0) {
+                    disable = true;
+                    break;
+                }
+            }
+            $(this).prop('disabled', disable);
+			}
+		});
 	});
 	
 }
 TractSelect.prototype.constructor = TractSelect;
-
-TractSelect.prototype.checkColormapMinMax = function(min, max) {
-	if (min < 0.01) { // cutoff for nifti density maps
-		min = 0.01;
-	} else if (min < 0 || min > 1 || max < 0 || max > 1 || min > max) {
-		throw TypeError("Invalid min/max values passed to colormap function");
-	}
-	return {"min":min, "max":max};
-}
-
-/*
- * @param min Minimum probability cutoff for density map
- * @param max Value above which probability saturates
- * @param alpha opacity of the colormap
- */
-TractSelect.prototype.redColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 160+(i*95/numSegments);
-		var g = (i*100/numSegments);
-		var b = 0;
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,180,0,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.blueColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 0;
-		var g = (i*200/numSegments);
-		var b = 160+(i*95/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [0,200,255,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.greenColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 0;
-		var g = 120+(i*135/numSegments);
-		var b = (i*180/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [180,255,180,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.purpleColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 120+(i*135/numSegments);
-		var g = 0;
-		var b = 120+(i*135/numSegments);
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,180,255,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.yellowColormap = function(min, max, alpha) {
-	var minMax = TractSelect.prototype.checkColormapMinMax(min, max);
-	min = minMax["min"], max = minMax["max"];
-	var numSegments = 5;
-	var segmentLength = (max - min) / numSegments;
-	var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
-	for (var i=0; i<numSegments+1; i++) {
-		var r = 150+(i*105/numSegments);
-		var g = 150+(i*105/numSegments);
-		var b = 0;
-		//var a = 1.0; //0.6+(i*0.4/numSegments);
-		colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
-	}
-	colormap.push({"index": 1, "rgb": [255,255,180,alpha]});
-	return colormap;
-}
-
-TractSelect.prototype.colormapFunctions = {"red": TractSelect.prototype.redColormap,
-									  "blue": TractSelect.prototype.blueColormap,
-									  "green": TractSelect.prototype.greenColormap,
-									  "purple": TractSelect.prototype.purpleColormap,
-									  "yellow": TractSelect.prototype.yellowColormap} // object of colormap functions
-
-TractSelect.prototype.generateXTKColormap = function(colormap) {
-	var cmapShades = 100;
-	var cmap = Colormaps({
-		colormap: colormap,
-		alpha: [0,1],
-		nshades: cmapShades,
-		format: 'rgbaString'
-	});
-	return function(normpixval) {
-		var rgbaString = cmap[Math.floor((cmap.length-1)*normpixval)];
-		rgbaString = rgbaString.replace(/[^\d,.]/g, '').split(',');
-		var rgba = [];
-		for (var i = 0; i<3; i++) rgba.push(parseInt(rgbaString[i], 10));
-		rgba.push(255*parseFloat(rgbaString[3]));
-		return rgba;
-	};
-}
 
 TractSelect.prototype.populateDynamicTractInfo = function(data) {
 	$('#tract-info-name').html(data ? data.tractName : '');
@@ -687,4 +597,6 @@ TractSelect.prototype.closeTractSettings = function() {
 		this._tractSettingsVisible = false;
 	}
 }
+
+
 
