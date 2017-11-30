@@ -469,6 +469,24 @@ select::-ms-expand {
 	background: url("images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
 }
 
+.colormap-indicator-disabled {
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 12px;
+    background-color: lightgrey;
+}
+
+.colormap-indicator-caret-disabled {
+    float: right;
+    position: relative;
+    top: 0.08em;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: -.25em;
+    background: url("images/select-caret-disabled.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+}
+
 #colormap-select {
 	position: absolute;
 	width: 120px;

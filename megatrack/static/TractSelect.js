@@ -368,18 +368,20 @@ function TractSelect(containerId, parent) {
 		});
 		
 		$('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
-			// hide first in case colormap-select is already open for another tract
-			$('#colormap-select').hide();
-			
-			// work out position of colormap indicator for current tract
-			var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
-			$('#colormap-select').css('top', indicatorPos.top);
-			$('#colormap-select').css('left', indicatorPos.left - 6);
-			
-			// attach selected tract code to colormap select
-			$('#colormap-select').data('tractCode', event.data.tractCode);
-			// show colormap select
-			$('#colormap-select').show('blind');
+		    if (!instance._selectedTracts[tractCode].disabled) {
+    			// hide first in case colormap-select is already open for another tract
+    			$('#colormap-select').hide();
+    			
+    			// work out position of colormap indicator for current tract
+    			var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
+    			$('#colormap-select').css('top', indicatorPos.top);
+    			$('#colormap-select').css('left', indicatorPos.left - 6);
+    			
+    			// attach selected tract code to colormap select
+    			$('#colormap-select').data('tractCode', event.data.tractCode);
+    			// show colormap select
+    			$('#colormap-select').show('blind');
+			}
 		});
 		
 		// pre-fetch the tract metrics and put in cache
@@ -445,11 +447,16 @@ function TractSelect(containerId, parent) {
                 $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon-disabled');
                 $('#'+tractCode+' > #tract-download').children().removeClass('download-icon clickable');
                 $('#'+tractCode+' > #tract-download').children().addClass('download-icon-disabled');
+                var color = instance._tractSettings[tractCode]["color"];
+                $('#'+tractCode+'-colormap-indicator').removeClass(color+'-colormap');
+                $('#'+tractCode+'-colormap-indicator').removeClass('colormap-indicator');
+                $('#'+tractCode+'-colormap-indicator').removeClass('clickable');
+                $('#'+tractCode+'-colormap-indicator').addClass('colormap-indicator-disabled');
+                $('#'+tractCode+'-colormap-indicator').children().removeClass('colormap-indicator-caret');
+                $('#'+tractCode+'-colormap-indicator').children().addClass('colormap-indicator-caret-disabled');
 			} else {
 				if (instance._availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
 					instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, newQuery);
-					var color = instance._tractSettings[tractCode].color;
-					$('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
 					
 					// reenable the tract row
 					$('#'+tractCode+' > #tract-name').removeClass('tract-disabled');
@@ -461,10 +468,16 @@ function TractSelect(containerId, parent) {
                     $('#'+tractCode+' > #tract-atlas').children().addClass('atlas-icon clickable');
                     $('#'+tractCode+' > #tract-download').children().removeClass('download-icon-disabled');
                     $('#'+tractCode+' > #tract-download').children().addClass('download-icon clickable');
-					
+                    $('#'+tractCode+' > #tract-colormap').children().removeClass('colormap-indicator-disabled');
+                    var color = instance._tractSettings[tractCode]["color"];
+                    $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+                    $('#'+tractCode+'-colormap-indicator').addClass('colormap-indicator');
+                    $('#'+tractCode+'-colormap-indicator').addClass('clickable');
+                    $('#'+tractCode+'-colormap-indicator').children().removeClass('colormap-indicator-caret-disabled');
+                    $('#'+tractCode+'-colormap-indicator').children().addClass('colormap-indicator-caret');
+                    
 				} else { // if previously active, update labelmap
 					instance._parent.updateLabelmapFile(tractCode, newQuery);
-					
 				}
 				
 				// update metrics
