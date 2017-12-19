@@ -424,7 +424,8 @@ function TractSelect(containerId, parent) {
 		
 		var datasets = Object.keys(newQuery);
 		var currentInfoTractCode = instance._currentInfoTractCode;
-
+        
+        $(document).trigger('view:disable');
 		for (var tractCode in instance._selectedTracts) {
 			// check to see if we want to disable the tract
 			var disable = false;
@@ -512,6 +513,7 @@ function TractSelect(containerId, parent) {
 		if (Object.keys(instance._selectedTracts).length) {
 		    instance._parent.resetSlicesForDirtyFiles();
 		}
+		setTimeout(function() {$(document).trigger('view:enable');}, 1000);
 		
 		// also loop through all the options in the tract select and disable the the required tracts 
 		$('#add-tract-select option[value!=default]').each(function(idx) {

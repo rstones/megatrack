@@ -132,9 +132,5 @@ def get_nifti_data(file_path):
 def average_density_map():
     pass
     
-
-
-
-    
     
     

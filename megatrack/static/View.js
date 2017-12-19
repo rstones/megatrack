@@ -29,6 +29,22 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	this._viewHeight = this._renderHeight + 80;
 	this._mniCoord = 0;
 	
+	this._disabled = false;
+	
+	var instance = this;
+	
+	$(document).on('view:disable', function(event) {
+	    instance._disabled = true;
+	    instance.disableSlider();
+	    console.log('Disabling View ' + instance._plane);
+	    
+	});
+	$(document).on('view:enable', function(event) {
+	    instance._disabled = false;
+	    instance.enableSlider();
+	    console.log('Enabling View ' + instance._plane);
+	});
+	
 	this._container.append('<div id="'+this._plane+'-view-border" class="view-border"></div>');
 	$('#'+this._plane+'-view-border').css('width', this._viewWidth);
 	$('#'+this._plane+'-view-border').css('height', this._viewHeight);
@@ -88,6 +104,14 @@ View.prototype.setSliderValue = function(newValue) {
 
 View.prototype.getSliderValue = function() {
 	return $('#'+this._plane+'-slider').slider('option', 'value');
+}
+
+View.prototype.disableSlider = function() {
+    $('#'+this._plane+'-slider').slider('disable');
+}
+
+View.prototype.enableSlider = function() {
+    $('#'+this._plane+'-slider').slider('enable');
 }
 
 View.prototype.initSlicingOverlay = function() {
