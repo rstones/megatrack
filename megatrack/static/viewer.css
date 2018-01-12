@@ -163,6 +163,14 @@ select::-ms-expand {
     background: url("images/metrics-icon-disabled.png") 96% / 12px no-repeat;
 }
 
+.info-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    /*top: -0.15em;*/
+    background: url("images/info-icon.png") 10% / 15px no-repeat;
+}
+
 .loading-gif {
 	width: 12px;
 	height: 12px;
@@ -172,6 +180,15 @@ select::-ms-expand {
 	top: 5px;
 	left: -12px;
 	margin: 0 auto;
+}
+
+.view-loading-gif {
+    width: 15px;
+    height: 15px;
+    background: url("images/loading.gif") 100% / 15px no-repeat;
+    position: absolute;
+    /*top: -130px;
+    left: 130px;*/
 }
 
 #viewer {
@@ -261,7 +278,7 @@ select::-ms-expand {
 
 #tract-disabled-msg-text {
 	color: #F00202;
-	font-size: 80%;
+	font-size: 75%;
 	/*width: 50%;
 	float: left;
 	text-align: left;
@@ -345,7 +362,7 @@ select::-ms-expand {
 	margin: auto;
 }
 
-#table-div {
+#tract-select-wrapper {
 	height: 250px;
 	width: 450px;
 	/*border: 1px solid darkgrey;
@@ -355,8 +372,14 @@ select::-ms-expand {
 	float: left;
 }
 
+#tract-table-wrapper {
+    width: 450px;
+    height: 200px;
+    overflow-y: scroll;
+}
+
 #tract-table {
-	width: inherit;
+	width: 435px;
 	/*height: 200px;*/
 	/*background: lightgrey;*/
 	/*border-collapse: collapse;*/
@@ -391,7 +414,7 @@ select::-ms-expand {
 	border-bottom: 1px solid lightgrey;
 	border-top-left-radius: 5px;
 	border-bottom-left-radius: 5px;
-	width: 45%;
+	width: 50%;
 	font-size: 85%;
 	text-align: left;
 	padding-left: 10px;
@@ -401,7 +424,7 @@ select::-ms-expand {
 #tract-colormap {
 	border-top: 1px solid lightgrey;
 	border-bottom: 1px solid lightgrey;
-	width: 22%;
+	width: 20%;
 	margin-right: 3px;
 	vertical-align: middle;
 }
@@ -581,8 +604,14 @@ select::-ms-expand {
 	width: 10%;
 }
 
+#dataset-table-wrapper {
+    width: 503px;
+    height: 200px;
+    overflow-y: scroll;
+}
+
 #dataset-table {
-	width: 100%;
+	width: 485px;
 	border-spacing: 0;
 }
 
@@ -967,6 +996,10 @@ select::-ms-expand {
 	position: relative;
 	margin: 0 auto;
 	top: 27px;
+}
+
+.metric-info {
+    float: right
 }
 
 #tract-info-description {

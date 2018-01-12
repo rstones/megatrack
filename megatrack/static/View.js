@@ -36,13 +36,12 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	$(document).on('view:disable', function(event) {
 	    instance._disabled = true;
 	    instance.disableSlider();
-	    console.log('Disabling View ' + instance._plane);
-	    
+	    instance.showLoadingOverlay();
 	});
 	$(document).on('view:enable', function(event) {
 	    instance._disabled = false;
 	    instance.enableSlider();
-	    console.log('Enabling View ' + instance._plane);
+	    instance.hideLoadingOverlay();
 	});
 	
 	this._container.append('<div id="'+this._plane+'-view-border" class="view-border"></div>');
@@ -78,6 +77,13 @@ function View(plane, volume, container, dim, orientation, reverse, vSlice, vReve
 	
 	this._container.append('<canvas id="'+this._plane+'-labels" class="overlay"></canvas>');
 	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-crosshairs" class="overlay"></canvas>');
+	$('#'+this._plane+'-view').append('<canvas id="'+this._plane+'-loading" class="overlay"></canvas>');
+	$('#'+this._plane+'-view').append('<div id="'+this._plane+'-loading-gif" class="view-loading-gif"></canvas>');
+	$('#'+this._plane+'-loading-gif').css('left', this._renderWidth/2);
+	$('#'+this._plane+'-loading-gif').css('top', this._renderHeight/2);
+	this.drawLoadingOverlay();
+	this.hideLoadingOverlay();
+	
 }
 View.prototype.constructor = View;
 
@@ -100,19 +106,19 @@ View.prototype.addSlider = function(orientation) {
 
 View.prototype.setSliderValue = function(newValue) {
 	$('#'+this._plane+'-slider').slider('value', this._reverse ? -newValue : newValue);
-}
+};
 
 View.prototype.getSliderValue = function() {
 	return $('#'+this._plane+'-slider').slider('option', 'value');
-}
+};
 
 View.prototype.disableSlider = function() {
     $('#'+this._plane+'-slider').slider('disable');
-}
+};
 
 View.prototype.enableSlider = function() {
     $('#'+this._plane+'-slider').slider('enable');
-}
+};
 
 View.prototype.initSlicingOverlay = function() {
 	var canvas = $('#'+this._plane+'-crosshairs').get(0);
@@ -126,7 +132,7 @@ View.prototype.initSlicingOverlay = function() {
 		$('#viewer').trigger('view:click', [view._plane, x, y, canvas.width, canvas.height]);
 	};
 	this.drawCrosshairs();
-}
+};
 
 View.prototype.drawLabels = function() {
 	var canvas = $('#'+this._plane+'-labels').get(0);
@@ -155,7 +161,7 @@ View.prototype.drawLabels = function() {
 		ctx.fillText("L", this._viewWidth-20, this._viewHeight/2);
 		ctx.fillText("z = "+mniCoord, this._viewWidth-60, this._viewHeight-10);
 	}
-}
+};
 
 View.prototype.drawCrosshairs = function() {
 	var vDim = this._volume.dimensions[this._vDimIdx];
@@ -177,4 +183,26 @@ View.prototype.drawCrosshairs = function() {
 	ctx.moveTo(0, hSlicePos);
 	ctx.lineTo(canvas.width, hSlicePos);
 	ctx.stroke();
-}
+};
+
+View.prototype.drawLoadingOverlay = function() {
+    var canvas = $('#'+this._plane+'-loading').get(0);
+    canvas.width = this._renderWidth;
+    canvas.height = this._renderHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(0, 0, this._renderWidth, this._renderHeight);
+    //ctx.fillStyle = 'white';
+    //ctx.font = 'normal 17px Helvetica';
+    //ctx.fillText("Loading...", this._renderWidth/2 - 35, this._renderHeight/2 - 10);
+};
+
+View.prototype.hideLoadingOverlay = function() {
+    var canvas = $('#'+this._plane+'-loading').css('z-index', '-1');
+    $('#'+this._plane+'-loading-gif').css('z-index', '-1');
+};
+
+View.prototype.showLoadingOverlay = function() {
+    var canvas = $('#'+this._plane+'-loading').css('z-index', '1');
+    $('#'+this._plane+'-loading-gif').css('z-index', '2');
+};
