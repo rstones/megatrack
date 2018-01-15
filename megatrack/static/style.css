@@ -55,6 +55,10 @@ a {
     text-decoration: none;
 }
 
+.clear {
+    clear: both;
+}
+
 #header-wrapper {
 	width: 100%;
 	height: 100px;
@@ -130,7 +134,7 @@ nav {
     width: 200px;
     float: right;
     padding-top: 12px;
-    background: url("images/Supported_by_NHS.jpg") 90% / 180px no-repeat white;
+    background: url("images/Supported_by_NHS.png") 90% / 180px no-repeat white;
 }
 
 #wellcome-logo {
@@ -176,7 +180,7 @@ nav {
     width: 400px;
     height: 150px;
     float: left;
-    margin-left: 50px;
+    margin-left: 80px;
     background: url("images/Maudsley-BRC.png") 100% / 400px no-repeat white;
 }
 
@@ -184,8 +188,8 @@ nav {
     width: 250px;
     height: 150px;
     float: left;
-    margin-left: 80px;
-    background: url("images/Supported_by_NHS.jpg") 100% / 250px no-repeat white;
+    margin-left: 60px;
+    background: url("images/Supported_by_NHS.png") 100% / 250px no-repeat white;
 }
 
 #about-wellcome-logo {
@@ -197,9 +201,25 @@ nav {
 }
 
 #about-natbrainlab-logo {
-    width: 100%;
-    height: 150px;
+    width: 500px;
+    height: 200px;
     float: left;
-    margin-left: 70px;
-    background: url("images/natbrainlab-logo.jpg") 0% / 1000px no-repeat white;
+    margin-left: 60px;
+    background: url("images/natbrainlab-logo.png") 0% / 400px no-repeat white;
+}
+
+#about-kings-logo {
+    width: 200px;
+    height: 200px;
+    float: left;
+    margin-left: 90px;
+    background: url("images/kings-logo.png") 0% / 130px no-repeat white;
+}
+
+#about-sackler-logo {
+    width: 300px;
+    height: 200px;
+    float: left;
+    margin-left: 0px;
+    background: url("images/sackler-logo.png") 0% / 300px no-repeat white;
 }
