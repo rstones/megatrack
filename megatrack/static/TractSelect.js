@@ -13,15 +13,20 @@ function TractSelect(containerId, parent) {
 	this._availableTracts = {};
 	this._selectedTracts = {};
 	
-	$('#'+this._containerId).append('<div id="table-div">'
+	this._probabilisticMetricsDescription = 'Metrics for the averaged density map as displayed in the viewer';
+	this._populationMetricsDescription = 'Averaged metrics of the individual subjects';
+	
+	$('#'+this._containerId).append('<div id="tract-select-wrapper">'
 			+'<div class="tract-select-container"><select id="add-tract-select" disabled><option value="default" disabled selected>Add tract...</option></select></div>'
 			+'<div id="tract-disabled-msg-container"><span id="tract-disabled-msg-text">Query a dataset before selecting a tract</span></div>'
 			+'<div class="clear"></div>'
 			+'<hr>'
+			+'<div id="tract-table-wrapper">'
 			+'<table id="tract-table">'
 			+'<tbody>'
 			+'</tbody>'
 			+'</table>'
+			+'</div>'
 			+'<div id="tract-settings-menu"></div>'
 			+'<ul id="colormap-select"></ul>'
 			+'</div>'
@@ -30,11 +35,11 @@ function TractSelect(containerId, parent) {
 				+'<div id="tract-info-name"></div>'
 				+'<hr>'
 				+'<div id="tract-info-dynamic-metrics" class="tract-info-metrics">'
-					+'<div>Probabilistic atlas metrics:</div>'
+					+'<div>Probabilistic atlas metrics: <div class="metric-info clickable" title="'+this._probabilisticMetricsDescription+'"><div class="info-icon"></div></div></div>'
 					+'<div id="prob-atlas-metrics" class="metrics-display"></div>'
 				+'</div>'
 				+'<div id="tract-info-static-metrics" class="tract-info-metrics">'
-					+'<div>Population metrics:</div>'
+					+'<div>Population metrics: <div class="metric-info clickable" title="'+this._populationMetricsDescription+'"><div class="info-icon"></div></div></div>'
 					+'<div id="pop-metrics" class="metrics-display"></div>'
 				+'</div>'
 				//+'<div id="tract-info-button" class="clickable">View 3D tract</div>'
@@ -221,6 +226,7 @@ function TractSelect(containerId, parent) {
 		
 		// add the tract to the viewer
 		instance._tractSettings[tractCode] = instance._parent.addLabelmapToVolume(tractCode, instance._parent._currentQuery);
+		instance._parent.resetSlicesForDirtyFiles();
 		var color = instance._tractSettings[tractCode].color;
 		
 		// add row to table
@@ -424,7 +430,12 @@ function TractSelect(containerId, parent) {
 		
 		var datasets = Object.keys(newQuery);
 		var currentInfoTractCode = instance._currentInfoTractCode;
-
+        
+        // fire event to disable the views while tracts are updated
+        if (Object.keys(instance._selectedTracts).length) {
+            $(document).trigger('view:disable');
+        }
+        
 		for (var tractCode in instance._selectedTracts) {
 			// check to see if we want to disable the tract
 			var disable = false;
@@ -512,6 +523,7 @@ function TractSelect(containerId, parent) {
 		if (Object.keys(instance._selectedTracts).length) {
 		    instance._parent.resetSlicesForDirtyFiles();
 		}
+		//setTimeout(function() {$(document).trigger('view:enable');}, 1000);
 		
 		// also loop through all the options in the tract select and disable the the required tracts 
 		$('#add-tract-select option[value!=default]').each(function(idx) {

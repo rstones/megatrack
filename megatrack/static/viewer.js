@@ -4,6 +4,7 @@
  * @param {string} elementId ID of container for Viewer
  */
 function Viewer(elementId, rootPath) {
+	var instance = this;
 	
 	this._rootPath = rootPath;
 	this._elementId = elementId;
@@ -96,20 +97,25 @@ function Viewer(elementId, rootPath) {
 	});
 	
 	$('#viewer').on('view:click', function(event, plane, x, y, canvasWidth, canvasHeight) {
-		// update volume for other Views, need to reverse the volume idx for some views
-		var view = viewer._views[plane];
-		x = view._vReverse ? canvasWidth - x : x;
-		y = view._hReverse ? canvasHeight - y : y;
-		viewer._volume[view._vIdx] = Math.round(viewer._volume.dimensions[view._vDimIdx] * (x / canvasWidth));
-		viewer._volume[view._hIdx] = Math.round(viewer._volume.dimensions[view._hDimIdx] * (y / canvasHeight));
-		// update slice lines on all Views and slider positions
-		for (var key in viewer._views) {
-			var view = viewer._views[key];
-			view.drawCrosshairs();
-			view.setSliderValue(viewer._volume[view._idx]);
-			view.drawLabels();
-		}
+        // update volume for other Views, need to reverse the volume idx for some views
+    	var view = viewer._views[plane];
+    	if (!view._disabled) {
+    		x = view._vReverse ? canvasWidth - x : x;
+    		y = view._hReverse ? canvasHeight - y : y;
+    		viewer._volume[view._vIdx] = Math.round(viewer._volume.dimensions[view._vDimIdx] * (x / canvasWidth));
+    		viewer._volume[view._hIdx] = Math.round(viewer._volume.dimensions[view._hDimIdx] * (y / canvasHeight));
+    		// update slice lines on all Views and slider positions
+    		for (var key in viewer._views) {
+    			view = viewer._views[key];
+    			view.drawCrosshairs();
+    			view.setSliderValue(viewer._volume[view._idx]);
+    			view.drawLabels();
+    		}
+        }
 	});
+	
+	$(document).on('parsingComplete', {instance: this}, this.parsingListener);
+	this._addingNewTract = true;
 	
 	var queryBuilder = new QueryBuilder('query-panel', this._rootPath);
 	
@@ -312,6 +318,8 @@ Viewer.prototype.removeLabelmapFromVolume = function(tractCode) {
 }
 
 Viewer.prototype.addLabelmapToVolume = function(tractCode, newQuery) {
+    this._addingNewTract = true;
+    $(document).trigger('view:disable');
 	var map = new X.labelmap(this._volume);
 	map.tractCode = tractCode; // store tractCode on labelmap for access later. Need cleaner solution
     if (newQuery) {
@@ -332,12 +340,15 @@ Viewer.prototype.addLabelmapToVolume = function(tractCode, newQuery) {
 	this._labelmapColors.push(color);
 	
 	// re-render
-	this.resetSlicesForDirtyFiles();
+	//this.resetSlicesForDirtyFiles();
+	
+	//setTimeout(function() {$(document).trigger('view:enable');}, 1000);
 	
 	return tractSettings;
 }
 
 Viewer.prototype.updateLabelmapFile = function(tractCode, newQuery) {
+    this._addingNewTract = false;
 	for (var i=0; i<this._volume.labelmap.length; i++) {
 		var map = this._volume.labelmap[i];
 		if (map.tractCode == tractCode) {
@@ -346,6 +357,23 @@ Viewer.prototype.updateLabelmapFile = function(tractCode, newQuery) {
 			break;
 		}
 	}
+}
+
+Viewer.prototype.parsingListener = function(event) {
+    if (!event.data.instance._addingNewTract) {
+        if (this.parsingEventCount || this.parsingEventCount == 0) {
+            this.parsingEventCount++;
+        } else {
+            this.parsingEventCount = 1;
+        }
+        if (this.parsingEventCount == event.data.instance._volume.labelmap.length) {
+            $(document).trigger('view:enable');
+            this.parsingEventCount = 0;
+        }
+    }
+    else {
+        $(document).trigger('view:enable');
+    }
 }
 
 $(document).ready(function() {

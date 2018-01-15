@@ -51,6 +51,10 @@ body {
     line-height: 1;
 }
 
+a {
+    text-decoration: none;
+}
+
 #header-wrapper {
 	width: 100%;
 	height: 100px;
@@ -115,6 +119,28 @@ nav {
 	color: grey;
 }
 
+#header-logos {
+    width: 500px;
+    height: 100px;
+    float: right;
+}
+
+#brc-logo {
+    height: 100px;
+    width: 200px;
+    float: right;
+    padding-top: 12px;
+    background: url("images/Supported_by_NHS.jpg") 90% / 180px no-repeat white;
+}
+
+#wellcome-logo {
+    height: 100px;
+    width: 100px;
+    float: right;
+    padding-top: 12px;
+    background: url("images/wellcome-logo.jpg") 90% / 80px no-repeat white;
+}
+
 #content-wrapper {
 	width: 100%;
 	text-align: center;
@@ -125,11 +151,15 @@ nav {
 	display: inline-block;
 	/*text-align: left;*/
 	margin: 10px;
+	padding-top: 10px;
 }
 
-/*#content-text {
-	text-align: left;
-}*/
+#content-text {
+	width: 1200px;
+    display: inline-block;
+    padding-top: 30px;
+    font-size: 120%;
+}
 
 #footer-wrapper {
 	width: 100%;
@@ -142,3 +172,34 @@ nav {
 	display: inline-block;
 }
 
+#about-maudsley-logo {
+    width: 400px;
+    height: 150px;
+    float: left;
+    margin-left: 50px;
+    background: url("images/Maudsley-BRC.png") 100% / 400px no-repeat white;
+}
+
+#about-brc-logo {
+    width: 250px;
+    height: 150px;
+    float: left;
+    margin-left: 80px;
+    background: url("images/Supported_by_NHS.jpg") 100% / 250px no-repeat white;
+}
+
+#about-wellcome-logo {
+    width: 250px;
+    height: 150px;
+    float: left;
+    margin-left: 80px;
+    background: url("images/wellcome-logo.jpg") 100% / 250px no-repeat white;
+}
+
+#about-natbrainlab-logo {
+    width: 100%;
+    height: 150px;
+    float: left;
+    margin-left: 70px;
+    background: url("images/natbrainlab-logo.jpg") 0% / 1000px no-repeat white;
+}

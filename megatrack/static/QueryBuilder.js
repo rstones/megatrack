@@ -19,10 +19,12 @@ function QueryBuilder(containerId, rootPath) {
 									+'<div id="query-info"></div>'
 									+'<div class="clear"></div>'
 									+'<hr>'
+									+'<div id="dataset-table-wrapper">'
 									+'<table id="dataset-table">'
 									+'<tbody>'
 									+'</tbody>'
 									+'</table>'
+									+'</div>'
 									+'</div>');
 		
 		$('#query-info').html('<span id="query-info-text">'+instance._queryInfoText+'0</span>');
