@@ -71,10 +71,6 @@ select::-ms-expand {
     }
 }
 
-.clear {
-	clear: both;
-}
-
 .remove-icon {
 	width: 10px;
 	height: 10px;
