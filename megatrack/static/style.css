@@ -138,7 +138,7 @@ nav {
     width: 100px;
     float: right;
     padding-top: 12px;
-    background: url("images/wellcome-logo-black.png") 90% / 80px no-repeat white;
+    background: url("images/wellcome-logo.jpg") 90% / 80px no-repeat white;
 }
 
 #content-wrapper {
@@ -184,16 +184,16 @@ nav {
     width: 250px;
     height: 150px;
     float: left;
-    margin-left: 120px;
+    margin-left: 80px;
     background: url("images/Supported_by_NHS.jpg") 100% / 250px no-repeat white;
 }
 
 #about-wellcome-logo {
-    width: 130px;
+    width: 250px;
     height: 150px;
     float: left;
-    margin-left: 120px;
-    background: url("images/wellcome-logo-black.png") 100% / 112px no-repeat white;
+    margin-left: 80px;
+    background: url("images/wellcome-logo.jpg") 100% / 250px no-repeat white;
 }
 
 #about-natbrainlab-logo {
