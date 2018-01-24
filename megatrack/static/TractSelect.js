@@ -396,26 +396,30 @@ function TractSelect(containerId, parent) {
 			$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 			$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 		}
-		$.ajax({
-			dataType: 'json',
-			url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(instance._parent._currentQuery),
-			success: function(data) {
-				instance._tractMetrics[data.tractCode]['dynamic'] = data;
-				if (showTractInfo) {
-					instance.populateDynamicTractInfo(data);
-				}
-			}
-		});
-		$.ajax({
-			dataType: 'json',
-			url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
-			success: function(data) {
-				instance._tractMetrics[data.tractCode]['static'] = data;
-				if (showTractInfo) {
-					instance.populateStaticTractInfo(data);
-				}
-			}
-		});
+		// wait to allow request for density map to be sent before fetching tract metrics 
+		setTimeout(function() {
+		    $.ajax({
+                dataType: 'json',
+                url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(instance._parent._currentQuery),
+                success: function(data) {
+                    instance._tractMetrics[data.tractCode]['dynamic'] = data;
+                    if (showTractInfo) {
+                        instance.populateDynamicTractInfo(data);
+                    }
+                }
+            });
+            $.ajax({
+                dataType: 'json',
+                url: instance._parent._rootPath + '/get_tract_info/' + tractCode + '?'+$.param(instance._parent._currentQuery),
+                success: function(data) {
+                    instance._tractMetrics[data.tractCode]['static'] = data;
+                    if (showTractInfo) {
+                        instance.populateStaticTractInfo(data);
+                    }
+                }
+            });
+		}, 500);
+		
 	});
 	
 	$(document).on('query-update', function(event, newQuery) {
@@ -497,7 +501,8 @@ function TractSelect(containerId, parent) {
 					$('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 					$('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
 				}
-				$.ajax({
+				
+			    $.ajax({
 					dataType: 'json',
 					url: instance._parent._rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
 					success: function(data) {
@@ -517,13 +522,13 @@ function TractSelect(containerId, parent) {
 						}
 					}
 				});
+    			
 			}
 			instance._availableTracts[tractCode].disabled = disable;
 		}
 		if (Object.keys(instance._selectedTracts).length) {
 		    instance._parent.resetSlicesForDirtyFiles();
 		}
-		//setTimeout(function() {$(document).trigger('view:enable');}, 1000);
 		
 		// also loop through all the options in the tract select and disable the the required tracts 
 		$('#add-tract-select option[value!=default]').each(function(idx) {

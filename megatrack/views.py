@@ -1,4 +1,4 @@
-from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
+from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify
 from flask_jsontools import jsonapi
 import numpy as np
@@ -31,6 +31,10 @@ def about():
 @megatrack.route('/contact')
 def contact():
     return render_template('contact.html')
+
+@megatrack.route('/admin')
+def admin():
+    return render_template('admin.html')
 
 @megatrack.route('/get_template')
 def get_template():

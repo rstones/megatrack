@@ -1,27 +1,14 @@
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
+# 
+# db = SQLAlchemy()
+# 
+# from flask import json
+# from json.decoder import JSONDecodeError
+# from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from megatrack import application, bcrypt, db
 from sqlalchemy.orm import validates
-
-db = SQLAlchemy()
-
-from flask import json
-from json.decoder import JSONDecodeError
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
-
-# json encoder for SQLAlchemy objects
-class AlchemyEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o.__class__, DeclarativeMeta):
-            data = {}
-            fields = o.__json__() if hasattr(o, '__json__') else dir(o)
-            for field in [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]:
-                value = o.__getattribute__(field)
-                try:
-                    json.dumps(value)
-                    data[field] = value
-                except TypeError:
-                    data[field] = None
-            return data
-        return json.JSONEncoder.default(self, o)
+import jwt
+import datetime
 
 class Subject(db.Model):
     '''
@@ -181,6 +168,41 @@ class DatasetTracts(db.Model):
         
     def __repr__(self):
         return '<DatasetTracts %r>' % (self.dataset_code + ' ' + self.tract_code)
+    
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_name = db.Column(db.String(255), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    reg_date = db.Column(db.DateTime, nullable=False)
+    
+    def __init__(self, user_name, password):
+        self.user_name = user_name
+        self.password = bcrypt.generate_password_hash(password)
+        self.reg_date = datetime.datetime.now()
+        
+    def __repr__(self):
+        return '<User %r>' % self.user_name
+        
+    def encode_auth_token(self, user_id):
+        try:
+            payload = {
+                'exp': datetime.datetime.now() + datetime.timedelta(days=0, seconds=60*60),
+                'iat': datetime.datetime.now(),
+                'sub': user_id
+            }
+            return jwt.encode(payload, application.config.get('HASH_KEY'), algorithm='HS256')
+        except Exception as e:
+            return e
+    
+    @staticmethod
+    def decode_auth_token(auth_token):
+        try:
+            payload = jwt.decode(auth_token, application.config.get('HASH_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
     
     
     
