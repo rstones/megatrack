@@ -3,6 +3,38 @@ $(document).ready(function() {
     // form should submit action to log in route and obtain an auth token to be saved in localStorage
     // on successful log in, remove the log in form and show a "Log out" button
     
+    $('#admin-login-form').submit(function(event) {
+        event.preventDefault();
+        $.ajax({
+            url: '/megatrack/login',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#admin-login-form').serialize(),
+            success: function(data) {
+                localStorage.setItem('authToken', data.authToken);
+                $('#admin-login-container').remove();
+                $('#content').append('<div id="admin-tabs-container">'
+                    +'<div id="admin-tabs">'
+                        +'<ul>'
+                            +'<li><a href="#datasets-tab">Datasets</a></li>'
+                            +'<li><a href="#tracts-tab">Tracts</a></li>'
+                            +'<li><a href="#subjects-tab">Subjects</a></li>'
+                        +'</ul>'
+                        +'<div id="datasets-tab">This is the datasets tab</div>'
+                        +'<div id="tracts-tab">This is the tracts tab</div>'
+                        +'<div id="subjects-tab">This is the subjects tab</div>'
+                    +'</div>'   
+                +'</div>');
+                
+                $('#admin-tabs').tabs();
+                
+            },
+            error: function(xhr) {
+                $('#admin-login-error-message').html(xhr.responseText);
+            }
+        });
+    })
+    
     // show tabs for each table we need to update: Datasets, Tracts, Subjects
     // For the Datasets and Tracts tabs show the available data in a paginated table in left column
     // each row should have an update and remove icon

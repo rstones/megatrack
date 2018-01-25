@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 {% block head %}
   {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='external/jquery-ui.css') }}">
   <script src="{{ url_for('static', filename='external/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='external/jquery-ui.js') }}"></script>
   <script src="{{ url_for('static', filename='admin.js') }}"></script>
 {% endblock %}
 {% block content %}
 
-
-
+<div id="admin-login-container">
+    <form id="admin-login-form" action="/megatrack/login" method="POST">
+        <input type="text" name="username" value="User name" class="admin-login-input"
+            onfocus="if (this.value == 'User name') {this.value = ''; this.style.color='#3b3b3b'}"><br>
+        <input type="text" name="password" value="Password" class="admin-login-input"
+            onfocus="if (this.value == 'Password') {this.type = 'password'; this.value = ''; this.style.color='#000000'}"><br>
+        <input id="admin-login-button" type="submit" value="Log in"><br>
+    </form>
+    <div id="admin-login-error-message"></div>
+</div>
 {% endblock %}

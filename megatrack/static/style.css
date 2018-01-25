@@ -151,7 +151,7 @@ nav {
 }
 
 #content {
-	/*width: 1000px;*/
+	width: 1000px;
 	display: inline-block;
 	/*text-align: left;*/
 	margin: 10px;
@@ -223,3 +223,40 @@ nav {
     margin-left: 0px;
     background: url("images/sackler-logo.png") 0% / 300px no-repeat white;
 }
+
+#admin-login-container {
+    background-color: lightgrey;
+    border: 1px solid darkgrey;
+    border-radius: 10px;
+    width: 350px;
+    height: 230px;
+    margin: 0 auto;
+}
+
+#admin-login-form {
+
+}
+
+.admin-login-input {
+    color: #a7a7a7;
+    width: 300px;
+    height: 30px;
+    font-size: 150%;
+    margin: 10px;
+}
+
+#admin-login-button {
+    width: 150px;
+    margin: 10px;
+    height: 40px;
+    font-size: 140%;
+}
+
+#admin-login-error-message {
+    width: 300px;
+    margin: 0 auto;
+    height: 50px;
+    color: red;
+}
+
+

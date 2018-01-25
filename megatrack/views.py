@@ -1,5 +1,5 @@
-from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
-from flask import current_app, Blueprint, render_template, request, send_file, jsonify
+from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts, User
+from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
 import numpy as np
 import nibabel as nib
@@ -11,7 +11,8 @@ import megatrack.cache_utils as cu
 import megatrack.data_utils as du
 import megatrack.database_utils as dbu
 import time
- 
+from megatrack import bcrypt
+
 megatrack = Blueprint('megatrack', __name__)
 
 def file_path_relative_to_root_path(file_path):
@@ -35,6 +36,25 @@ def contact():
 @megatrack.route('/admin')
 def admin():
     return render_template('admin.html')
+
+@megatrack.route('/login', methods=['POST'])
+def login():
+    try:
+        user = User.query.filter(User.user_name == request.form['username']).first()
+        if user and bcrypt.check_password_hash(user.password, request.form['password']):
+            auth_token = user.encode_auth_token(user.user_id)
+            if auth_token:
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged in!',
+                    'authToken': auth_token.decode()
+                }
+                return make_response(jsonify(responseObject)), 200
+        else:
+            return 'User does not exist or incorrect password used. Please try again.', 404
+    except Exception as e:
+        current_app.logger.error(e)
+        return 'Log in failed. Please try again.', 500
 
 @megatrack.route('/get_template')
 def get_template():
