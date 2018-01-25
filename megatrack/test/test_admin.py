@@ -51,5 +51,50 @@ class AdminTestCase(TestCase):
         assert b'User does not exist or incorrect password used. Please try again.' in resp.get_data()
         
         
+    def test_modify_datasets_GET(self):
+        
+        # set up the data
+        dataset1_code = 'TEST_DATASET1'
+        dataset1_name = 'Test Dataset 1'
+        dataset1_file_path = '/test/dataset1'
+        dataset1_query_params = '{"query": "params"}'
+        dataset1 = Dataset(dataset1_code, dataset1_name, dataset1_file_path, dataset1_query_params)
+        db.session.add(dataset1)
+        
+        dataset2_code = 'TEST_DATASET2'
+        dataset2_name = 'Test Dataset 2'
+        dataset2_file_path = '/test/dataset2'
+        dataset2_query_params = '{"query": "params"}'
+        dataset2 = Dataset(dataset2_code, dataset2_name, dataset2_file_path, dataset2_query_params)
+        db.session.add(dataset2)
+        
+        db.session.commit()
+        
+        # send request to client
+        resp = self.client.get('datasets')
+        data = resp.get_data()
         
         
+    
+    def test_modify_datasets_POST(self):
+        pass
+        
+    def test_modify_datasets_PUT(self):
+        pass
+        
+    def test_modify_datasets_DELETE(self):
+        pass
+    
+    def test_modify_tracts_GET(self):
+        pass
+    
+    def test_modify_tracts_POST(self):
+        pass
+        
+    def test_modify_tracts_PUT(self):
+        pass
+        
+    def test_modify_tracts_DELETE(self):
+        pass
+    
+            

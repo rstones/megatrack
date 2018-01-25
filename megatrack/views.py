@@ -55,6 +55,74 @@ def login():
     except Exception as e:
         current_app.logger.error(e)
         return 'Log in failed. Please try again.', 500
+    
+@megatrack.route('/tracts', methods=['GET','POST','PUT','DELETE'])
+def modify_tracts():
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        pass
+    elif request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        pass
+
+@megatrack.route('/datasets', methods=['GET','POST','PUT','DELETE'])
+def modify_datasets():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+        if auth_token:
+            user_id = User.decode_auth_token(auth_token)
+            
+            if request.method == 'GET':
+                try:
+                    datasets = Dataset.query.all()
+                    response_object = {
+                        "datasets": datasets
+                    }
+                    return make_response(response_object), 200
+                except Exception as e:
+                    current_app.logger.error(e)
+                    return 'An error occured while getting datasets.', 500
+                
+            elif request.method == 'POST':
+                form = request.form
+                try:
+                    dataset = Dataset(form['code'], form['name'], form['filePath'], form['queryParams'])
+                    db.session.add(dataset)
+                    db.session.commit()
+                    return 'New dataset successfully created.', 200
+                except Exception as e:
+                    current_app.logger.error(e)
+                    return 'An error occurred while created a dataset record.', 500
+                
+            elif request.method == 'PUT':
+                form = request.form
+                try:
+                    dataset = Dataset.query.filter(Dataset.code == form['code']).first()
+                    dataset.name = form['name']
+                    dataset.file_path = form['filePath']
+                    dataset.query_params = form['queryParams']
+                    db.session.commit()
+                    return 'Dataset successfully updated.', 200
+                except Exception as e:
+                    current_app.logger.error(e)
+                    return 'An error occurred while updating dataset.', 500
+            
+            elif request.method == 'DELETE':
+                code = request.args['code']
+                if code:
+                    try:
+                        Dataset.query.filter(Dataset.code == code).delete()
+                        db.session.commit()
+                        return 'Dataset successfully deleted.', 200
+                    except Exception as e:
+                        current_app.logger.error(e)
+                        return 'An error occurred while deleting dataset.', 500
+                else:
+                    current_app.logger.error('No code sent with dataset DELETE request')
+                    return 'No dataset code was sent with DELETE request.', 404
 
 @megatrack.route('/get_template')
 def get_template():
