@@ -64,7 +64,7 @@ class DataUtilsTestCase(unittest.TestCase):
         subject_file_names = ['test_file_path_1', 'test_file_path_2']
         
         with monkey_patch(du.nib, 'load', lambda filepath: test_nifti_1 if filepath == test_filepath_1 else test_nifti_2):
-            averaged_map = du.subject_averaged_map(subject_file_names, 'FA')
+            averaged_map = du.subject_averaged_map(subject_file_names, 'FA', 'data/dir/')
             assert np.all(averaged_map == 4)
             assert averaged_map.dtype == 'float64'
             

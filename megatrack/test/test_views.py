@@ -8,7 +8,8 @@ import flask
 import unittest
 import mock
 from flask_testing import TestCase
-from megatrack.models import db, AlchemyEncoder, Tract, Dataset, Subject
+from megatrack.models import db, Tract, Dataset, Subject
+from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack, construct_subject_file_paths
 import megatrack.views as views
 from .cache_mock import CacheMock
