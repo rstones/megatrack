@@ -1,0 +1,9 @@
+#!/home/richard/git/megatrack/megatrackvenv3.6/bin/python3.6
+"""PAR/REC to NIfTI converter
+"""
+
+from nibabel.parrec2nii_cmd import main
+
+
+if __name__ == '__main__':
+    main()
