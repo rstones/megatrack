@@ -9,6 +9,8 @@ from megatrack import application, bcrypt, db
 from sqlalchemy.orm import validates
 import jwt
 import datetime
+import json
+from json.decoder import JSONDecodeError
 
 class Subject(db.Model):
     '''
