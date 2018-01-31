@@ -27,14 +27,50 @@ $(document).ready(function() {
                 +'</div>');
                 
                 $('#admin-tabs').tabs();
+                constructDatasetsTab();
                 
             },
             error: function(xhr) {
                 $('#admin-login-error-message').html(xhr.responseText);
             }
         });
-    })
+    });
     
+    var constructDatasetsTab = function() {
+        $('#datasets-tab').append('<div id="datasets-tab-left-column">'
+                                        +'<table id="datasets-table">'
+                                            +'<thead></thead><tbody></tbody>'
+                                        +'</table>'
+                                    +'</div>'
+                                    +'<div id="datasets-tab-right-column">'
+                                    +'</div>');
+                                    
+        $.ajax({
+            url: '/megatrack/datasets',
+            method: 'GET',
+            dataType: 'json',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer '+localStorage.getItem('authToken'));  
+            },
+            success: function(data) {
+                // populate #datasets-table
+                for (i=0; i<data.datasets.length; i++) {
+                    dataset = data.datasets[i];
+                    $('#datasets-table > tbody').append('<tr>'
+                                                            +'<td>'+dataset.code+'</td>'
+                                                            +'<td>'+dataset.name+'</td>'
+                                                            +'<td>'+dataset.file_path+'</td>'
+                                                            +'<td>'+dataset.query_params+'</td>'
+                                                            +'<td>Update</td>'
+                                                            +'<td>Delete</td>'
+                                                        +'</tr>');
+                }
+            },
+            error: function(xhr) {
+                
+            }
+        });
+    };
     // show tabs for each table we need to update: Datasets, Tracts, Subjects
     // For the Datasets and Tracts tabs show the available data in a paginated table in left column
     // each row should have an update and remove icon
