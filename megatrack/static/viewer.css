@@ -1055,3 +1055,16 @@ select::-ms-expand {
 	line-height: 25px;
 }
 
+#lesion-select {
+    float: left;
+    top: -55px;
+    position: relative;
+    left: 20px;
+    color: white;
+}
+
+#lesion-select > span {
+    float: left;
+    margin-bottom: 10px;
+}
+

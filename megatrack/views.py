@@ -25,6 +25,10 @@ def file_path_relative_to_root_path(file_path):
 def index():
     return render_template('index.html')
 
+@megatrack.route('/lesions')
+def lesions():
+    return render_template('lesions.html')
+
 @megatrack.route('/about')
 def about():
     return render_template('about.html')
@@ -367,7 +371,53 @@ def get_trk(tract_code):
     tract = dbu.get_tract(tract_code)
     data_dir = current_app.config['DATA_FILE_PATH']
     return send_file('../'+data_dir+'/trk/'+tract.file_path+'.trk', as_attachment=True, attachment_filename=tract.code+'.trk', conditional=True, add_etags=True)
-    
+
+
+################################################################################
+#
+# Lesion mapping routes
+#
+################################################################################
+
+from werkzeug.utils import secure_filename
+import os
+
+ALLOWED_EXTENSIONS = ['nii', 'nii.gz']
+
+def allowed_filename(filename):
+    return '.' in filename \
+                and filename.split('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@megatrack.route('/lesion_upload', methods=['POST'])
+def lesion_upload():
+    current_app.logger.info('Received request to upload lesion map.')
+    for key in request.files.keys():
+        print(key)
+    if 'lesionmap' not in request.files:
+        current_app.logger.info('Request did not contain a file part.')
+        return 'Request did not contain a file part', 400
+    file = request.files['lesionmap']
+    if file.filename == '':
+        current_app.logger.info('No file selected.')
+        return 'No file selected', 400
+    if file and allowed_filename(file.filename):
+        current_app.logger.info(f'Filename allowed so saving lesion map {file.filename}...')
+        filename = secure_filename(file.filename)
+        extension = filename.split('.', 1)[1]
+        # generate lesion code
+        lesion_code = 'LESION001'
+        path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], f"{lesion_code}.{extension}")
+        file.save(path)
+        response_object = {
+                'lesionCode': lesion_code,
+                'message': 'Lesion map successfully uploaded'
+            }
+        return make_response(jsonify(response_object)), 200
+        
+@megatrack.route('/lesion/<lesion_code>')
+def get_lesion(lesion_code):
+    return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+
 @megatrack.route('/_test_viewer')
 def _test_viewer():
     '''Serve QUnit test file for javascript Viewer.'''
