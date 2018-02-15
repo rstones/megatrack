@@ -5,6 +5,6 @@ $(document).ready(function() {
                                             containerId: 'viewer',
                                             rootPath: '/megatrack',
                                             queryBuilderId: 'query-panel',
-                                            tractSelectId: 'tract-panel'
+                                            lesionAnalysisId: 'lesion-panel'
                                         });
 });

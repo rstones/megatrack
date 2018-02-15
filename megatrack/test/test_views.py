@@ -10,9 +10,22 @@ import mock
 from flask_testing import TestCase
 from megatrack.models import db, Tract, Dataset, Subject
 from megatrack.alchemy_encoder import AlchemyEncoder
-from megatrack.views import megatrack, construct_subject_file_paths
+from megatrack.views import megatrack
 import megatrack.views as views
 from .cache_mock import CacheMock
+import numpy as np
+from nibabel import Nifti1Image, Nifti1Header
+from werkzeug.datastructures import FileStorage
+import contextlib
+
+@contextlib.contextmanager
+def monkey_patch(module, fn_name, patch):
+    unpatch = getattr(module, fn_name)
+    setattr(module, fn_name, patch)
+    try:
+        yield
+    finally:
+        setattr(module, fn_name, unpatch)
         
 class MegatrackTestCase(TestCase):
     
@@ -258,6 +271,56 @@ class MegatrackTestCase(TestCase):
                       }
         file_paths, file_names = construct_subject_file_paths(test_query, 'TEST_DATA_DIR', 'TEST_TRACT_DIR', 'TEST_TRACT_FILE_NAME')
         assert len(file_paths) == 1
+        
+        
+    test_affine = np.eye(4)
+    nifti_dim = (91,109,91)
+        
+    def test_lesion_upload(self):
+        
+        # mock uploaded file
+        # mock template file
+        # mock save method of FileStorage class
+        # mock nibabel.load
+        
+        template_filepath = 'template.nii.gz'
+        template = Nifti1Image(np.ones(self.nifti_dim, dtype=np.int16), self.test_affine)
+        lesion_filepath = 'lesion.nii.gz'
+        lesion = Nifti1Image(np.ones(self.nifti_dim, dtype=np.int16), self.test_affine)
+        
+        saved_file = None
+        uploaded_file = FileStorage(filename=lesion_filepath, name='lesionmap')
+        
+        def file_storage_save(_self, path):
+            '''Function to monkey patch FileStorage.save(self, dst, buffer_size=16384)'''
+            saved_file = lesion
+        
+        # send post request using self.client('/lesion_upload', data={'lesionupload': FileStorage()})
+        with monkey_patch(views.nib, 'load', lambda path: template if path == template_filepath else lesion):
+            
+            with monkey_patch(FileStorage, 'save', file_storage_save):
+                
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 200
+                
+                # no file attached to request
+                
+                # no file with key 'lesionmap' in request.files
+                
+                # filename not an allowed filename
+                
+                # not a secure filename
+                
+                # check not matching dim, pixdim or RAS
+                # check response and check flags in db
+                
+                # success: check response and db
+                # assert saved_file == lesion
+                # check consecutive uploads with same file name get distinct records in the db
+                # check volume is correct
+                
+        
+    
 
 if __name__ == '__main__':
     unittest.main()

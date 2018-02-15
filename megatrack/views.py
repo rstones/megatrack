@@ -1,4 +1,4 @@
-from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts, User
+from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts, User, LesionUpload
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
 import numpy as np
@@ -381,18 +381,17 @@ def get_trk(tract_code):
 
 from werkzeug.utils import secure_filename
 import os
+import numpy.linalg as npla
 
-ALLOWED_EXTENSIONS = ['nii', 'nii.gz']
+ALLOWED_EXTENSIONS = ['nii.gz']
 
 def allowed_filename(filename):
     return '.' in filename \
-                and filename.split('.', 1)[1] in ALLOWED_EXTENSIONS
+                and filename.split('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @megatrack.route('/lesion_upload', methods=['POST'])
 def lesion_upload():
     current_app.logger.info('Received request to upload lesion map.')
-    for key in request.files.keys():
-        print(key)
     if 'lesionmap' not in request.files:
         current_app.logger.info('Request did not contain a file part.')
         return 'Request did not contain a file part', 400
@@ -404,12 +403,50 @@ def lesion_upload():
         current_app.logger.info(f'Filename allowed so saving lesion map {file.filename}...')
         filename = secure_filename(file.filename)
         extension = filename.split('.', 1)[1]
+        
+        data_dir = current_app.config['DATA_FILE_PATH']
+        saved_filename = du.temp_file(data_dir, filename, extension)
+        lesion_upload = LesionUpload(filename, saved_filename)
+        db.session.add(lesion_upload)
+        
         # generate lesion code
-        lesion_code = 'LESION001'
-        path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], f"{lesion_code}.{extension}")
+        lesion_code = lesion_upload.lesion_id
+        
+        path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], saved_filename)
         file.save(path)
+        
+        # now check the nifti MNI transformation matches template
+        
+        lesion_map = nib.load(file_path_relative_to_root_path(path))
+        lesion_map_header = lesion_map.header
+        lesion_map_affine = lesion_map.get_sform()
+        template = nib.load(file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME))
+        template_header = template.header
+        
+        if np.all(lesion_map_header['dim'] != template_header['dim']):
+            lesion_upload.dim_match = 'N'
+            db.session.commit()
+            return 'Nifti dimensions do not match template', 400
+        elif np.all(lesion_map_header['pixdim'] != template_header['pixdim']):
+            lesion_upload.dim_match = 'Y'
+            lesion_upload.pixdim_match = 'N'
+            db.session.commit()
+            return 'Voxel size does not match template', 400
+        elif npla.det(lesion_map_affine) < 0: # determinant of the affine should be positive for RAS coords
+            lesion_upload.pixdim_match = 'Y'
+            lesion_upload.RAS = 'N'
+            db.session.commit()
+            return 'Nifti not in RAS coordinates', 400
+        
+        lesion_upload.RAS = 'Y'
+        db.session.commit()
+        
+        # calculate lesion volume
+        volume = du.averaged_tract_volume(lesion_map.get_data(), 1.e-6)
+        
         response_object = {
                 'lesionCode': lesion_code,
+                'volume': volume,
                 'message': 'Lesion map successfully uploaded'
             }
         return make_response(jsonify(response_object)), 200

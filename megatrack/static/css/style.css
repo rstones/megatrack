@@ -59,6 +59,10 @@ a {
     clear: both;
 }
 
+.clickable:hover {
+    cursor: pointer;
+}
+
 #header-wrapper {
 	width: 100%;
 	height: 100px;
@@ -83,7 +87,7 @@ a {
 #title-logo {
 	width: 120px;
 	height: 100px;
-	background: url("images/header-logo.png") no-repeat white;
+	background: url("../images/header-logo.png") no-repeat white;
 	background-size: contain;
 	float: left;
 }
@@ -129,21 +133,7 @@ nav {
     float: right;
 }
 
-#brc-logo {
-    height: 100px;
-    width: 200px;
-    float: right;
-    padding-top: 12px;
-    background: url("images/Supported_by_NHS.png") 90% / 180px no-repeat white;
-}
 
-#wellcome-logo {
-    height: 100px;
-    width: 100px;
-    float: right;
-    padding-top: 12px;
-    background: url("images/wellcome-logo.jpg") 90% / 80px no-repeat white;
-}
 
 #content-wrapper {
 	width: 100%;
@@ -176,12 +166,28 @@ nav {
 	display: inline-block;
 }
 
+#brc-logo {
+    height: 100px;
+    width: 200px;
+    float: right;
+    padding-top: 12px;
+    background: url("../images/Supported_by_NHS.png") 90% / 180px no-repeat white;
+}
+
+#wellcome-logo {
+    height: 100px;
+    width: 100px;
+    float: right;
+    padding-top: 12px;
+    background: url("../images/wellcome-logo.jpg") 90% / 80px no-repeat white;
+}
+
 #about-maudsley-logo {
     width: 400px;
     height: 150px;
     float: left;
     margin-left: 80px;
-    background: url("images/Maudsley-BRC.png") 100% / 400px no-repeat white;
+    background: url("../images/Maudsley-BRC.png") 100% / 400px no-repeat white;
 }
 
 #about-brc-logo {
@@ -189,7 +195,7 @@ nav {
     height: 150px;
     float: left;
     margin-left: 60px;
-    background: url("images/Supported_by_NHS.png") 100% / 250px no-repeat white;
+    background: url("../images/Supported_by_NHS.png") 100% / 250px no-repeat white;
 }
 
 #about-wellcome-logo {
@@ -197,7 +203,7 @@ nav {
     height: 150px;
     float: left;
     margin-left: 80px;
-    background: url("images/wellcome-logo.jpg") 100% / 250px no-repeat white;
+    background: url("../images/wellcome-logo.jpg") 100% / 250px no-repeat white;
 }
 
 #about-natbrainlab-logo {
@@ -205,7 +211,7 @@ nav {
     height: 200px;
     float: left;
     margin-left: 60px;
-    background: url("images/natbrainlab-logo.png") 0% / 400px no-repeat white;
+    background: url("../images/natbrainlab-logo.png") 0% / 400px no-repeat white;
 }
 
 #about-kings-logo {
@@ -213,7 +219,7 @@ nav {
     height: 200px;
     float: left;
     margin-left: 90px;
-    background: url("images/kings-logo.png") 0% / 130px no-repeat white;
+    background: url("../images/kings-logo.png") 0% / 130px no-repeat white;
 }
 
 #about-sackler-logo {
@@ -221,42 +227,6 @@ nav {
     height: 200px;
     float: left;
     margin-left: 0px;
-    background: url("images/sackler-logo.png") 0% / 300px no-repeat white;
+    background: url("../images/sackler-logo.png") 0% / 300px no-repeat white;
 }
-
-#admin-login-container {
-    background-color: lightgrey;
-    border: 1px solid darkgrey;
-    border-radius: 10px;
-    width: 350px;
-    height: 230px;
-    margin: 0 auto;
-}
-
-#admin-login-form {
-
-}
-
-.admin-login-input {
-    color: #a7a7a7;
-    width: 300px;
-    height: 30px;
-    font-size: 150%;
-    margin: 10px;
-}
-
-#admin-login-button {
-    width: 150px;
-    margin: 10px;
-    height: 40px;
-    font-size: 140%;
-}
-
-#admin-login-error-message {
-    width: 300px;
-    margin: 0 auto;
-    height: 50px;
-    color: red;
-}
-
 

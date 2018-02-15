@@ -94,6 +94,24 @@ mgtrk.Renderers = (function() {
             }
         };
         
+        /*
+            idx: index of labelmap in X.volume.labelmap to remove
+        */
+        renderers.removeLabelmapFromVolumeNew = function(idx) {
+            renderers.volume.labelmap.splice(idx, 1);
+            for (let i=0; i<3; i++) {
+                for (let j=0; j<renderers.volume.children[i].children.length; j++) {
+                    if (renderers.volume.children[i].children[j]) {
+                        // remove labelmap from slice
+                        renderers.volume.children[i].children[j]._labelmap.splice(idx, 1);
+                    }
+                }
+            }
+            renderers.views.sagittal.renderer.update(renderers.volume);
+            renderers.views.coronal.renderer.update(renderers.volume);
+            renderers.views.axial.renderer.update(renderers.volume);
+        };
+        
         renderers.addLabelmapToVolume = function(tractCode, newQuery) {
             renderers.addingNewTract = true;
             $(document).trigger('view:disable');
@@ -119,24 +137,24 @@ mgtrk.Renderers = (function() {
             return tractSettings;
         };
         
-        renderers.addLesionMapToVolume = function(lesionCode) {
+        /*
+            mapType: 'tract' or 'lesion' defines the type of map to get from the server
+            code: the tract code or lesion code
+            idx: the index at which to put the new labelmap in the X.volume.labelmaps array
+            params: optional params object which will be converted to a string and included in the query params of the url
+        */
+        renderers.addLabelmapToVolumeNew = function(mapType, code, idx, settings, params) {
             renderers.addingNewTract = true;
             $(document).trigger('view:disable');
             var map = new X.labelmap(renderers.volume);
-            map.lesionCode = lesionCode; // store tractCode on labelmap for access later. Need cleaner solution
-            map.file = rootPath + '/lesion/'+lesionCode+'?file_type=.nii.gz';
-            var color = 'lesion';
-//             var tractSettings = {
-//                     "colormapMax": 1,
-//                     "colormapMin": 0,
-//                     "opacity": 0.5,
-//                     "color": color,
-//                     "colormapMinUpdate": 0
-//                 };
-            map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.colormaps[color]);
-            renderers.volume.labelmap.push(map);
-            renderers.labelmapColors.push(color);
-//             return tractSettings;
+            map.code = code; // store tractCode on labelmap for access later. Need cleaner solution
+            if (params) {
+                map.file = rootPath + '/'+mapType+'/'+code+'?'+$.param(params)+'&file_type=.nii.gz';
+            } else {
+                map.file = rootPath + '/'+mapType+'/'+code+'?file_type=.nii.gz';
+            }
+            map.colormap = _this.colormaps.generateXTKColormap(settings.colormap);
+            renderers.volume.labelmap.splice(idx, 0, map);
             return true;
         };
         
@@ -150,6 +168,22 @@ mgtrk.Renderers = (function() {
                     break;
                 }
             }
+        };
+        
+        /*
+            mapType: 'tract' or 'lesion' defines the type of map to get from the server
+            code: the tract code or lesion code
+            idx: the index at which to put the new labelmap in the X.volume.labelmaps array
+            params: optional params object which will be converted to a string and included in the query params of the url
+        */
+        renderers.updateLabelmapFileNew = function(mapType, code, idx, params) {
+            renderers.addingNewTract = false;
+            if (params) {
+                renderers.volume.labelmap[idx].file = rootPath + '/' + mapType + '/' + code + '?' + $.param(params)+'&file_type=.nii.gz';
+            } else {
+                renderers.volume.labelmap[idx].file = rootPath + '/' + mapType + '/' + code + '?file_type=.nii.gz';
+            }
+             
         };
         
         renderers.parsingListener = function(event) {
@@ -270,5 +304,5 @@ mgtrk.Renderers = (function() {
         };
     };
     
-    return Renderers
+    return Renderers;
 })();

@@ -106,7 +106,7 @@ mgtrk.Colormaps = (function() {
         };
         
         const lesionColormap = function(min, max, alpha) {
-            alpha = 0.6;
+            //alpha = 0.6;
             var minMax = checkColormapMinMax(min, max);
             min = minMax.min; max = minMax.max;
             var numSegments = 5;
@@ -123,7 +123,6 @@ mgtrk.Colormaps = (function() {
         };
     
         const colormapFunctions = {
-            "lesion": lesionColormap,
             "yellow": yellowColormap,
             "purple": purpleColormap,
             "green": greenColormap,
@@ -183,7 +182,8 @@ mgtrk.Colormaps = (function() {
                                 colormaps: colormaps,
                                 numColormaps: numColormaps,
                                 colormapFunctions: colormapFunctions,
-                                generateXTKColormap: generateXTKColormap
+                                generateXTKColormap: generateXTKColormap,
+                                lesionColormap: lesionColormap
                             }
                 };
     };

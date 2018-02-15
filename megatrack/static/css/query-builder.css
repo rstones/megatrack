@@ -1,0 +1,305 @@
+#query-panel {
+    width: 40%;
+    height: 300px;
+    background: white;
+    border: none;
+    background: white;
+    float: left;
+    padding: 10px;
+    border: 1px solid darkgrey;
+    border-radius: 5px;
+    height: 250px;
+    margin-top: 10px;
+}
+
+#query-form-container {
+    border: 1px solid darkgrey;
+    border-radius: 5px;
+    height: 200px;
+}
+
+#query-submit {
+    margin-top: 25px;
+}
+
+#query-info {
+    font-size: 80%;
+    text-align: left;
+    width: 38%;
+    height: 10px;
+    float: left;
+    top: 5px;
+    position: relative;
+}
+
+#query-info-text {
+    padding-left: 15px;
+    vertical-align: middle;
+    vertical-align: -webkit-baseline-middle;
+    
+}
+
+.range-label {
+    border:0;
+    color:darkgrey;
+    font-weight:bold;
+    width: 100px;
+    margin-left: 18px;
+}
+
+.query-checkboxes {
+    width: 44%;
+    float: left;
+}
+
+.query-range {
+    width: 70%;
+    margin: auto;
+}
+
+.dataset-spacer-row {
+    height: 6px;
+}
+
+.dataset-query-row-excluded {
+    color: lightgrey;
+}
+
+.dataset-query-heading {
+    width: 25%;
+    float: left;
+    padding-left: 5px;
+    padding-top: 3px;
+    padding-right: 10px;
+    text-align: left;
+}
+
+.dataset-query-constraint-select {
+    width: 35%;
+    float: left;
+}
+
+.dataset-exclude {
+    width: 20%;
+    float: left;
+    padding-left: 5px;
+    padding-top: 3px;
+}
+
+.dataset-exclude-label {
+    position: relative;
+    /*vertical-align: text-bottom;*/
+    bottom: 4px;
+    padding-right: 10px;
+    font-size: 85%;
+}
+
+.dataset-remove {
+    float: right;
+    width: 10%;
+}
+
+#dataset-table-wrapper {
+    width: 503px;
+    height: 200px;
+    overflow-y: scroll;
+}
+
+#dataset-table {
+    width: 485px;
+    border-spacing: 0;
+}
+
+.dataset-query-cell {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    padding: 3px;
+}
+
+.dataset-table-cell {
+    background: #fcfff4; /* Old browsers */
+    /*background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+    /*background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+    /*background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+.dataset-title-query-select {
+    width: 35%;
+    border-left: 1px solid darkgrey;
+    border-top: 1px solid darkgrey;
+    border-bottom: 1px solid darkgrey;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.query-constraints {
+    width: 65%;
+    border-right: 1px solid darkgrey;
+    border-top: 1px solid darkgrey;
+    border-bottom: 1px solid darkgrey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.query-constraints-table {
+    width: 100%;
+    border-spacing: 0;
+    margin-top: 5px;
+}
+
+.query-constraint-row {
+    font-size: 85%;
+    text-align: left;
+    padding-left: 20px;
+    height: 25px;
+}
+
+.query-constraint-checkbox-label {
+    position: relative;
+    /*vertical-align: text-bottom;*/
+    bottom: 4px;
+    padding-right: 10px;
+}
+
+#query-name {
+    width: 40%;
+    border-left: 1px solid lightgrey;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    text-align: left;
+    padding-left: 10px;
+    vertical-align: middle;
+}
+
+#query-control {
+    width: 50%;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    vertical-align: middle;
+}
+
+#query-remove {
+    width: 10%;
+    border-right: 1px solid lightgrey;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-left: 25px;
+    vertical-align: middle;
+    padding-top: 6px;
+}
+
+.query-constraint-table-cell {
+    background: #fcfff4; /* Old browsers */
+    background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    padding: 0px;
+}
+
+.query-constraint-spacer-row {
+    height: 3px;
+}
+
+.query-slider-handle {
+    font-size: 80%;
+}
+
+#query-range-slider {
+    height: 8px;
+}
+
+#query-range-min-handle {
+    width: 1.7em;
+    text-align: center;
+    top: -0.3em;
+}
+
+#query-range-max-handle {
+    width: 1.7em;
+    text-align: center;
+    top: -0.3em;
+}
+
+.dataset-select-container {
+    width: 30%;
+    float: left;
+}
+
+#add-dataset-select {
+    width: 100%;
+}
+
+#add-dataset-button {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    width: 30%;
+    margin-top: 4px;
+    float: left;
+}
+
+#add-dataset-button:hover {
+    cursor: pointer;
+    background: rgb(225,225,225);
+}
+
+#dataset-select {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    box-shadow: 2px 2px 2px lightgrey;
+    border-radius: 5px;
+    z-index: 3;
+}
+
+#update-query-button {
+    border-radius: 5px;
+    width: 30%;
+    margin-top: 1px;
+    margin-left: 8px;
+    margin-bottom: 7px;
+    float: left;
+    height: 25px;
+}
+
+#update-query-button-text {
+    vertical-align: middle;
+    vertical-align: -webkit-baseline-middle;
+}
+
+.update-query-button-active {
+    background: white;
+    background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    border: 1px solid lightgrey;
+}
+
+.update-query-button-active:hover {
+    background: #e9e9ce;
+    cursor: pointer;
+}
+
+.update-query-button-disabled {
+    border: 1px solid lightgrey;
+    background: #EBEDE6;
+    color: lightgrey;
+}
+
+.dataset-remove-icon {
+    margin-left: 25px;
+    margin-top: 10px;
+}
+
+#query-report-container {
+    width: 200px;
+    height: 200px;
+    float: left;
+    margin-left: 10px;
+    border-radius: 5px;
+    border: 1px solid darkgrey;
+    margin-top: 10px;
+}
