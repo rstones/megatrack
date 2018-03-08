@@ -73,6 +73,10 @@ mgtrk.LesionMapping = (function() {
         $('#'+containerId).append('<div id="lesion-mapping-wrapper">'
                                         +'<div id="lesion-upload-button" class="button"><span>Lesion Upload</span><div class="upload-icon"></div></div>'
                                         +'<div id="run-lesion-analysis-button" class="button">Run Analysis</div>'
+                                        +'<div id="lesion-volume-wrapper">'
+                                            +'<div id="lesion-volume-label">Lesion volume:</div>'
+                                            +'<div id="lesion-volume">- ml</div>'
+                                        +'</div>'
                                         +'<div id="lesion-opacity-slider-wrapper">'
                                             +'<div id="lesion-opacity-label">Lesion opacity (%):</div>'
                                             +'<div id="lesion-opacity-slider">'
@@ -218,6 +222,8 @@ mgtrk.LesionMapping = (function() {
                      _this.renderers.resetSlicesForDirtyFiles();
                      
                      $('#lesion-opacity-slider').slider('enable');
+                     
+                     $('#lesion-volume').html(data.volume.toFixed(2) + ' ml');
                      
                      setTimeout(function() {
                             $('#lesion-upload-close').trigger('click');

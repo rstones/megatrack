@@ -54,6 +54,23 @@
     margin: 0 0 7px 10px;
 }
 
+#lesion-volume-wrapper {
+    width: 120px;
+    font-size: 80%;
+    float: left;
+    text-align: left;
+    margin-left: 10px;
+}
+
+#lesion-volume-label {
+
+}
+
+#lesion-volume {
+    text-align: center;
+    margin-top: 3px;
+}
+
 #lesion-opacity-slider-wrapper {
     width: 35%;
     float: right;
