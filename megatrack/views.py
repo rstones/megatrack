@@ -382,6 +382,7 @@ def get_trk(tract_code):
 from werkzeug.utils import secure_filename
 import os
 import numpy.linalg as npla
+import datetime
 
 ALLOWED_EXTENSIONS = ['nii.gz']
 
@@ -399,61 +400,75 @@ def lesion_upload():
     if file.filename == '':
         current_app.logger.info('No file selected.')
         return 'No file selected', 400
-    if file and allowed_filename(file.filename):
-        current_app.logger.info(f'Filename allowed so saving lesion map {file.filename}...')
-        filename = secure_filename(file.filename)
-        extension = filename.split('.', 1)[1]
-        
-        data_dir = current_app.config['DATA_FILE_PATH']
-        saved_filename = du.temp_file(data_dir, filename, extension)
-        lesion_upload = LesionUpload(filename, saved_filename)
+    
+    filename = secure_filename(file.filename)
+    
+    if not allowed_filename(filename):
+        current_app.logger.info(f'Invalid filename extension for uploaded file {filename}')
+        return f'Invalid filename extension {filename.split(".", 1)[1]}', 400
+    
+    current_app.logger.info(f'Filename allowed so saving lesion map {filename}...')
+    filename_components = filename.split('.', 1)
+    filename = filename_components[0]
+    extension = filename_components[1]
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    lesion_upload_dir = current_app.config['LESION_UPLOAD_FOLDER']
+    saved_filename = du.temp_file(lesion_upload_dir, filename, extension)
+    lesion_upload = LesionUpload(filename, saved_filename)
+    #db.session.add(lesion_upload)
+    
+    #path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], saved_filename)
+    file.save(saved_filename)
+    
+    # now check the nifti MNI transformation matches template
+    
+    lesion_map = nib.load(saved_filename) #nib.load(file_path_relative_to_root_path(saved_filename))
+    lesion_map_header = lesion_map.header
+    lesion_map_affine = lesion_map.get_sform()
+    template = nib.load(data_dir+'/'+du.TEMPLATE_FILE_NAME) #nib.load(file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME))
+    template_header = template.header
+    
+    if not np.all(lesion_map_header['dim'][1:4] == template_header['dim'][1:4]):
+        lesion_upload.dim_match = 'N'
         db.session.add(lesion_upload)
-        
-        # generate lesion code
-        lesion_code = lesion_upload.lesion_id
-        
-        path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], saved_filename)
-        file.save(path)
-        
-        # now check the nifti MNI transformation matches template
-        
-        lesion_map = nib.load(file_path_relative_to_root_path(path))
-        lesion_map_header = lesion_map.header
-        lesion_map_affine = lesion_map.get_sform()
-        template = nib.load(file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME))
-        template_header = template.header
-        
-        if np.all(lesion_map_header['dim'] != template_header['dim']):
-            lesion_upload.dim_match = 'N'
-            db.session.commit()
-            return 'Nifti dimensions do not match template', 400
-        elif np.all(lesion_map_header['pixdim'] != template_header['pixdim']):
-            lesion_upload.dim_match = 'Y'
-            lesion_upload.pixdim_match = 'N'
-            db.session.commit()
-            return 'Voxel size does not match template', 400
-        elif npla.det(lesion_map_affine) < 0: # determinant of the affine should be positive for RAS coords
-            lesion_upload.pixdim_match = 'Y'
-            lesion_upload.RAS = 'N'
-            db.session.commit()
-            return 'Nifti not in RAS coordinates', 400
-        
-        lesion_upload.RAS = 'Y'
         db.session.commit()
-        
-        # calculate lesion volume
-        volume = du.averaged_tract_volume(lesion_map.get_data(), 1.e-6)
-        
-        response_object = {
-                'lesionCode': lesion_code,
-                'volume': volume,
-                'message': 'Lesion map successfully uploaded'
-            }
-        return make_response(jsonify(response_object)), 200
+        return 'Nifti dimensions do not match template', 400
+    elif not np.all(lesion_map_header['pixdim'][1:4] == template_header['pixdim'][1:4]):
+        lesion_upload.dim_match = 'Y'
+        lesion_upload.pixdim_match = 'N'
+        db.session.add(lesion_upload)
+        db.session.commit()
+        return 'Voxel size does not match template', 400
+    elif npla.det(lesion_map_affine) < 0: # determinant of the affine should be positive for RAS coords
+        lesion_upload.dim_match = 'Y'
+        lesion_upload.pixdim_match = 'Y'
+        lesion_upload.RAS = 'N'
+        db.session.add(lesion_upload)
+        db.session.commit()
+        return 'Nifti not in RAS coordinates', 400
+    
+    lesion_upload.dim_match = 'Y'
+    lesion_upload.pixdim_match = 'Y'
+    lesion_upload.RAS = 'Y'
+    db.session.add(lesion_upload)
+    db.session.commit()
+    
+    # calculate lesion volume
+    volume = du.averaged_tract_volume(lesion_map.get_data(), 1.e-6)
+    
+    response_object = {
+            'lesionCode': lesion_upload.lesion_id,
+            'volume': volume,
+            'message': 'Lesion map successfully uploaded'
+        }
+    return make_response(jsonify(response_object)), 200
         
 @megatrack.route('/lesion/<lesion_code>')
 def get_lesion(lesion_code):
-    return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+    lesion_upload = LesionUpload.query.filter(LesionUpload.lesion_id == lesion_code).all()[0]
+    #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+    return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
 
 @megatrack.route('/_test_viewer')
 def _test_viewer():

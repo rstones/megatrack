@@ -3,12 +3,12 @@ Created on 7 Sep 2017
 
 @author: richard
 '''
-from flask import Flask
+from flask import Flask, json
 import flask
 import unittest
 import mock
 from flask_testing import TestCase
-from megatrack.models import db, Tract, Dataset, Subject
+from megatrack.models import db, Tract, Dataset, Subject, LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
 import megatrack.views as views
@@ -17,6 +17,8 @@ import numpy as np
 from nibabel import Nifti1Image, Nifti1Header
 from werkzeug.datastructures import FileStorage
 import contextlib
+from io import BytesIO
+import pickle
 
 @contextlib.contextmanager
 def monkey_patch(module, fn_name, patch):
@@ -86,6 +88,29 @@ class MegatrackTestCase(TestCase):
     sbjct4_ravens_iq_raw = 55
     sbjct4_file_path = 'TESTDATASETB004_MNI_'
     sbjct4_mmse = None
+    
+    # template and lesion to test lesion upload
+    test_affine = np.eye(4)
+    nifti_dim = (91,109,91)
+    template_filepath = 'Template_T1_2mm_new_RAS.nii.gz'
+    template = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), test_affine)
+    lesion_filepath = 'lesion.nii.gz'
+    lesion = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), test_affine)
+    
+    # non-matching dim
+    lesion_wrong_dim_filepath = 'wrong_dim.nii.gz'
+    lesion_wrong_dim = Nifti1Image(np.ones((182,218,182), dtype=np.int16), test_affine)
+    
+    # non-matching pixdim
+    lesion_wrong_pixdim_filepath = 'wrong_pixdim.nii.gz'
+    lesion_wrong_pixdim = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), test_affine)
+    lesion_wrong_pixdim.header['pixdim'] = [1, 2, 2, 2, 1, 1, 1, 1]
+    
+    # not RAS
+    lesion_not_RAS_filepath = 'not_RAS.nii.gz'
+    not_RAS_affine = np.eye(4)
+    not_RAS_affine[0,0] = -1
+    lesion_not_RAS = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), not_RAS_affine)
     
     def create_app(self):
         app = Flask(__name__, template_folder='../templates')
@@ -272,10 +297,6 @@ class MegatrackTestCase(TestCase):
         file_paths, file_names = construct_subject_file_paths(test_query, 'TEST_DATA_DIR', 'TEST_TRACT_DIR', 'TEST_TRACT_FILE_NAME')
         assert len(file_paths) == 1
         
-        
-    test_affine = np.eye(4)
-    nifti_dim = (91,109,91)
-        
     def test_lesion_upload(self):
         
         # mock uploaded file
@@ -283,44 +304,131 @@ class MegatrackTestCase(TestCase):
         # mock save method of FileStorage class
         # mock nibabel.load
         
-        template_filepath = 'template.nii.gz'
-        template = Nifti1Image(np.ones(self.nifti_dim, dtype=np.int16), self.test_affine)
-        lesion_filepath = 'lesion.nii.gz'
-        lesion = Nifti1Image(np.ones(self.nifti_dim, dtype=np.int16), self.test_affine)
+        self.saved_file = None
+        self.saved_file_path = None
         
-        saved_file = None
-        uploaded_file = FileStorage(filename=lesion_filepath, name='lesionmap')
+        def nib_load(path):
+            '''Function to monkey patch nibabel.load using relevant files created in memory'''
+            template = MegatrackTestCase.template_filepath
+            lesion = MegatrackTestCase.lesion_filepath
+            wrong_dim = MegatrackTestCase.lesion_wrong_dim_filepath
+            wrong_pixdim = MegatrackTestCase.lesion_wrong_pixdim_filepath
+            not_RAS = MegatrackTestCase.lesion_not_RAS_filepath
+            if template[:len(template)-7] in path:
+                return MegatrackTestCase.template
+            elif wrong_dim[:len(wrong_dim)-7] in path:
+                return MegatrackTestCase.lesion_wrong_dim
+            elif wrong_pixdim[:len(wrong_pixdim)-7] in path:
+                return MegatrackTestCase.lesion_wrong_pixdim
+            elif not_RAS[:len(not_RAS)-7] in path:
+                return MegatrackTestCase.lesion_not_RAS
+            elif lesion[:len(lesion)-7] in path:
+                return MegatrackTestCase.lesion
         
         def file_storage_save(_self, path):
             '''Function to monkey patch FileStorage.save(self, dst, buffer_size=16384)'''
-            saved_file = lesion
+            self.saved_file_path = path
+            self.saved_file = MegatrackTestCase.lesion
         
-        # send post request using self.client('/lesion_upload', data={'lesionupload': FileStorage()})
-        with monkey_patch(views.nib, 'load', lambda path: template if path == template_filepath else lesion):
+        with monkey_patch(views.nib, 'load', nib_load):
             
             with monkey_patch(FileStorage, 'save', file_storage_save):
-                
-                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
-                assert resp.status_code == 200
-                
+            
                 # no file attached to request
+                resp = self.client.post('/lesion_upload', data={})
+                assert resp.status_code == 400
+                assert b'Request did not contain a file part' in resp.get_data()
+#                 
+#                 # no file with key 'lesionmap' in request.files
+                uploaded_file = FileStorage(stream=BytesIO(), filename=MegatrackTestCase.lesion_filepath, name='wrongfile')
+                resp = self.client.post('/lesion_upload', data={'wrongfile': uploaded_file})
+                assert resp.status_code == 400
+                assert b'Request did not contain a file part' in resp.get_data()
                 
-                # no file with key 'lesionmap' in request.files
+                # no file selected
+                uploaded_file = FileStorage(stream=BytesIO(), filename='', name='lesionmap')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 400
+                assert b'No file selected' in resp.get_data()
                 
                 # filename not an allowed filename
+                uploaded_file = FileStorage(stream=BytesIO(), filename='invalid_filename.php', name='lesionmap')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 400
+                assert b'Invalid filename extension' in resp.get_data()
+                assert uploaded_file.filename.split('.', 1)[1].encode() in resp.get_data()
+                
+                # success: check response and db
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion)),
+                                            filename=MegatrackTestCase.lesion_filepath,
+                                            name='lesionmap',
+                                            content_type='application/octet-stream')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 200
+                test_str = 'data/lesion_upload/temp/' + MegatrackTestCase.lesion_filepath.split('.', 1)[0]
+                assert self.saved_file_path[:len(test_str)] == test_str
+                lesion_upload_record = LesionUpload.query.all()[0]
+                resp_data = json.loads(resp.get_data())
+                assert lesion_upload_record.lesion_id == resp_data['lesionCode']
+                assert lesion_upload_record.upload_file_name == uploaded_file.filename.split('.', 1)[0]
+                assert resp_data['volume'] == np.sum(np.ones(MegatrackTestCase.nifti_dim)) * 8.e-3
                 
                 # not a secure filename
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion)),
+                                            filename='../../../'+MegatrackTestCase.lesion_filepath,
+                                            name='lesionmap',
+                                            content_type='application/octet-stream')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                # assert that everything succeeded and the path arg passed to monkey patched file_storage_save function has
+                # the leading '../../../' stripped
+                assert resp.status_code == 200
+                test_str = 'data/lesion_upload/temp/' + MegatrackTestCase.lesion_filepath.split('.', 1)[0]
+                assert self.saved_file_path[:len(test_str)] == test_str
                 
                 # check not matching dim, pixdim or RAS
                 # check response and check flags in db
                 
-                # success: check response and db
+                # not matching dim
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_wrong_dim)),
+                                            filename=MegatrackTestCase.lesion_wrong_dim_filepath,
+                                            name='lesionmap',
+                                            content_type='application/octet-stream')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 400
+                assert b'Nifti dimensions do not match template' in resp.get_data()
+                lesion_upload_record = LesionUpload.query.all()[-1]
+                assert lesion_upload_record.dim_match == 'N'
+                
+                # not matching pixdim
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_wrong_pixdim)),
+                                            filename=MegatrackTestCase.lesion_wrong_pixdim_filepath,
+                                            name='lesionmap',
+                                            content_type='application/octet-stream')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 400
+                assert b'Voxel size does not match template' in resp.get_data()
+                lesion_upload_record = LesionUpload.query.all()[-1]
+                assert lesion_upload_record.dim_match == 'Y'
+                assert lesion_upload_record.pixdim_match == 'N'
+                
+                # not RAS
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_not_RAS)),
+                                            filename=MegatrackTestCase.lesion_not_RAS_filepath,
+                                            name='lesionmap',
+                                            content_type='application/octet-stream')
+                resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
+                assert resp.status_code == 400
+                assert b'Nifti not in RAS coordinates' in resp.get_data()
+                lesion_upload_record = LesionUpload.query.all()[-1]
+                assert lesion_upload_record.dim_match == 'Y'
+                assert lesion_upload_record.pixdim_match == 'Y'
+                assert lesion_upload_record.RAS == 'N'
+                
                 # assert saved_file == lesion
+                # assert lesion code is the db
                 # check consecutive uploads with same file name get distinct records in the db
                 # check volume is correct
                 
-        
-    
 
 if __name__ == '__main__':
     unittest.main()

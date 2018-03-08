@@ -11,6 +11,7 @@ __pycache__/
 .project
 .pydevproject
 .javascript.liclipseprefs
+.settings
 
 # data files
 data/
@@ -26,6 +27,7 @@ config.py
 
 # python virtual environment
 megatrackvenv
+megatrackvenv3.6
 
 # a folder that suddenly appeared
 megatrack/bin/
