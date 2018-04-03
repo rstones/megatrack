@@ -3,7 +3,12 @@ var mgtrk = mgtrk || {};
 mgtrk.View = (function() {
     
     const View = {};
-
+    
+    /**
+     * Initiates basic features of a View object.
+     *
+     * @param {Object} view     Contains properties required to instantiate a View object.
+     */
     View.initBasicView = (view) => {
         view.renderWidth = view.dim[0];
         view.renderHeight = view.dim[1];
@@ -46,6 +51,11 @@ mgtrk.View = (function() {
         });
     };
     
+    /**
+     * Adds slider to a View object.
+     *
+     * @param {Object} view     The object to add a slider to.
+     */
     View.addSlider = (view) => {
         view.container.append('<div id="'+view.plane+'-slider"></div>');
         
@@ -90,6 +100,11 @@ mgtrk.View = (function() {
         
     };
     
+    /**
+     * Add a label overlay canvas to View object.
+     *
+     * @param {Object} view     The view object to add a label overlay on.
+     */
     View.addLabelOverlay = (view) => {
         view.container.append('<canvas id="'+view.plane+'-labels" class="overlay"></canvas>');
         
@@ -127,6 +142,11 @@ mgtrk.View = (function() {
         
     };
     
+    /**
+     * Add a slicing overlay to a View.
+     *
+     * @param {Object} view     The View object to add a slicing overlay to.
+     */
     View.addSlicingOverlay = (view) => {
         $('#'+view.plane+'-view').append('<canvas id="'+view.plane+'-crosshairs" class="overlay"></canvas>');
             
@@ -167,6 +187,11 @@ mgtrk.View = (function() {
         
     };
     
+    /**
+     * Add loading overlay to a View object.
+     *
+     * @param {Object}      The View object to add a loading overlay to.
+     */
     View.addLoadingOverlay = (view) => {
         $('#'+view.plane+'-view').append('<canvas id="'+view.plane+'-loading" class="overlay"></canvas>');
         $('#'+view.plane+'-view').append('<div id="'+view.plane+'-loading-gif" class="view-loading-gif"></canvas>');
@@ -206,6 +231,11 @@ mgtrk.View = (function() {
         
     };
     
+    /**
+     * Add overlay to draw a ROI on a View object.
+     *
+     * @param {Object}      The View object to add a loading overlay to.
+     */
     View.addROIOverlay = (view) => {
         $('#'+view.plane+'-view').append('<canvas id="'+view.plane+'-ROI" class="overlay"></canvas>');
     };

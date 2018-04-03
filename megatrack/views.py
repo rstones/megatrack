@@ -382,6 +382,7 @@ def get_trk(tract_code):
 from werkzeug.utils import secure_filename
 import os
 import numpy.linalg as npla
+import numpy.ma as ma
 import datetime
 
 ALLOWED_EXTENSIONS = ['nii.gz']
@@ -466,9 +467,90 @@ def lesion_upload():
         
 @megatrack.route('/lesion/<lesion_code>')
 def get_lesion(lesion_code):
-    lesion_upload = LesionUpload.query.filter(LesionUpload.lesion_id == lesion_code).all()[0]
+    lesion_upload = LesionUpload.query.get(lesion_code) #filter(LesionUpload.lesion_id == lesion_code).all()[0]
     #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
     return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+
+@megatrack.route('/lesion_analysis/<lesion_code>/<threshold>')
+def lesion_analysis(lesion_code, threshold):
+    
+    # get the request query
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    if not len(subject_ids_dataset_path):
+        return 'No subjects in dataset query', 400
+    
+    try:
+        threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+    except ValueError:
+        current_app.logger.info('Invalid threshold value applied returning 404...')
+        return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    
+    lesion_upload = LesionUpload.query.get(lesion_code)
+    
+    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+    
+    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    rh = nib.load(current_app.config['RIGHT_HEMISPHERE_MASK']).get_data()
+    lh = nib.load(current_app.config['LEFT_HEMISPHERE_MASK']).get_data()
+    
+    rh_overlap = lesion_data * rh
+    lh_overlap = lesion_data * lh
+    
+    intersecting_tracts = []
+    
+    def check_lesion_tract_overlaps(tracts):
+        for tract in tracts:
+            # average density maps for this tract based on current query
+            # save averaged map and cache the file path
+            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            
+#             # perform weighted overlap: lesion * tract
+#             tract_data = du.get_nifti_data(tract_file_path)
+#             overlap = lesion_data * tract_data
+#             # weighted sum of voxels occupied by overlap
+#             # figure out percentage of tract overlapping with lesion
+#             overlap_sum = np.sum(overlap)
+#             if overlap_sum:
+#                 overlap_score = overlap_sum / np.sum(tract_data)
+#                 # add dict to intersecting_tracts list
+#                 intersecting_tracts.append({"tractCode": tract.code, "overlapScore": overlap_score})
+            
+            # alternative overlap score
+            tract_data = du.get_nifti_data(tract_file_path)
+            masked_tract_data = ma.masked_where(tract_data < threshold, tract_data)
+            overlap = lesion_data * masked_tract_data
+            over_threshold_count = masked_tract_data.count()
+            print(tract.code, over_threshold_count)
+            over_threshold_overlap_count = len(overlap.nonzero()[0]) # np.count_nonzero(overlap)
+            print(tract.code, over_threshold_overlap_count)
+            if over_threshold_overlap_count:
+                overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
+                # add dict to intersecting_tracts list
+                intersecting_tracts.append({"tractName": tract.name, "tractCode": tract.code, "overlapScore": overlap_percent})
+    
+    '''Can speed up the loop through tracts by using multiprocessing pool'''
+    
+    if np.any(rh_overlap):
+        current_app.logger.info('Checking lesion overlap with right hemisphere tracts.')
+        # loop through right hemisphere tracts
+        tracts = Tract.query.filter(Tract.code.like('%_R%')).all()
+        check_lesion_tract_overlaps(tracts)
+    
+    if np.any(lh_overlap):
+        current_app.logger.info('Checking lesion overlap with left hemisphere tracts.')
+        # loop through left hemisphere tracts
+        tracts = Tract.query.filter(Tract.code.like('%_L%')).all()
+        check_lesion_tract_overlaps(tracts)
+    
+    # loop through tracts connecting hemispheres
+    current_app.logger.info('Checking lesion overlap with tracts connecting hemispheres.')
+    tracts = Tract.query.filter(~Tract.code.like('%_R%') & ~Tract.code.like('%_L%')).all() # ~ negates the like
+    check_lesion_tract_overlaps(tracts)
+    
+    return make_response(jsonify(intersecting_tracts)), 200
 
 @megatrack.route('/_test_viewer')
 def _test_viewer():

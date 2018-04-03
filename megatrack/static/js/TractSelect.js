@@ -4,11 +4,16 @@ mgtrk.TractSelect = (function() {
 
     const TractSelect = {};
 
-    TractSelect.init = (_this) => {
+    /**
+     * Initialise a TractSelect object to choose and display tract info.
+     *
+     * @param {Object} _parent      The parent object.
+     */
+    TractSelect.init = (_parent) => {
     
         const tractSelect = {};
     
-        const containerId = _this.tractSelectId;
+        const containerId = _parent.tractSelectId;
         
         tractSelect.tractSettings = {};
         tractSelect.tractSettingsVisible = false;
@@ -48,7 +53,7 @@ mgtrk.TractSelect = (function() {
                 }
                 $.ajax({
                     dataType: 'json',
-                    url: _this.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_this.currentQuery),
+                    url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
                     success: function(data) {
                         tractSelect.tractMetrics[data.tractCode].dynamic = data;
                         if (tractCode == tractSelect.currentInfoTractCode) {
@@ -66,7 +71,7 @@ mgtrk.TractSelect = (function() {
             $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
             $.ajax({
                 dataType: 'json',
-                url: _this.rootPath + '/get_tract_info/' + tractCode + '?' + $.param(_this.currentQuery),
+                url: _parent.rootPath + '/get_tract_info/' + tractCode + '?' + $.param(_parent.currentQuery),
                 success: function(data) {
                     tractSelect.currentInfoTractCode = data.tractCode;
                     populateStaticTractInfo(data);
@@ -177,11 +182,11 @@ mgtrk.TractSelect = (function() {
                 /*
                 Fire 'colormap-change' event here so the following loop can move to AtlasViewer factory function
                 */
-                for (let i=0; i<_this.renderers.volume.labelmap.length; i++) {
-                    var map = _this.renderers.volume.labelmap[i];
+                for (let i=0; i<_parent.renderers.volume.labelmap.length; i++) {
+                    var map = _parent.renderers.volume.labelmap[i];
                     if (map.file.indexOf(tractCode) != -1) {
-                        map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.colormapFunctions[color](min, max, opacity));
-                        _this.renderers.resetSlicesForColormapChange();
+                        map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormapFunctions[color](min, max, opacity));
+                        _parent.renderers.resetSlicesForColormapChange();
                         break;
                     }
                 }
@@ -208,11 +213,11 @@ mgtrk.TractSelect = (function() {
                 /*
                 Fire 'colormap-change' event here so the following loop can move to AtlasViewer factory function
                 */
-                for (var i=0; i<_this.renderers.volume.labelmap.length; i++) {
-                    var map = _this.renderers.volume.labelmap[i];
+                for (var i=0; i<_parent.renderers.volume.labelmap.length; i++) {
+                    var map = _parent.renderers.volume.labelmap[i];
                     if (map.file.indexOf(tractCode) != -1) {
-                        map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.colormapFunctions[color](min, max, opacity));
-                        _this.renderers.resetSlicesForColormapChange();
+                        map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormapFunctions[color](min, max, opacity));
+                        _parent.renderers.resetSlicesForColormapChange();
                         break;
                     }
                 }
@@ -224,7 +229,7 @@ mgtrk.TractSelect = (function() {
         /*
         Fire 'populate-colormap-select' event here so the following loop can move to AtlasViewer factory function?
         */
-        for (let key in _this.colormaps.colormaps) {
+        for (let key in _parent.colormaps.colormaps) {
             $('#colormap-select').append('<div id="'+key+'-colormap-select-item" class="colormap-select-item clickable '+key+'-colormap">&nbsp&nbsp&nbsp</div>');
             $('#'+key+'-colormap-select-item').on('click', {color: key}, function(event) {
                 // fetch selected tract code from colormap select
@@ -237,15 +242,15 @@ mgtrk.TractSelect = (function() {
                 /*
                 Fire 'colormap-change' event here so the following loop can move to AtlasViewer factory function
                 */
-                for (let i=0; i<_this.renderers.volume.labelmap.length; i++) {
-                    const map = _this.renderers.volume.labelmap[i];
+                for (let i=0; i<_parent.renderers.volume.labelmap.length; i++) {
+                    const map = _parent.renderers.volume.labelmap[i];
                     if (map.file.indexOf(tractCode) != -1 && tractSelect.tractSettings[tractCode].color != color) {
                         tractSelect.tractSettings[tractCode]["color"] = color;
-                        map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.colormapFunctions[color](colormapMin, colormapMax, opacity));
-                        $('#'+tractCode+'-colormap-indicator').removeClass(_this.renderers.labelmapColors[i]+'-colormap');
+                        map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormapFunctions[color](colormapMin, colormapMax, opacity));
+                        $('#'+tractCode+'-colormap-indicator').removeClass(_parent.renderers.labelmapColors[i]+'-colormap');
                         $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
-                        _this.renderers.labelmapColors[i] = color;
-                        _this.renderers.resetSlicesForColormapChange();
+                        _parent.renderers.labelmapColors[i] = color;
+                        _parent.renderers.resetSlicesForColormapChange();
                         break;
                     }
                 }
@@ -255,7 +260,7 @@ mgtrk.TractSelect = (function() {
         
         $.ajax({
             dataType: 'json',
-            url: _this.rootPath + '/tract_select',
+            url: _parent.rootPath + '/tract_select',
             success: function(data) {
                 for (let tractCode in data) {
                     $('#add-tract-select').append('<option id="'+tractCode+'" value="'+tractCode+'">'+data[tractCode].name+'</option>');
@@ -303,8 +308,8 @@ mgtrk.TractSelect = (function() {
             Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
             */
             // add the tract to the viewer
-            tractSelect.tractSettings[tractCode] = _this.renderers.addLabelmapToVolume(tractCode, _this.currentQuery);
-            _this.renderers.resetSlicesForDirtyFiles();
+            tractSelect.tractSettings[tractCode] = _parent.renderers.addLabelmapToVolume(tractCode, _parent.currentQuery);
+            _parent.renderers.resetSlicesForDirtyFiles();
             var color = tractSelect.tractSettings[tractCode].color;
             
             // add row to table
@@ -325,7 +330,7 @@ mgtrk.TractSelect = (function() {
                 var tractCode = event.currentTarget.parentElement.id;
                 if (!tractSelect.selectedTracts[tractCode].disabled) {
                     event.preventDefault();
-                    window.location.href = 'tract/'+tractCode+'?'+$.param(_this.currentQuery)+'&file_type=.nii.gz';
+                    window.location.href = 'tract/'+tractCode+'?'+$.param(_parent.currentQuery)+'&file_type=.nii.gz';
                 }
             });
             
@@ -358,7 +363,7 @@ mgtrk.TractSelect = (function() {
                 Fire 'remove-tract' event here so the following code can move to AtlasViewer factory function
                 */
                 // remove labelmap from the viewer
-                _this.renderers.removeLabelmapFromVolume(tractCode);
+                _parent.renderers.removeLabelmapFromVolume(tractCode);
             });
             
             // add event listener on settings icon
@@ -409,7 +414,7 @@ mgtrk.TractSelect = (function() {
                         $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
                         $.ajax({
                             dataType: 'json',
-                            url: _this.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_this.currentQuery),
+                            url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
                             success: function(data) {
                                 tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
                                 populateDynamicTractInfo(data);
@@ -418,7 +423,7 @@ mgtrk.TractSelect = (function() {
                         $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
                         $.ajax({
                             dataType: 'json',
-                            url: _this.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_this.currentQuery),
+                            url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
                             success: function(data) {
                                 tractSelect.tractMetrics[data.tractCode]['static'] = data;
                                 populateStaticTractInfo(data);
@@ -441,7 +446,7 @@ mgtrk.TractSelect = (function() {
                     renderer.remove(tractSelect.trk);
                     renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
                     
-                    tractSelect.trk.file = _this.rootPath + '/get_trk/'+tractCode+'?.trk';
+                    tractSelect.trk.file = _parent.rootPath + '/get_trk/'+tractCode+'?.trk';
                     tractSelect.trk.opacity = 1.0;
                     
                     renderer.add(tractSelect.trk);
@@ -472,7 +477,7 @@ mgtrk.TractSelect = (function() {
             });
             
             // pre-fetch the tract metrics and put in cache
-            var initThreshold = parseInt(_this.colormaps.initColormapMin * 100);
+            var initThreshold = parseInt(_parent.colormaps.initColormapMin * 100);
             if (showTractInfo) {
                 $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
                 $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
@@ -481,7 +486,7 @@ mgtrk.TractSelect = (function() {
             setTimeout(function() {
                 $.ajax({
                     dataType: 'json',
-                    url: _this.rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(_this.currentQuery),
+                    url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(_parent.currentQuery),
                     success: function(data) {
                         tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
                         if (showTractInfo) {
@@ -491,7 +496,7 @@ mgtrk.TractSelect = (function() {
                 });
                 $.ajax({
                     dataType: 'json',
-                    url: _this.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_this.currentQuery),
+                    url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
                     success: function(data) {
                         tractSelect.tractMetrics[data.tractCode]['static'] = data;
                         if (showTractInfo) {
@@ -505,7 +510,7 @@ mgtrk.TractSelect = (function() {
         
         $(document).on('query-update', function(event, newQuery) {
         
-           _this.currentQuery = newQuery;
+           _parent.currentQuery = newQuery;
             
             // remove the disabled tract select message
             if ($('#add-tract-select').prop('disabled')) {
@@ -535,7 +540,7 @@ mgtrk.TractSelect = (function() {
                     /*
                     Fire 'remove-tract' event here so the following code can move to AtlasViewer factory function
                     */
-                    _this.renderers.removeLabelmapFromVolume(tractCode);
+                    _parent.renderers.removeLabelmapFromVolume(tractCode);
                     // disable tract row
                     $('#'+tractCode+' > #tract-name').addClass('tract-disabled');
                     $('#'+tractCode+' > #tract-settings').children().removeClass('settings-icon clickable');
@@ -555,7 +560,7 @@ mgtrk.TractSelect = (function() {
                     $('#'+tractCode+'-colormap-indicator').children().addClass('colormap-indicator-caret-disabled');
                 } else {
                     if (tractSelect.availableTracts[tractCode].disabled) { // if previously disabled, add new labelmap
-                        tractSelect.tractSettings[tractCode] = _this.renderers.addLabelmapToVolume(tractCode, newQuery);
+                        tractSelect.tractSettings[tractCode] = _parent.renderers.addLabelmapToVolume(tractCode, newQuery);
                         
                         // reenable the tract row
                         $('#'+tractCode+' > #tract-name').removeClass('tract-disabled');
@@ -579,7 +584,7 @@ mgtrk.TractSelect = (function() {
                         /*
                         Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
                         */
-                        _this.renderers.updateLabelmapFile(tractCode, newQuery);
+                        _parent.renderers.updateLabelmapFile(tractCode, newQuery);
                     }
                     
                     // update metrics
@@ -591,7 +596,7 @@ mgtrk.TractSelect = (function() {
                     
                     $.ajax({
                         dataType: 'json',
-                        url: _this.rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
+                        url: _parent.rootPath + '/get_tract_info/'+tractCode+'/'+threshold+'?'+$.param(newQuery),
                         success: function(data) {
                             tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
                             if (data.tractCode == tractSelect.currentInfoTractCode) {
@@ -601,7 +606,7 @@ mgtrk.TractSelect = (function() {
                     });
                     $.ajax({
                         dataType: 'json',
-                        url: _this.rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
+                        url: _parent.rootPath + '/get_tract_info/'+tractCode+'?'+$.param(newQuery),
                         success: function(data) {
                             tractSelect.tractMetrics[data.tractCode]['static'] = data;
                             if (data.tractCode == tractSelect.currentInfoTractCode) {
@@ -617,7 +622,7 @@ mgtrk.TractSelect = (function() {
             Fire an event here so the following code can move to AtlasViewer factory function
             */
             if (Object.keys(tractSelect.selectedTracts).length) {
-                _this.renderers.resetSlicesForDirtyFiles();
+                _parent.renderers.resetSlicesForDirtyFiles();
             }
             
             // also loop through all the options in the tract select and disable the the required tracts 
@@ -637,25 +642,6 @@ mgtrk.TractSelect = (function() {
         });
         
         return {tractSelect: tractSelect};
-//         {
-//             tractSelect: {
-//                 tractSettings: tractSettings,
-//                 tractSettingsVisible: tractSettingsVisible,
-//                 currentInfoTractCode: currentInfoTractCode,
-//                 tractMetrics: tractMetrics,
-//                 availableTracts: availableTracts,
-//                 selectedTracts: selectedTracts,
-//                 
-//                 trkRenderer: trkRenderer,
-//                 trk: trk,
-//             
-//                 populateDynamicTractInfo: populateDynamicTractInfo,
-//                 populateStaticTractInfo: populateStaticTractInfo,
-//                 updateDynamicTractInfo: updateDynamicTractInfo,
-//                 updateStaticTractInfo: updateStaticTractInfo,
-//                 closeTractSettings: closeTractSettings   
-//             }
-//         };
     };
     
     return TractSelect;

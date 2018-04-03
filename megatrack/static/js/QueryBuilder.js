@@ -3,10 +3,15 @@ var mgtrk = mgtrk || {};
 mgtrk.QueryBuilder = (function() {
 
     const QueryBuilder = {};
-
-    QueryBuilder.init = (_this) => {
+    
+    /**
+     * Initialise a query builder object.
+     *
+     * @param {Object} _parent        The parent object.
+     */
+    QueryBuilder.init = (_parent) => {
         
-        const containerId = _this.queryBuilderId;
+        const containerId = _parent.queryBuilderId;
         
         const queryBuilder = {};
         
@@ -297,7 +302,7 @@ mgtrk.QueryBuilder = (function() {
         
         // ajax call to get available datasets and associated query params
         $.ajax({
-            url: _this.rootPath + '/dataset_select',
+            url: _parent.rootPath + '/dataset_select',
             dataType: 'json',
             success: function(data) {
                 // populate dataset select and attach data to QueryBuilder object
@@ -332,13 +337,13 @@ mgtrk.QueryBuilder = (function() {
         updateButton.on('click', function() {
             if (updateButton.hasClass('update-query-button-active')) {
                 var newQuery = buildQueryObject();
-                if (JSON.stringify(newQuery) != JSON.stringify(_this.currentQuery)) {
+                if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
                     $.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
                     // show loading gif in #query-info div here
                     $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+'<div class="loading-gif"></div></span>');
                     $.ajax({
                         dataType: 'json',
-                        url: _this.rootPath + '/query_report?'+$.param(newQuery),
+                        url: _parent.rootPath + '/query_report?'+$.param(newQuery),
                         success: function(data) {
                             var totalSubjects = 0;
                             for (let key in data.dataset) {
@@ -348,13 +353,13 @@ mgtrk.QueryBuilder = (function() {
                         } 
                     });
                     $.ajax({
-                        url: _this.rootPath + '/generate_mean_maps?'+$.param(newQuery),
+                        url: _parent.rootPath + '/generate_mean_maps?'+$.param(newQuery),
                         success: function(data) {
                             // do nothing
                         } 
                     });
                 }
-                _this.currentQuery = newQuery;
+                _parent.currentQuery = newQuery;
                 updateButton.removeClass('update-query-button-active');
                 updateButton.removeClass('clickable');
                 updateButton.addClass('update-query-button-disabled');
@@ -369,7 +374,7 @@ mgtrk.QueryBuilder = (function() {
                 updateButton.removeClass('update-query-button-active');
                 updateButton.removeClass('clickable');
                 updateButton.addClass('update-query-button-disabled');
-            } else if (JSON.stringify(newQuery) != JSON.stringify(_this.currentQuery)) {
+            } else if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
                 updateButton.removeClass('update-query-button-disabled');
                 updateButton.addClass('update-query-button-active');
                 updateButton.addClass('clickable');

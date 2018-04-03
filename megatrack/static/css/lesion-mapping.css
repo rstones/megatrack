@@ -11,6 +11,17 @@
     margin-bottom: 10px;
 }
 
+#view-container-title {
+    font-size: 200%;
+    color: white;
+    position: relative;
+    top: -63px;
+    left: -325px;
+    font: normal normal normal 45px/1.4em Jura,sans-serif;
+    width: 1250px;
+    height: 100px;
+}
+
 #lesion-panel {
     width: 700px;
     float: left;

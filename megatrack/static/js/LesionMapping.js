@@ -62,13 +62,20 @@ mgtrk.LesionMapping = (function() {
     
     const LesionMapping = {};
     
-    LesionMapping.init = (_this) => {
+    /**
+     * Initialise a LesionMapping object to perform lesion upload and display lesion analysis results.
+     *
+     * @param {Object} _parent      The parent object.
+     */
+    LesionMapping.init = (_parent) => {
         
         const lesionMapping = {};
+        lesionMapping._parent = _parent;
         
-        const containerId = _this.lesionAnalysisId;
+        const containerId = _parent.lesionAnalysisId;
+        lesionMapping.tractTableContainerId = 'tract-table-wrapper';
         
-        let currentLesionCode = null;
+        //let currentLesionCode = null;
         
         $('#'+containerId).append('<div id="lesion-mapping-wrapper">'
                                         +'<div id="lesion-upload-button" class="button"><span>Lesion Upload</span><div class="upload-icon"></div></div>'
@@ -85,15 +92,21 @@ mgtrk.LesionMapping = (function() {
                                         +'</div>'
                                         +'<div class="clear"></div>'
                                         +'<hr>'
-                                        +'<div id="tract-table-wrapper">'
-                                            +'<table id="tract-table">'
-                                            +'<tbody>'
-                                            +'</tbody>'
-                                            +'</table>'
+                                        +'<div id="'+lesionMapping.tractTableContainerId+'">'
+//                                             +'<table id="tract-table">'
+//                                             +'<tbody>'
+//                                             +'</tbody>'
+//                                             +'</table>'
                                         +'</div>'
                                         +'<div id="lesion-upload-popup"></div>'
                                         +'<div id="lesion-upload-popup-background-screen"></div>'
                                     +'</div>');
+                                    
+        //lesionMapping.colormaps = _parent.colormaps;
+        const TractTable = mgtrk.TractTable;
+        const tractTableRowComponents = [TractTable.RowTitle, TractTable.RowColormapSelect, TractTable.RowSettings, TractTable.RowDownload, TractTable.RowValue];
+        const tractTable = TractTable.init(lesionMapping, tractTableRowComponents);
+        lesionMapping.tractTable = tractTable;
                                     
         var opacitySliderHandle = $('#lesion-opacity-slider-handle');
         $('#lesion-opacity-slider').slider({
@@ -106,11 +119,11 @@ mgtrk.LesionMapping = (function() {
             },
             slide: function(event, ui) {
                 opacitySliderHandle.text(ui.value);
-                const idx = _this.findVolumeLabelmapIndex(lesionMapping.currentLesionCode);
-                const map = _this.renderers.volume.labelmap[idx];
+                const idx = _parent.findVolumeLabelmapIndex(lesionMapping.currentLesionCode);
+                const map = _parent.renderers.volume.labelmap[idx];
                 const opacity = ui.value / 100;
-                map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.lesionColormap(0, 1, opacity));
-                _this.renderers.resetSlicesForColormapChange();
+                map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.lesionColormap(0, 1, opacity));
+                _parent.renderers.resetSlicesForColormapChange();
             }
         });
         $('#lesion-opacity-slider').slider('disable');
@@ -146,7 +159,7 @@ mgtrk.LesionMapping = (function() {
         
         $('#lesion-upload-close').on('click', function(event) {
              $('#lesion-upload-popup').hide();
-             $('#lesion-upload-popup-background-screen').hide()
+             $('#lesion-upload-popup-background-screen').hide();
         });
         
         $('#lesion-upload-button').on('click', function(event) {
@@ -199,27 +212,27 @@ mgtrk.LesionMapping = (function() {
                      $('#post-upload-message').css('color', 'rgba(0,204,0)');
                      $('#post-upload-message').html('Lesion map successfully uploaded!');
                      
-                     if (_this.labelmaps.lesion[0]) { // update lesion map
+                     if (_parent.labelmaps.lesion[0]) { // update lesion map
                          const settings = {
                                             code: lesionCode,
-                                            colormap: _this.colormaps.lesionColormap(0, 1, 0.7)
+                                            colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
                                         };
-                         _this.labelmaps.lesion[0] = settings;
+                         _parent.labelmaps.lesion[0] = settings;
                          
-                         const idx = _this.findVolumeLabelmapIndex(lesionCode);
-                         _this.renderers.updateLabelmapFileNew('lesion', lesionCode, idx);
+                         const idx = _parent.findVolumeLabelmapIndex(lesionCode);
+                         _parent.renderers.updateLabelmapFileNew('lesion', lesionCode, idx);
                      } else { // add the lesion map for the first time
                          const settings = {
                                             code: lesionCode,
-                                            colormap: _this.colormaps.lesionColormap(0, 1, 0.7)
+                                            colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
                                         };
-                         _this.labelmaps.lesion[0] = settings;
+                         _parent.labelmaps.lesion[0] = settings;
                          
-                         const idx = _this.findVolumeLabelmapIndex(lesionCode);
-                         _this.renderers.addLabelmapToVolumeNew('lesion', lesionCode, idx, settings);
+                         const idx = _parent.findVolumeLabelmapIndex(lesionCode);
+                         _parent.renderers.addLabelmapToVolumeNew('lesion', lesionCode, idx, settings);
                      }
                      
-                     _this.renderers.resetSlicesForDirtyFiles();
+                     _parent.renderers.resetSlicesForDirtyFiles();
                      
                      $('#lesion-opacity-slider').slider('enable');
                      
@@ -241,18 +254,95 @@ mgtrk.LesionMapping = (function() {
         $('#run-lesion-analysis-button').on('click', function(event) {
              
              // get current query from queryBuilder
-             const currentQuery = _this.currentQuery;
+             const currentQuery = _parent.currentQuery;
              
              $.ajax({
-                url: 'megatrack/lesion_analysis?' + $.param(currentQuery),
+                url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
                 method: 'GET',
                 dataType: 'json',
-                data: {lesionCode: lesionMapping.currentLesionCode},
+                //data: {lesionCode: lesionMapping.currentLesionCode},
                 success: function(data) {
-                    // receive list of objects containing tract code/name and volume of lesion within the tract
-                    // loop through the tract codes
-                        // add labelmaps to the volume for those codes and the current query
-                        // add rows to tract-table displaying tract name, volume, icons etc
+                    console.log(data);
+                    
+                    const dataLen = data.length;
+                    for (let i=0; i<dataLen; i++) {
+                        const tractCode = data[i].tractCode;
+                        const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
+                        const settings = {
+                                            name: data[i].tractName,
+                                            code: tractCode,
+                                            overlapScore: data[i].overlapScore,
+                                            color: color,
+                                            colormap: _parent.colormaps.colormaps[color],
+                                            colormapMax: _parent.colormaps.initColormapMax,
+                                            colormapMin: _parent.colormaps.initColormapMin,
+                                            opacity: _parent.colormaps.initColormapOpacity,
+                                            colormapMinUpdate: 0
+                                        };
+                        _parent.labelmaps.tracts.push(settings);
+                        const idx = _parent.findVolumeLabelmapIndex(tractCode);
+                         _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
+                         
+                         tractTable.addRow(settings);
+                         
+//                          // add row to tract table
+//                          $('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
+//                                 +'<td id="tract-name" class="tract-table-cell">'+tractCode+'</td>'
+//                                 +'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
+//                                 +'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
+//                                 //+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
+//                                 +'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
+//                                 +'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
+//                                 //+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
+//                                 +'</tr>'
+//                                 +'<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
+//                         
+//                         $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+//                         
+//                         // add event listener on settings icon
+//                         $('#'+tractCode+' > #tract-settings').on('click', function(event) {
+//                             var tractCode = event.currentTarget.parentElement.id;
+//                             if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                                 var settingsMenu = $('#tract-settings-menu');
+//                                 settingsMenu.data('tractCode', tractCode);
+//                                 $('#tract-settings-title').html('Settings:<br>'+tractSelect.availableTracts[tractCode].name);
+//                                 var min = 100*tractSelect.tractSettings[tractCode]["colormapMin"];
+//                                 var max = 100*tractSelect.tractSettings[tractCode]["colormapMax"];
+//                                 var opacity = 100*tractSelect.tractSettings[tractCode]["opacity"];
+//                                 $('#tract-prob-range-slider').slider('values', [min, max]);
+//                                 $('#tract-prob-range-min-handle').text(Math.floor(min));
+//                                 $('#tract-prob-range-max-handle').text(Math.floor(max));
+//                                 $('#tract-opacity-slider').slider('value', opacity);
+//                                 $('#tract-opacity-slider-handle').text(Math.floor(opacity));
+//                                 
+//                                 // position menu at settings button or mouse click?
+//                                 var buttonOffset = $('#'+tractCode+' > #tract-settings').offset();
+//                                 settingsMenu.show(); // show before setting offset as can't set offset of hidden elements
+//                                 settingsMenu.offset({top: buttonOffset.top - settingsMenu.height(), left: buttonOffset.left - 30});
+//                                 
+//                                 tractSelect.tractSettingsVisible = true;
+//                             }
+//                         });
+//                         
+//                         $('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
+//                             if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                                 // hide first in case colormap-select is already open for another tract
+//                                 $('#colormap-select').hide();
+//                                 
+//                                 // work out position of colormap indicator for current tract
+//                                 var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
+//                                 $('#colormap-select').css('top', indicatorPos.top);
+//                                 $('#colormap-select').css('left', indicatorPos.left - 6);
+//                                 
+//                                 // attach selected tract code to colormap select
+//                                 $('#colormap-select').data('tractCode', event.data.tractCode);
+//                                 // show colormap select
+//                                 $('#colormap-select').show('blind');
+//                             }
+//                         });
+                        
+                    }
+                    _parent.renderers.resetSlicesForDirtyFiles();
                 },
                 error: function(xhr) {
                     

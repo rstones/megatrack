@@ -428,7 +428,62 @@ class MegatrackTestCase(TestCase):
                 # assert lesion code is the db
                 # check consecutive uploads with same file name get distinct records in the db
                 # check volume is correct
-                
+    
+    def test_lesion_analysis(self):
+        
+        # create a lesion nifti
+        lesion_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        lesion_data[50:60,60:70,50:60] = 1
+        lesion = Nifti1Image(lesion_data, np.eye(4))
+        
+        # create 3 tract niftis (1 left, 1 right and 1 connecting hemispheres)
+        right_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        right_tract_data[:,:,:] = 1
+        right_tract = Nifti1Image(right_tract_data, np.eye(4))
+        
+        left_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        left_tract_data[:,:,:] = 1
+        left_tract = Nifti1Image(left_tract_data, np.eye(4))
+        
+        both_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        both_tract_data[:,:,:] = 1
+        both_tract = Nifti1Image(both_tract_data, np.eye(4))
+        
+        # create left and right hemisphere mask niftis
+        right_mask_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        right_mask_data[46:,:,:] = 1
+        right_mask = Nifti1Image(right_mask_data, np.eye(4))
+        
+        left_mask_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        left_mask_data[:46,:,:] = 1
+        left_mask = Nifti1Image(left_mask_data, np.eye(4))
+        
+        # insert records into LesionUpload and Tract corresponding to these niftis
+        lesion_upload = LesionUpload('lesion_upload.nii.gz', 'lesion_upload_saved.nii.gz')
+        db.session.add(lesion_upload)
+        
+        right_tract_record = Tract('TRACT_R', 'Test Tract (right)', 'test/tract/right', 'This tract is in the right hemisphere')
+        db.session.add(right_tract_record)
+        
+        left_tract_record = Tract('TRACT_L', 'Test Tract (left)', 'test/tract/left', 'This tract is in the left hemisphere')
+        db.session.add(left_tract_record)
+        
+        both_tract_record = Tract('TRACT_BOTH', 'Test Tract (both)', 'test/tract/both', 'This tract is in both hemispheres')
+        db.session.add(both_tract_record)
+        
+        db.session.commit()
+        
+        # mock data_utils.generate_averaged_density_map to return a tract file path to be used with nib.load
+        # mock nibabel load
+        
+        
+        # test request with lesion code that isn't in db
+        
+        # test request without query string
+        
+        # test request with existing lesion code
+        
+        pass
 
 if __name__ == '__main__':
     unittest.main()

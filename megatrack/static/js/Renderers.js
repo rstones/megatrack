@@ -3,9 +3,15 @@ var mgtrk = mgtrk || {};
 mgtrk.Renderers = (function() {
 
     const Renderers = {};
-
-    Renderers.init = (_this, viewInit) => {
-        const rootPath = _this.rootPath;
+    
+    /**
+     * Initialise a Renderers object for rendering 2D slices of brain data in the three principle planes.
+     *
+     * @param {Object} _parent              The parent object.
+     * @param {Function} viewInit           Returns a view object.
+     */
+    Renderers.init = (_parent, viewInit) => {
+        const rootPath = _parent.rootPath;
         
         const renderers = {};
     
@@ -122,15 +128,15 @@ mgtrk.Renderers = (function() {
             } else {
                 map.file = rootPath + '/tract/'+tractCode+'?file_type=.nii.gz';
             }
-            var color = Object.keys(_this.colormaps.colormaps)[Math.floor(Math.random()*_this.colormaps.numColormaps)];
+            var color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
             var tractSettings = {
-                    "colormapMax": _this.colormaps.initColormapMax,
-                    "colormapMin": _this.colormaps.initColormapMin,
-                    "opacity": _this.colormaps.initColormapOpacity,
+                    "colormapMax": _parent.colormaps.initColormapMax,
+                    "colormapMin": _parent.colormaps.initColormapMin,
+                    "opacity": _parent.colormaps.initColormapOpacity,
                     "color": color,
                     "colormapMinUpdate": 0
                 };
-            map.colormap = _this.colormaps.generateXTKColormap(_this.colormaps.colormaps[color]);
+            map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormaps[color]);
             renderers.volume.labelmap.push(map);
             renderers.labelmapColors.push(color);
             
@@ -153,7 +159,7 @@ mgtrk.Renderers = (function() {
             } else {
                 map.file = rootPath + '/'+mapType+'/'+code+'?file_type=.nii.gz';
             }
-            map.colormap = _this.colormaps.generateXTKColormap(settings.colormap);
+            map.colormap = _parent.colormaps.generateXTKColormap(settings.colormap);
             renderers.volume.labelmap.splice(idx, 0, map);
             return true;
         };
@@ -297,6 +303,29 @@ mgtrk.Renderers = (function() {
                     view.drawLabels();
                 }
             }
+        });
+        
+        $(document).on("colormap:change", function(event, settings) {
+            const tractCode = settings.code;
+            const color = settings.color;
+            const colormapMin = settings.colormapMin;
+            const colormapMax = settings.colormapMax;
+            const opacity = settings.opacity;
+            for (let i=0; i<renderers.volume.labelmap.length; i++) {
+                const map = renderers.volume.labelmap[i];
+                if (map.file.indexOf(tractCode) != -1) {
+                    map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormapFunctions[color](
+                                                                                                                colormapMin,
+                                                                                                                colormapMax,
+                                                                                                                opacity
+                                                                                                                )
+                                                                    );
+                    renderers.labelmapColors[i] = color;
+                    renderers.resetSlicesForColormapChange();
+                    break;
+                }
+            }
+            return false;
         });
         
         return {

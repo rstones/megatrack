@@ -19,7 +19,7 @@
     height: 16px;
     display: inline-block;
     margin-top: -.25em;
-    background: url("images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+    background: url("../images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
 }
 
 .colormap-indicator-disabled {
@@ -140,12 +140,26 @@
     border-spacing: 0;
 }
 
+.tract-table-row-left-cell {
+    border-left: 1px solid lightgrey;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.tract-table-row-right-cell {
+    border-right: 1px solid lightgrey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
 .tract-table-cell {
     background: #fcfff4; /* Old browsers */
     background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
     background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
     text-align: center;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
 }
 
 #tract-table tr {
@@ -164,8 +178,8 @@
 
 #tract-name {
     border-left: 1px solid lightgrey;
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     width: 50%;
@@ -176,45 +190,49 @@
 }
 
 #tract-colormap {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     width: 20%;
     margin-right: 3px;
     vertical-align: middle;
 }
 
 #tract-settings {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     padding-left: 8px;
 }
 
 #tract-download {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     padding-left: 3px;
 }
 
 #tract-info {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     padding-left: 9px;
 }
 
 #tract-atlas {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     padding-left: 9px;
 }
 
 #tract-remove {
-    border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
     border-right: 1px solid lightgrey;
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
     padding-left: 12px;
     padding-right: 8px;
+}
+
+#tract-value {
+    font-size: 80%;
 }
 
 .tract-icon {
