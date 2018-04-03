@@ -88,8 +88,8 @@ mgtrk.Renderers = (function() {
         };
         
         renderers.removeLabelmapFromVolume = function(tractCode) {            
-            for (let i=renderers.voluime.labelmap.length; i--;) {
-                const idx = i - 1; 
+            for (let i=renderers.volume.labelmap.length; i--;) {
+                const idx = i; //i - 1; 
                 const map = renderers.volume.labelmap[idx];
                 if (map.tractCode == tractCode) {
                     renderers.volume.labelmap.splice(idx, 1);
@@ -326,6 +326,10 @@ mgtrk.Renderers = (function() {
                 }
             }
             return false;
+        });
+        
+        $(document).on('tract:remove', function(event, tractCode) {
+            renderers.removeLabelmapFromVolume(tractCode);
         });
         
         return {

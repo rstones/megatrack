@@ -24,6 +24,7 @@
 
 #lesion-panel {
     width: 700px;
+    height: 250px;
     float: left;
     padding: 10px;
     border: 1px solid darkgrey;

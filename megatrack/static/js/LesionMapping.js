@@ -277,7 +277,8 @@ mgtrk.LesionMapping = (function() {
                                             colormapMax: _parent.colormaps.initColormapMax,
                                             colormapMin: _parent.colormaps.initColormapMin,
                                             opacity: _parent.colormaps.initColormapOpacity,
-                                            colormapMinUpdate: 0
+                                            colormapMinUpdate: 0,
+                                            currentQuery: currentQuery
                                         };
                         _parent.labelmaps.tracts.push(settings);
                         const idx = _parent.findVolumeLabelmapIndex(tractCode);

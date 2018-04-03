@@ -2,6 +2,7 @@
 {% block head %}
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/atlas.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/query-builder.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tract-select.css') }}">
   
@@ -16,6 +17,7 @@
   <script>goog.require('X.renderer2D'); goog.require('X.volume'); goog.require('X.renderer3D'); goog.require('X.fibers');</script>
   
   <script src="{{ url_for('static', filename='js/Colormaps.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/TractTable.js') }}"></script>
   <script src="{{ url_for('static', filename='js/TractSelect.js') }}"></script>
   <script src="{{ url_for('static', filename='js/QueryBuilder.js') }}"></script>
   <script src="{{ url_for('static', filename='js/View.js') }}"></script>

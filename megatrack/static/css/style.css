@@ -127,6 +127,10 @@ nav {
 	color: grey;
 }
 
+#header li a:active {
+    color: grey;
+}
+
 #header-logos {
     width: 500px;
     height: 100px;

@@ -177,11 +177,11 @@
 }
 
 #tract-name {
-    border-left: 1px solid lightgrey;
-    /*border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;*/
+    /*border-left: 1px solid lightgrey;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
     border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;*/
     width: 50%;
     font-size: 85%;
     text-align: left;
@@ -223,10 +223,10 @@
 
 #tract-remove {
     /*border-top: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;*/
+    border-bottom: 1px solid lightgrey;
     border-right: 1px solid lightgrey;
     border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-bottom-right-radius: 5px;*/
     padding-left: 12px;
     padding-right: 8px;
 }

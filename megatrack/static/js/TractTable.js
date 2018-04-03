@@ -10,6 +10,7 @@ mgtrk.TractTable = (function() {
         
         tractTable.tractSettings = {};
         
+        tractTable._parent = _parent;
         tractTable.currentQuery = _parent._parent.currentQuery;
         
         const containerId = _parent.tractTableContainerId;
@@ -204,6 +205,12 @@ mgtrk.TractTable = (function() {
         }
         $('#colormap-select').hide();
         
+        /**
+         * Function to add a row to the tractTable.
+         *
+         * @param {object} tractSettings    Contains properties needed to construct correct functionality for row buttons.
+                                            Eg. callbacks property can define custom onclick callback for a certain button.
+         */
         tractTable.addRow = (tractSettings) => {
             const tractCode = tractSettings.code;
             tractTable.tractSettings[tractCode] = tractSettings;
@@ -211,7 +218,8 @@ mgtrk.TractTable = (function() {
             const numRowComponents = tractTable.rowComponents.length;
             for (let i=0; i<numRowComponents; i++) {
                 var rowComponent = tractTable.rowComponents[i];
-                rowComponent.insert(tractCode, tractTable, i===0, i===numRowComponents-1);
+                const clickCallback = tractSettings.callbacks[rowComponent.label];
+                rowComponent.insert(tractCode, tractTable, i===0, i===numRowComponents-1, clickCallback);
             }
             $('#tract-table > tbody').append('</tr>');
             $('#tract-table > tbody').append('<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
@@ -220,6 +228,14 @@ mgtrk.TractTable = (function() {
         return tractTable;
     };
     
+    /**
+     * Adds a css class to the table cell if it is the left or right cell.
+     *
+     * @param {boolean} leftCell    Whether the cell is the left-most cell in the row.
+     * @param {boolean} rightCell   Whether the cel is the right-most cell in the row.
+     * @param {string} tractCode    Code identifying the tract the current row refers to.
+     * @param {string} cellId       ID for the cell that may be styled left and/or right.
+     */
     TractTable.styleRowEnds = (leftCell, rightCell, tractCode, cellId) => {
         if (leftCell) {
             $('#'+tractCode+' > #'+cellId).addClass('tract-table-row-left-cell');
@@ -230,6 +246,7 @@ mgtrk.TractTable = (function() {
     };
     
     TractTable.RowTitle = {
+        label: 'title',
         insert: function(tractCode, tractTable, leftCell, rightCell) {
             $('#tract-table > tbody > tr#'+tractCode).append(
                 '<td id="tract-name" class="tract-table-cell">'+tractTable.tractSettings[tractCode].name+'</td>'
@@ -239,7 +256,8 @@ mgtrk.TractTable = (function() {
     };
     
     TractTable.RowColormapSelect = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
+        label: 'colormapSelect',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
             const tractSettings = tractTable.tractSettings[tractCode];
             $('#tract-table > tbody > tr#'+tractCode).append(
                 '<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
@@ -267,7 +285,8 @@ mgtrk.TractTable = (function() {
     };
     
     TractTable.RowSettings = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
+        label: 'settings',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
             const tractSettings = tractTable.tractSettings[tractCode];
             $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-settings" class="tract-table-cell">'
                                                                         +'<div class="tract-icon clickable settings-icon" title="Tract settings"></div>'
@@ -301,7 +320,8 @@ mgtrk.TractTable = (function() {
     };
     
     TractTable.RowDownload = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
+        label: 'download',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
             const tractSettings = tractTable.tractSettings[tractCode];
             $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>');
             TractTable.styleRowEnds(leftCell, rightCell, tractCode, 'tract-download');
@@ -310,26 +330,52 @@ mgtrk.TractTable = (function() {
                 var tractCode = event.currentTarget.parentElement.id;
                 //if (!tractSelect.selectedTracts[tractCode].disabled) {
                 event.preventDefault();
-                window.location.href = 'tract/'+tractCode+'?'+$.param(tractTable.currentQuery)+'&file_type=.nii.gz';
+                window.location.href = 'tract/'+tractCode+'?'+$.param(tractSettings.currentQuery)+'&file_type=.nii.gz';
                 //}
             });
         }
     };
     
     TractTable.RowRemove = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
-            
+        label: 'remove',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
+                    const tractSettings = tractTable.tractSettings[tractCode];
+                    $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>');
+                    TractTable.styleRowEnds(leftCell, rightCell, tractCode, 'tract-remove');
+                    
+                    if (clickCallback) {
+                        $('#'+tractCode+' > #tract-remove').on('click',  clickCallback);
+                    } else {
+                        $('#'+tractCode+' > #tract-remove').on('click', function(event) {
+                            $('#tract-table > tbody > tr#'+tractCode).remove();
+                        });
+                    }
+                    
+
         }
     };
     
     TractTable.RowMetrics = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
+        label: 'metrics',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
+            const tractSettings = tractTable.tractSettings[tractCode];
+            $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-metrics" class="tract-table-cell"><div class="tract-icon clickable metrics-icon" title="Tract metrics"></div></td>');
+            TractTable.styleRowEnds(leftCell, rightCell, tractCode, 'tract-metrics');
+            
+            if (clickCallback) {
+                $('#'+tractCode+' > #tract-metrics').on('click', clickCallback);
+            } else {
+                $('#'+tractCode+' > #tract-metrics').on('click', function(event) {
+                    console.log('No callback attached to tract metrics button.');
+                });
+            }
             
         }
     };
     
     TractTable.Row3DAtlas = {
-        insert: function(tractCode, tractTable, leftCell, rightCell) {
+        label: 'atlas',
+        insert: function(tractCode, tractTable, leftCell, rightCell, clickCallback) {
             const tractSettings = tractTable.tractSettings[tractCode];
             $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>');
             TractTable.styleRowEnds(leftCell, rightCell, tractCode, 'tract-atlas');
@@ -361,6 +407,7 @@ mgtrk.TractTable = (function() {
     };
     
     TractTable.RowValue = {
+        label: 'value',
         insert: function(tractCode, tractTable, leftCell, rightCell) {
             const tractSettings = tractTable.tractSettings[tractCode];
             $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-value" class="tract-table-cell"><div class="tract-icon"><span title="Overlap score">OS: '+tractSettings.overlapScore.toFixed(2)+'</span></div></td>')

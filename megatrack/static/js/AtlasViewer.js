@@ -60,11 +60,11 @@ mgtrk.AtlasViewer = (function() {
         const container = $('#'+atlasViewer.containerId);
         container.append('<div id="view-container"></div>');
         const viewContainer = $('#view-container');
-        viewContainer.append('<div id="coronal-panel"></div>');
-        viewContainer.append('<div id="sagittal-panel"></div>');
-        viewContainer.append('<div id="axial-panel"></div>');
-        viewContainer.append('<div id="viewer-title">Megatrack Atlas</div>');
-        $('#view-container div').addClass('viewer-panel');
+        viewContainer.append('<div id="coronal-panel" class="viewer-panel"></div>');
+        viewContainer.append('<div id="sagittal-panel" class="viewer-panel"></div>');
+        viewContainer.append('<div id="axial-panel" class="viewer-panel"></div>');
+        viewContainer.append('<div id="view-container-title">Megatrack Atlas</div>');
+        //$('#view-container div').addClass('viewer-panel');
         container.append('<div class="clear"></div>');
         container.append('<div id="'+atlasViewer.queryBuilderId+'"></div>');
         container.append('<div id="'+atlasViewer.tractSelectId+'"></div>');

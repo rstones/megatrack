@@ -15,6 +15,8 @@ mgtrk.TractSelect = (function() {
     
         const containerId = _parent.tractSelectId;
         
+        tractSelect._parent = _parent;
+        
         tractSelect.tractSettings = {};
         tractSelect.tractSettingsVisible = false;
         
@@ -135,27 +137,27 @@ mgtrk.TractSelect = (function() {
             $('#tract-info-overlay').hide();
         });
         
-        $('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
-                +'<div id="tract-settings-title"></div>'
-                +'<div id="tract-settings-close" class="clickable remove-icon"></div>'
-                +'</div>'
-                +'<div class="clear"></div>'
-                +'<div id="tract-prob-range-slider-wrapper">'
-                    +'<div id="tract-prob-range-label">Probability range (%):</div>'
-                    +'<div id="tract-prob-range-slider">'
-                        +'<div id="tract-prob-range-min-handle" class="ui-slider-handle prob-range-slider-handle"></div>'
-                        +'<div id="tract-prob-range-max-handle" class="ui-slider-handle prob-range-slider-handle"></div>'
-                    +'</div>'
-                +'</div>'
-                +'<div class="clear"></div>'
-                +'<div id="tract-opacity-slider-wrapper">'
-                    +'<div id="tract-opacity-label">Opacity (%):</div>'
-                    +'<div id="tract-opacity-slider">'
-                        +'<div id="tract-opacity-slider-handle" class="ui-slider-handle opacity-slider-handle"></div>'
-                    +'</div>'
-                +'</div>'
-                +'<div class="clear"></div>'
-                +'<div class="triangle"></div>');
+//         $('#tract-settings-menu').append('<div id="tract-settings-menu-header">'
+//                 +'<div id="tract-settings-title"></div>'
+//                 +'<div id="tract-settings-close" class="clickable remove-icon"></div>'
+//                 +'</div>'
+//                 +'<div class="clear"></div>'
+//                 +'<div id="tract-prob-range-slider-wrapper">'
+//                     +'<div id="tract-prob-range-label">Probability range (%):</div>'
+//                     +'<div id="tract-prob-range-slider">'
+//                         +'<div id="tract-prob-range-min-handle" class="ui-slider-handle prob-range-slider-handle"></div>'
+//                         +'<div id="tract-prob-range-max-handle" class="ui-slider-handle prob-range-slider-handle"></div>'
+//                     +'</div>'
+//                 +'</div>'
+//                 +'<div class="clear"></div>'
+//                 +'<div id="tract-opacity-slider-wrapper">'
+//                     +'<div id="tract-opacity-label">Opacity (%):</div>'
+//                     +'<div id="tract-opacity-slider">'
+//                         +'<div id="tract-opacity-slider-handle" class="ui-slider-handle opacity-slider-handle"></div>'
+//                     +'</div>'
+//                 +'</div>'
+//                 +'<div class="clear"></div>'
+//                 +'<div class="triangle"></div>');
         
         var probRangeMinHandle = $('#tract-prob-range-min-handle');
         var probRangeMaxHandle = $('#tract-prob-range-max-handle');
@@ -289,6 +291,11 @@ mgtrk.TractSelect = (function() {
             closeTractSettings();
         });
         
+        const TractTable = mgtrk.TractTable;
+        const tractTableRowComponents = [TractTable.RowTitle,TractTable.RowColormapSelect,TractTable.RowSettings,
+                                         TractTable.RowMetrics,TractTable.Row3DAtlas,TractTable.RowDownload,TractTable.RowRemove];
+        const tractTable = TractTable.init(tractSelect, tractTableRowComponents);
+        
         $('#add-tract-select').change(function(event) {
             var tractCode = event.currentTarget.value;
             $('#add-tract-select option[value='+tractCode+']').prop('disabled', true);
@@ -312,169 +319,250 @@ mgtrk.TractSelect = (function() {
             _parent.renderers.resetSlicesForDirtyFiles();
             var color = tractSelect.tractSettings[tractCode].color;
             
-            // add row to table
-            $('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
-                    +'<td id="tract-name" class="tract-table-cell">'+tractSelect.availableTracts[tractCode].name+'</td>'
-                    +'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
-                    +'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
-                    +'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
-                    +'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
-                    +'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
-                    +'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
-                    +'</tr>'
-                    +'<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
+            const settings = {
+                                name: tractSelect.availableTracts[tractCode].name,
+                                code: tractCode,
+                                color: color,
+                                colormap: _parent.colormaps.colormaps[color],
+                                colormapMax: _parent.colormaps.initColormapMax,
+                                colormapMin: _parent.colormaps.initColormapMin,
+                                opacity: _parent.colormaps.initColormapOpacity,
+                                colormapMinUpdate: 0,
+                                currentQuery: _parent.currentQuery,
+                                callbacks: {
+                                    'remove': function(event) {
+                                                var selectedTractCodes = Object.keys(tractSelect.selectedTracts);
+                                                if (selectedTractCodes.length == 1) {
+                                                    // no more tracts displayed so clear tract info
+                                                    $('#tract-info-name').html('');
+                                                    $('#prob-atlas-metrics').html('');
+                                                    $('#pop-metrics').html('');
+                                                } else if (tractSelect.currentInfoTractCode == tractCode) {
+                                                    // show metrics for tract below or above in table
+                                                    // simulate a click on the tract-info button of tract we want to select
+                                                    var tractCodeIdx = selectedTractCodes.indexOf(tractCode);
+                                                    var newTractInfoCode = tractCodeIdx === 0 ? selectedTractCodes[1] : selectedTractCodes[tractCodeIdx-1];
+                                                    $('#'+newTractInfoCode+' > #tract-info').trigger('click');
+                                                }
+                                                
+                                                // remove stuff
+                                                $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
+                                                event.currentTarget.parentElement.remove();
+                                                $('#'+tractCode+'-spacer').remove();
+                                                delete tractSelect.selectedTracts[tractCode];
+                                                delete tractSelect.tractMetrics[tractCode];
+                                                
+                                                // fire 'tract:remove' event to remove tract from renderers and volume
+                                                $(document).trigger('tract:remove', [tractCode]);
+                                    },
+                                    'metrics': function(event) {
+                                                    var tractCode = event.currentTarget.parentElement.id; 
+                                                    if (!tractSelect.selectedTracts[tractCode].disabled) {
+                                                        
+                                                        // change metrics icon to selected style
+                                                        if (tractSelect.currentInfoTractCode && tractSelect.currentInfoTractCode != tractCode) {
+                                                            $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+                                                            $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+                                                        }
+                                                        $('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+                                                        $('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+                                                        
+                                                        var metrics = tractSelect.tractMetrics[tractCode];
+                                                        tractSelect.currentInfoTractCode = tractCode;
+                                                        if (metrics && metrics.dynamic && metrics.static) {
+                                                            populateDynamicTractInfo(metrics.dynamic);
+                                                            populateStaticTractInfo(metrics.static);
+                                                        } else {
+                                                            // get the metric data
+                                                            var threshold = parseInt(100*tractSelect.tractSettings[tractCode].colormapMin);
+                                                            $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                                                            $.ajax({
+                                                                dataType: 'json',
+                                                                url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
+                                                                success: function(data) {
+                                                                    tractSelect.tractMetrics[data.tractCode].dynamic = data;
+                                                                    populateDynamicTractInfo(data);
+                                                                }
+                                                            });
+                                                            $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+                                                            $.ajax({
+                                                                dataType: 'json',
+                                                                url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
+                                                                success: function(data) {
+                                                                    tractSelect.tractMetrics[data.tractCode].static = data;
+                                                                    populateStaticTractInfo(data);
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                    }
+                                }
+                            };
+            tractTable.addRow(settings);
             
-            $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
-            
-            $('#'+tractCode+' > #tract-download').on('click', function(event) {
-                var tractCode = event.currentTarget.parentElement.id;
-                if (!tractSelect.selectedTracts[tractCode].disabled) {
-                    event.preventDefault();
-                    window.location.href = 'tract/'+tractCode+'?'+$.param(_parent.currentQuery)+'&file_type=.nii.gz';
-                }
-            });
-            
-            // add event listener on remove icon
-            $('#'+tractCode+' > #tract-remove').on('click', function(event) {
-                var tractCode = event.currentTarget.parentElement.id;
-                
-                // change tract info if this tracts metrics are being displayed
-                var selectedTractCodes = Object.keys(tractSelect.selectedTracts);
-                if (selectedTractCodes.length == 1) {
-                    // no more tracts displayed so clear tract info
-                    $('#tract-info-name').html('');
-                    $('#prob-atlas-metrics').html('');
-                    $('#pop-metrics').html('');
-                } else if (tractSelect.currentInfoTractCode == tractCode) {
-                    // show metrics for tract below or above in table
-                    // simulate a click on the tract-info button of tract we want to select
-                    var tractCodeIdx = selectedTractCodes.indexOf(tractCode);
-                    var newTractInfoCode = tractCodeIdx == 0 ? selectedTractCodes[1] : selectedTractCodes[tractCodeIdx-1];
-                    $('#'+newTractInfoCode+' > #tract-info').trigger('click');
-                }
-                
-                // remove stuff
-                $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
-                event.currentTarget.parentElement.remove();
-                $('#'+tractCode+'-spacer').remove();
-                delete tractSelect.selectedTracts[tractCode];
-                delete tractSelect.tractMetrics[tractCode];
-                /*
-                Fire 'remove-tract' event here so the following code can move to AtlasViewer factory function
-                */
-                // remove labelmap from the viewer
-                _parent.renderers.removeLabelmapFromVolume(tractCode);
-            });
-            
-            // add event listener on settings icon
-            $('#'+tractCode+' > #tract-settings').on('click', function(event) {
-                var tractCode = event.currentTarget.parentElement.id;
-                if (!tractSelect.selectedTracts[tractCode].disabled) {
-                    var settingsMenu = $('#tract-settings-menu');
-                    settingsMenu.data('tractCode', tractCode);
-                    $('#tract-settings-title').html('Settings:<br>'+tractSelect.availableTracts[tractCode].name);
-                    var min = 100*tractSelect.tractSettings[tractCode]["colormapMin"];
-                    var max = 100*tractSelect.tractSettings[tractCode]["colormapMax"];
-                    var opacity = 100*tractSelect.tractSettings[tractCode]["opacity"];
-                    $('#tract-prob-range-slider').slider('values', [min, max]);
-                    $('#tract-prob-range-min-handle').text(Math.floor(min));
-                    $('#tract-prob-range-max-handle').text(Math.floor(max));
-                    $('#tract-opacity-slider').slider('value', opacity);
-                    $('#tract-opacity-slider-handle').text(Math.floor(opacity));
-                    
-                    // position menu at settings button or mouse click?
-                    var buttonOffset = $('#'+tractCode+' > #tract-settings').offset();
-                    settingsMenu.show(); // show before setting offset as can't set offset of hidden elements
-                    settingsMenu.offset({top: buttonOffset.top - settingsMenu.height(), left: buttonOffset.left - 30});
-                    
-                    tractSelect.tractSettingsVisible = true;
-                }
-            });
-            
-            $('#'+tractCode+' > #tract-info').on('click', function(event) {
-                var tractCode = event.currentTarget.parentElement.id; 
-                if (!tractSelect.selectedTracts[tractCode].disabled) {
-                    
-                    // change metrics icon to selected style
-                    if (tractSelect.currentInfoTractCode && tractSelect.currentInfoTractCode != tractCode) {
-                        $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
-                        $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
-                    }
-                    $('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
-                    $('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
-                    
-                    var metrics = tractSelect.tractMetrics[tractCode];
-                    tractSelect.currentInfoTractCode = tractCode;
-                    if (metrics && metrics['dynamic'] && metrics['static']) {
-                        populateDynamicTractInfo(metrics['dynamic']);
-                        populateStaticTractInfo(metrics['static']);
-                    } else {
-                        // get the metric data
-                        var threshold = parseInt(100*tractSelect.tractSettings[tractCode]["colormapMin"]);
-                        $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-                        $.ajax({
-                            dataType: 'json',
-                            url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
-                            success: function(data) {
-                                tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
-                                populateDynamicTractInfo(data);
-                            }
-                        });
-                        $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-                        $.ajax({
-                            dataType: 'json',
-                            url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
-                            success: function(data) {
-                                tractSelect.tractMetrics[data.tractCode]['static'] = data;
-                                populateStaticTractInfo(data);
-                            }
-                        });
-                    }
-                }
-                
-            });
-            
-            $('#'+tractCode+' > #tract-atlas').on('click', function(event) {
-                var tractCode = event.currentTarget.parentElement.id; 
-                if (!tractSelect.selectedTracts[tractCode].disabled) {
-                
-                    $('#tract-info-overlay-title').html(tractSelect.selectedTracts[tractCode].name);
-                    $('#tract-info-overlay-description').html(tractSelect.selectedTracts[tractCode].description);
-                    $('#tract-info-overlay').show('slow');
-                    
-                    var renderer = tractSelect.trkRenderer;
-                    renderer.remove(tractSelect.trk);
-                    renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
-                    
-                    tractSelect.trk.file = _parent.rootPath + '/get_trk/'+tractCode+'?.trk';
-                    tractSelect.trk.opacity = 1.0;
-                    
-                    renderer.add(tractSelect.trk);
-                    renderer.render();
-                    
-                    tractSelect.cameraMotion = setInterval(function() {
-                        renderer.camera.rotate([3,0]);
-                    }, 50);
-                }
-                
-            });
-            
-            $('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
-                if (!tractSelect.selectedTracts[tractCode].disabled) {
-                    // hide first in case colormap-select is already open for another tract
-                    $('#colormap-select').hide();
-                    
-                    // work out position of colormap indicator for current tract
-                    var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
-                    $('#colormap-select').css('top', indicatorPos.top);
-                    $('#colormap-select').css('left', indicatorPos.left - 6);
-                    
-                    // attach selected tract code to colormap select
-                    $('#colormap-select').data('tractCode', event.data.tractCode);
-                    // show colormap select
-                    $('#colormap-select').show('blind');
-                }
-            });
+//             // add row to table
+//             $('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
+//                     +'<td id="tract-name" class="tract-table-cell">'+tractSelect.availableTracts[tractCode].name+'</td>'
+//                     +'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
+//                     +'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
+//                     +'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
+//                     +'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
+//                     +'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
+//                     +'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
+//                     +'</tr>'
+//                     +'<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
+//             
+//             $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
+//             
+//             $('#'+tractCode+' > #tract-download').on('click', function(event) {
+//                 var tractCode = event.currentTarget.parentElement.id;
+//                 if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                     event.preventDefault();
+//                     window.location.href = 'tract/'+tractCode+'?'+$.param(_parent.currentQuery)+'&file_type=.nii.gz';
+//                 }
+//             });
+//             
+//             // add event listener on remove icon
+//             $('#'+tractCode+' > #tract-remove').on('click', function(event) {
+//                 var tractCode = event.currentTarget.parentElement.id;
+//                 
+//                 // change tract info if this tracts metrics are being displayed
+//                 var selectedTractCodes = Object.keys(tractSelect.selectedTracts);
+//                 if (selectedTractCodes.length == 1) {
+//                     // no more tracts displayed so clear tract info
+//                     $('#tract-info-name').html('');
+//                     $('#prob-atlas-metrics').html('');
+//                     $('#pop-metrics').html('');
+//                 } else if (tractSelect.currentInfoTractCode == tractCode) {
+//                     // show metrics for tract below or above in table
+//                     // simulate a click on the tract-info button of tract we want to select
+//                     var tractCodeIdx = selectedTractCodes.indexOf(tractCode);
+//                     var newTractInfoCode = tractCodeIdx == 0 ? selectedTractCodes[1] : selectedTractCodes[tractCodeIdx-1];
+//                     $('#'+newTractInfoCode+' > #tract-info').trigger('click');
+//                 }
+//                 
+//                 // remove stuff
+//                 $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
+//                 event.currentTarget.parentElement.remove();
+//                 $('#'+tractCode+'-spacer').remove();
+//                 delete tractSelect.selectedTracts[tractCode];
+//                 delete tractSelect.tractMetrics[tractCode];
+//                 /*
+//                 Fire 'remove-tract' event here so the following code can move to AtlasViewer factory function
+//                 */
+//                 // remove labelmap from the viewer
+//                 _parent.renderers.removeLabelmapFromVolume(tractCode);
+//             });
+//             
+//             // add event listener on settings icon
+//             $('#'+tractCode+' > #tract-settings').on('click', function(event) {
+//                 var tractCode = event.currentTarget.parentElement.id;
+//                 if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                     var settingsMenu = $('#tract-settings-menu');
+//                     settingsMenu.data('tractCode', tractCode);
+//                     $('#tract-settings-title').html('Settings:<br>'+tractSelect.availableTracts[tractCode].name);
+//                     var min = 100*tractSelect.tractSettings[tractCode]["colormapMin"];
+//                     var max = 100*tractSelect.tractSettings[tractCode]["colormapMax"];
+//                     var opacity = 100*tractSelect.tractSettings[tractCode]["opacity"];
+//                     $('#tract-prob-range-slider').slider('values', [min, max]);
+//                     $('#tract-prob-range-min-handle').text(Math.floor(min));
+//                     $('#tract-prob-range-max-handle').text(Math.floor(max));
+//                     $('#tract-opacity-slider').slider('value', opacity);
+//                     $('#tract-opacity-slider-handle').text(Math.floor(opacity));
+//                     
+//                     // position menu at settings button or mouse click?
+//                     var buttonOffset = $('#'+tractCode+' > #tract-settings').offset();
+//                     settingsMenu.show(); // show before setting offset as can't set offset of hidden elements
+//                     settingsMenu.offset({top: buttonOffset.top - settingsMenu.height(), left: buttonOffset.left - 30});
+//                     
+//                     tractSelect.tractSettingsVisible = true;
+//                 }
+//             });
+//             
+//             $('#'+tractCode+' > #tract-info').on('click', function(event) {
+//                 var tractCode = event.currentTarget.parentElement.id; 
+//                 if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                     
+//                     // change metrics icon to selected style
+//                     if (tractSelect.currentInfoTractCode && tractSelect.currentInfoTractCode != tractCode) {
+//                         $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon-selected');
+//                         $('#'+tractSelect.currentInfoTractCode+' > #tract-info > .tract-icon').addClass('metrics-icon');
+//                     }
+//                     $('#'+tractCode+' > #tract-info > .tract-icon').removeClass('metrics-icon');
+//                     $('#'+tractCode+' > #tract-info > .tract-icon').addClass('metrics-icon-selected');
+//                     
+//                     var metrics = tractSelect.tractMetrics[tractCode];
+//                     tractSelect.currentInfoTractCode = tractCode;
+//                     if (metrics && metrics['dynamic'] && metrics['static']) {
+//                         populateDynamicTractInfo(metrics['dynamic']);
+//                         populateStaticTractInfo(metrics['static']);
+//                     } else {
+//                         // get the metric data
+//                         var threshold = parseInt(100*tractSelect.tractSettings[tractCode]["colormapMin"]);
+//                         $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+//                         $.ajax({
+//                             dataType: 'json',
+//                             url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
+//                             success: function(data) {
+//                                 tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
+//                                 populateDynamicTractInfo(data);
+//                             }
+//                         });
+//                         $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
+//                         $.ajax({
+//                             dataType: 'json',
+//                             url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
+//                             success: function(data) {
+//                                 tractSelect.tractMetrics[data.tractCode]['static'] = data;
+//                                 populateStaticTractInfo(data);
+//                             }
+//                         });
+//                     }
+//                 }
+//                 
+//             });
+//             
+//             $('#'+tractCode+' > #tract-atlas').on('click', function(event) {
+//                 var tractCode = event.currentTarget.parentElement.id; 
+//                 if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                 
+//                     $('#tract-info-overlay-title').html(tractSelect.selectedTracts[tractCode].name);
+//                     $('#tract-info-overlay-description').html(tractSelect.selectedTracts[tractCode].description);
+//                     $('#tract-info-overlay').show('slow');
+//                     
+//                     var renderer = tractSelect.trkRenderer;
+//                     renderer.remove(tractSelect.trk);
+//                     renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
+//                     
+//                     tractSelect.trk.file = _parent.rootPath + '/get_trk/'+tractCode+'?.trk';
+//                     tractSelect.trk.opacity = 1.0;
+//                     
+//                     renderer.add(tractSelect.trk);
+//                     renderer.render();
+//                     
+//                     tractSelect.cameraMotion = setInterval(function() {
+//                         renderer.camera.rotate([3,0]);
+//                     }, 50);
+//                 }
+//                 
+//             });
+//             
+//             $('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
+//                 if (!tractSelect.selectedTracts[tractCode].disabled) {
+//                     // hide first in case colormap-select is already open for another tract
+//                     $('#colormap-select').hide();
+//                     
+//                     // work out position of colormap indicator for current tract
+//                     var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
+//                     $('#colormap-select').css('top', indicatorPos.top);
+//                     $('#colormap-select').css('left', indicatorPos.left - 6);
+//                     
+//                     // attach selected tract code to colormap select
+//                     $('#colormap-select').data('tractCode', event.data.tractCode);
+//                     // show colormap select
+//                     $('#colormap-select').show('blind');
+//                 }
+//             });
             
             // pre-fetch the tract metrics and put in cache
             var initThreshold = parseInt(_parent.colormaps.initColormapMin * 100);
