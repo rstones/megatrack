@@ -79,7 +79,7 @@ mgtrk.LesionMapping = (function() {
         
         $('#'+containerId).append('<div id="lesion-mapping-wrapper">'
                                         +'<div id="lesion-upload-button" class="button"><span>Lesion Upload</span><div class="upload-icon"></div></div>'
-                                        +'<div id="run-lesion-analysis-button" class="button">Run Analysis</div>'
+                                        +'<div id="run-lesion-analysis-button" class="button-disabled">Run Analysis</div>'
                                         +'<div id="lesion-volume-wrapper">'
                                             +'<div id="lesion-volume-label">Lesion volume:</div>'
                                             +'<div id="lesion-volume">- ml</div>'
@@ -208,6 +208,9 @@ mgtrk.LesionMapping = (function() {
                      $('#post-upload-message').css('color', 'rgba(0,204,0)');
                      $('#post-upload-message').html('Lesion map successfully uploaded!');
                      
+                     $('#run-lesion-analysis-button').removeClass('button-disabled');
+                     $('#run-lesion-analysis-button').addClass('button');
+                     
                      if (_parent.labelmaps.lesion[0]) { // update lesion map
                          const settings = {
                                             code: lesionCode,
@@ -247,52 +250,56 @@ mgtrk.LesionMapping = (function() {
              });
         });
         
-        $('#run-lesion-analysis-button').on('click', function(event) {
-             
-             // get current query from queryBuilder
-             const currentQuery = _parent.currentQuery;
-             
-             $('#run-lesion-analysis-button').html('<div class="loading-gif"></div>');
-             
-             $.ajax({
-                url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
-                method: 'GET',
-                dataType: 'json',
-                //data: {lesionCode: lesionMapping.currentLesionCode},
-                success: function(data) {
-                    console.log(data);
-                    
-                    const dataLen = data.length;
-                    for (let i=0; i<dataLen; i++) {
-                        const tractCode = data[i].tractCode;
-                        const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
-                        const settings = {
-                                            name: data[i].tractName,
-                                            code: tractCode,
-                                            overlapScore: data[i].overlapScore,
-                                            color: color,
-                                            colormap: _parent.colormaps.colormaps[color],
-                                            colormapMax: _parent.colormaps.initColormapMax,
-                                            colormapMin: _parent.colormaps.initColormapMin,
-                                            opacity: _parent.colormaps.initColormapOpacity,
-                                            colormapMinUpdate: 0,
-                                            currentQuery: currentQuery
-                                        };
-                        _parent.labelmaps.tracts.push(settings);
-                        const idx = _parent.findVolumeLabelmapIndex(tractCode);
-                         _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
-                         
-                         tractTable.addRow(settings);
-                         
-                         $('#run-lesion-analysis-button').html('Run Analysis');
+        let lesionAnalysisButton = $('#run-lesion-analysis-button');
+        //lesionAnalysisButton.addClass('run-lesion-analysis-button-disabled');
+        lesionAnalysisButton.on('click', function(event) {
+        
+            if (lesionAnalysisButton.hasClass('button')) {
+                // get current query from queryBuilder
+                const currentQuery = _parent.currentQuery;
+                 
+                //lesionAnalysisButton.html('<div class="loading-gif"></div>');
+                 
+                $.ajax({
+                    url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
+                    method: 'GET',
+                    dataType: 'json',
+                    //data: {lesionCode: lesionMapping.currentLesionCode},
+                    success: function(data) {
+                        console.log(data);
+                        
+                        const dataLen = data.length;
+                        for (let i=0; i<dataLen; i++) {
+                            const tractCode = data[i].tractCode;
+                            const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
+                            const settings = {
+                                                name: data[i].tractName,
+                                                code: tractCode,
+                                                overlapScore: data[i].overlapScore,
+                                                color: color,
+                                                colormap: _parent.colormaps.colormaps[color],
+                                                colormapMax: _parent.colormaps.initColormapMax,
+                                                colormapMin: _parent.colormaps.initColormapMin,
+                                                opacity: _parent.colormaps.initColormapOpacity,
+                                                colormapMinUpdate: 0,
+                                                currentQuery: currentQuery
+                                            };
+                            _parent.labelmaps.tracts.push(settings);
+                            const idx = _parent.findVolumeLabelmapIndex(tractCode);
+                             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
+                             
+                             tractTable.addRow(settings);
+                             
+                             //$('#run-lesion-analysis-button').html('Run Analysis');
+                            
+                        }
+                        _parent.renderers.resetSlicesForDirtyFiles();
+                    },
+                    error: function(xhr) {
                         
                     }
-                    _parent.renderers.resetSlicesForDirtyFiles();
-                },
-                error: function(xhr) {
-                    
-                }
-             });
+                });
+            }
         });
        
         

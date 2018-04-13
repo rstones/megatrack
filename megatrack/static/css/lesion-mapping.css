@@ -58,7 +58,7 @@
 }
 
 #run-lesion-analysis-button {
-    border: 1px solid darkgrey;
+    /*border: 1px solid darkgrey;*/
     border-radius: 5px;
     width: 150px;
     height: 23px;

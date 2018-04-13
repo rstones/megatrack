@@ -24,6 +24,11 @@ hr {
     cursor: pointer;
 }
 
+.button-disabled {
+    border: 1px solid lightgrey;
+    color: lightgrey;
+}
+
 .ui-slider {
     clear: both;
 }
