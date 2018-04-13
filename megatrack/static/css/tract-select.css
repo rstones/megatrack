@@ -235,6 +235,11 @@
     font-size: 80%;
 }
 
+#tract-value > div {
+    position: relative;
+    top: -3px;
+}
+
 .tract-icon {
     margin: 0 auto;
 }

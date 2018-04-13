@@ -75,6 +75,14 @@ mgtrk.LesionViewer = (function() {
             return idx;
         };
         
+        lesionViewer.clearTracts = function() {
+            for (let i=lesionViewer.labelmaps.tracts.length; i--;) {
+                const idx = lesionViewer.findVolumeLabelmapIndex(lesionViewer.labelmaps.tracts[i].code);
+                lesionViewer.renderers.removeLabelmapFromVolumeNew(idx);
+            }
+            lesionViewer.labelmaps.tracts = [];
+        };
+        
         // insert DOM elements
         const container = $('#'+lesionViewer.containerId);
         container.append('<div id="view-container"></div>');

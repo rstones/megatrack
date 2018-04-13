@@ -417,7 +417,7 @@ mgtrk.TractTable = (function() {
         label: 'value',
         insert: function(tractCode, tractTable, leftCell, rightCell) {
             const tractSettings = tractTable.tractSettings[tractCode];
-            $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-value" class="tract-table-cell"><div class="tract-icon"><span title="Overlap score">OS: '+tractSettings.overlapScore.toFixed(2)+'</span></div></td>')
+            $('#tract-table > tbody > tr#'+tractCode).append('<td id="tract-value" class="tract-table-cell"><div><span title="Overlap score">OS: '+tractSettings.overlapScore.toFixed(2)+'</span></div></td>')
             TractTable.styleRowEnds(leftCell, rightCell, tractCode, 'tract-value');
         }
     };
