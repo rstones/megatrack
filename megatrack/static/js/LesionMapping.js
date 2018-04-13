@@ -1,63 +1,5 @@
 var mgtrk = mgtrk || {};
 
-/*
-    - insert button to open upload popup
-    - insert 'Run Analysis' button
-    - insert slider to change lesion opacity
-    - insert upload popup
-        - instructions:
-            - "Upload your lesion map as a gzipped nifti (nii.gz) file transformed
-                to MNI space using the template which can be downloaded here. Coords
-                must be RAS. Information on how to apply the MNI transformation can be
-                found here." etc... 
-        - upload form
-        - message box to display result of upload
-            - success: message shows up and popup closes after ~5 secs
-            - failure: message shows up with some information about the error
-                        (eg. use RAS, MNI transformation not properly applied, wrong file type etc.)
-    - insert table to display tracts
-    
-    
-    - lesion map upload callback:
-        - success:
-            - display success message and start timeout to close popup
-            - receive a lesion code and lesion info (eg. volume)
-    
-            - if no lesion map already uploaded...
-                - add lesion map to labelmaps object
-                - add lesion map labelmap to X.volume
-            - else if a lesion map is already uploaded...
-                - update lesion map in labelmaps object
-                - update lesion map labelmap file in X.volume
-            
-            - if a query is selected and analysis has previously run...
-                - change "Run Analysis" button to "Update Analysis" or automatically re-reun the analysis
-        - error:
-            - Display error message
-            
-    - "Run Analysis" callback:
-        - receive a list of tract codes and associated data (eg. volume of lesion within the tract)
-        - loop through the tract codes
-            -  insert a row into the tract table with info/icons: tract name, color select, settings, data, hide
-            - if tract code not already associated with a labelmap
-                - add new tract to labelmaps object
-                - add new labelmap with file pointing to tract code and query
-            - if tract already loaded but query has changed
-                - update the labelmap file with the new query
-            
-    - have message if no query selected: "Select a query before running lesion analysis"
-    - Disable "Run Analysis" button before a query is selected, enable and remove the above message
-        after the query is selected.
-        
-    - SERVER SIDE: file upload: every time a lesion map is uploaded:
-        - Validate file exists, file ending, MNI transformation is correctly applied, RAS
-        - generate a new lesion map code (increment a variable)
-        - add an entry into a database table (code, uploaded file name, saved file name, upload datetime)
-        - save the file with the lesion map code
-        - return the lesion map code
-        - or return an error message depending on the error
-    
-*/
 mgtrk.LesionMapping = (function() {
     
     const LesionMapping = {};
@@ -79,7 +21,7 @@ mgtrk.LesionMapping = (function() {
         
         $('#'+containerId).append('<div id="lesion-mapping-wrapper">'
                                         +'<div id="lesion-upload-button" class="button"><span>Lesion Upload</span><div class="upload-icon"></div></div>'
-                                        +'<div id="run-lesion-analysis-button" class="button-disabled">Run Analysis</div>'
+                                        +'<div id="run-analysis-button" class="button-disabled">Run Analysis</div>'
                                         +'<div id="lesion-volume-wrapper">'
                                             +'<div id="lesion-volume-label">Lesion volume:</div>'
                                             +'<div id="lesion-volume">- ml</div>'
@@ -95,7 +37,8 @@ mgtrk.LesionMapping = (function() {
                                         +'<div id="'+lesionMapping.tractTableContainerId+'"></div>'
                                         +'<div id="lesion-analysis-running"><div class="loading-gif lesion-analysis-running-loading-gif"></div></div>'
                                         +'<div id="lesion-upload-popup"></div>'
-                                        +'<div id="lesion-upload-popup-background-screen"></div>'
+                                        +'<div id="run-analysis-popup"></div>'
+                                        +'<div id="popup-background-screen"></div>'
                                     +'</div>');
                                     
         //lesionMapping.colormaps = _parent.colormaps;
@@ -149,18 +92,109 @@ mgtrk.LesionMapping = (function() {
                                             +'</div>'
                                         +'</div>'
                                         +'<div id="post-upload-message"></div>');
+                                        
+        $('#lesion-upload-close').on('click', function(event) {
+            $('#lesion-upload-popup').hide();
+            $('#popup-background-screen').hide();
+        });
+                                        
+        $('#run-analysis-popup').append('<div id="run-analysis-popup-close" class="remove-icon clickable float-right"></div>'
+                                        +'<div class="clear"></div>'
+                                        +'<div id="run-analysis-popup-text">'
+                                            +'Select the minimum probability threshold for calculating the overlap'
+                                            +' score during lesion analysis.'
+                                        +'</div>'
+                                        +'<div class="clear"></div>'
+                                        +'<div id="run-analysis-popup-prob-threshold-slider-wrapper">'
+                                            +'<div id="run-analysis-popup-prob-threshold-slider">'
+                                                +'<div id="run-analysis-popup-prob-threshold-slider-handle" class="ui-slider-handle run-analysis-popup-prob-threshold-slider-handle"></div>'
+                                            +'</div>'
+                                        +'</div>'
+                                        +'<div id="run-analysis-popup-ok-wrapper">'
+                                            +'<div id="run-analysis-popup-ok" class="clickable button">OK</div>'
+                                        +'</div>');
+        
+        const runAnalysisProbThresholdHandle = $('#run-analysis-popup-prob-threshold-slider-handle');
+        $('#run-analysis-popup-prob-threshold-slider').slider({
+            min: 0,
+            max: 100,
+            value: 25,
+            step: 1,
+            create: function() {
+                runAnalysisProbThresholdHandle.text($(this).slider("value"));
+            },
+            slide: function(event, ui) {
+                runAnalysisProbThresholdHandle.text(ui.value);
+            }
+        });
+                                        
+        $('#run-analysis-popup-close').on('click', function(event) {
+            $('#run-analysis-popup').hide();
+            $('#popup-background-screen').hide();
+        });
+        
+        $('#run-analysis-popup-ok').on('click', function(event) {
+            // get current query from queryBuilder
+            const currentQuery = _parent.currentQuery;
+            
+            $('#run-analysis-popup').hide();
+            $('#popup-background-screen').hide();
+            $('#lesion-analysis-running').show();
+            
+            const threshold = $('#run-analysis-popup-prob-threshold-slider').slider('option', 'value');
+            
+            $.ajax({
+                url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/'+threshold+'?' + $.param(currentQuery),
+                method: 'GET',
+                dataType: 'json',
+                //data: {lesionCode: lesionMapping.currentLesionCode},
+                success: function(data) {
+                    console.log(data);
+                    
+                    // clear tract table and current tract labelmaps
+                    tractTable.clear();
+                    _parent.clearTracts();
+                     
+                    const dataLen = data.length;
+                    for (let i=0; i<dataLen; i++) {
+                        const tractCode = data[i].tractCode;
+                        const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
+                        const settings = {
+                                            name: data[i].tractName,
+                                            code: tractCode,
+                                            overlapScore: data[i].overlapScore,
+                                            color: color,
+                                            colormap: _parent.colormaps.colormapFunctions[color](threshold / 100, _parent.colormaps.initColormapMax, _parent.colormaps.initColormapOpacity),
+                                            colormapMax: _parent.colormaps.initColormapMax,
+                                            colormapMin: threshold / 100,
+                                            opacity: _parent.colormaps.initColormapOpacity,
+                                            colormapMinUpdate: 0,
+                                            currentQuery: currentQuery
+                                        };
+                        _parent.labelmaps.tracts.push(settings);
+                        const idx = _parent.findVolumeLabelmapIndex(tractCode);
+                         _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
+                         
+                         tractTable.addRow(settings);
+                         
+                         $('#lesion-analysis-running').hide();
+                        
+                    }
+                    _parent.renderers.resetSlicesForDirtyFiles();
+                },
+                error: function(xhr) {
+                    
+                }
+            });
+        });
           
         $('#lesion-upload-popup').hide();
-        $('#lesion-upload-popup-background-screen').hide();
-        
-        $('#lesion-upload-close').on('click', function(event) {
-             $('#lesion-upload-popup').hide();
-             $('#lesion-upload-popup-background-screen').hide();
-        });
+        $('#run-analysis-popup').hide();
+        $('#popup-background-screen').hide();
         
         $('#lesion-upload-button').on('click', function(event) {
             // dim the background
-            const backgroundScreen = $('#lesion-upload-popup-background-screen');
+            const backgroundScreen = $('#popup-background-screen');
             backgroundScreen.show();
             backgroundScreen.css('width', $(window).width());
             backgroundScreen.css('height', $(window).height());
@@ -208,8 +242,8 @@ mgtrk.LesionMapping = (function() {
                      $('#post-upload-message').css('color', 'rgba(0,204,0)');
                      $('#post-upload-message').html('Lesion map successfully uploaded!');
                      
-                     $('#run-lesion-analysis-button').removeClass('button-disabled');
-                     $('#run-lesion-analysis-button').addClass('button');
+                     $('#run-analysis-button').removeClass('button-disabled');
+                     $('#run-analysis-button').addClass('button');
                      
                      if (_parent.labelmaps.lesion[0]) { // update lesion map
                          const settings = {
@@ -239,7 +273,7 @@ mgtrk.LesionMapping = (function() {
                      
                      setTimeout(function() {
                             $('#lesion-upload-close').trigger('click');
-                     }, 4000);
+                     }, 2000);
                      
                  },
                  error: function(xhr) {
@@ -250,58 +284,21 @@ mgtrk.LesionMapping = (function() {
              });
         });
         
-        let lesionAnalysisButton = $('#run-lesion-analysis-button');
-        lesionAnalysisButton.on('click', function(event) {
+        let runAnalysisButton = $('#run-analysis-button');
+        runAnalysisButton.on('click', function(event) {
         
-            if (lesionAnalysisButton.hasClass('button')) {
-                // get current query from queryBuilder
-                const currentQuery = _parent.currentQuery;
-                 
-                $('#lesion-analysis-running').show();
-                 
-                $.ajax({
-                    url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
-                    method: 'GET',
-                    dataType: 'json',
-                    //data: {lesionCode: lesionMapping.currentLesionCode},
-                    success: function(data) {
-                        console.log(data);
-                        
-                        // clear tract table and current tract labelmaps
-                        tractTable.clear();
-                        _parent.clearTracts();
-                         
-                        const dataLen = data.length;
-                        for (let i=0; i<dataLen; i++) {
-                            const tractCode = data[i].tractCode;
-                            const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
-                            const settings = {
-                                                name: data[i].tractName,
-                                                code: tractCode,
-                                                overlapScore: data[i].overlapScore,
-                                                color: color,
-                                                colormap: _parent.colormaps.colormaps[color],
-                                                colormapMax: _parent.colormaps.initColormapMax,
-                                                colormapMin: _parent.colormaps.initColormapMin,
-                                                opacity: _parent.colormaps.initColormapOpacity,
-                                                colormapMinUpdate: 0,
-                                                currentQuery: currentQuery
-                                            };
-                            _parent.labelmaps.tracts.push(settings);
-                            const idx = _parent.findVolumeLabelmapIndex(tractCode);
-                             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
-                             
-                             tractTable.addRow(settings);
-                             
-                             $('#lesion-analysis-running').hide();
-                            
-                        }
-                        _parent.renderers.resetSlicesForDirtyFiles();
-                    },
-                    error: function(xhr) {
-                        
-                    }
-                });
+            if (runAnalysisButton.hasClass('button')) {
+            
+                // dim the background
+                const backgroundScreen = $('#popup-background-screen');
+                backgroundScreen.show();
+                backgroundScreen.css('width', $(window).width());
+                backgroundScreen.css('height', $(window).height());
+                
+                const popup = $('#run-analysis-popup');
+                popup.show();
+                popup.css('left', ($(window).width()/2) - (popup.width()/2));
+                    
             }
         });
        

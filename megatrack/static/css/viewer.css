@@ -11,6 +11,14 @@ hr {
 	margin-top: 3px;
 }
 
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
 .button {
     border: 1px solid darkgrey;
     border-radius: 5px;
