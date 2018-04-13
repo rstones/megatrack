@@ -267,6 +267,8 @@ mgtrk.LesionMapping = (function() {
                     success: function(data) {
                         console.log(data);
                         
+                        tractTable.clear();
+                        
                         const dataLen = data.length;
                         for (let i=0; i<dataLen; i++) {
                             const tractCode = data[i].tractCode;

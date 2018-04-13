@@ -224,6 +224,13 @@ mgtrk.TractTable = (function() {
             $('#tract-table > tbody').append('</tr>');
             $('#tract-table > tbody').append('<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
         };
+        
+        /**
+         * Remove all current rows from tractTable.
+         */
+        tractTable.clear = () => {
+            $('#tract-table > tbody > tr').remove();  
+        };
                                     
         return tractTable;
     };
