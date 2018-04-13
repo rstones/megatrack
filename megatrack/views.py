@@ -474,6 +474,9 @@ def get_lesion(lesion_code):
 @megatrack.route('/lesion_analysis/<lesion_code>/<threshold>')
 def lesion_analysis(lesion_code, threshold):
     
+    cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+    
+    
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
     subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
@@ -502,10 +505,21 @@ def lesion_analysis(lesion_code, threshold):
     intersecting_tracts = []
     
     def check_lesion_tract_overlaps(tracts):
+        
+        cached_data = current_app.cache.get(cache_key)
+        
         for tract in tracts:
             # average density maps for this tract based on current query
             # save averaged map and cache the file path
-            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
+                tract_code = tract.code
+                tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+                current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+                cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+                current_app.cache.set(cache_key, cached_data)
+            else:
+                tract_file_path = cached_data[tract.code]
+                
             
 #             # perform weighted overlap: lesion * tract
 #             tract_data = du.get_nifti_data(tract_file_path)

@@ -1,4 +1,5 @@
 #view-container-title {
+    float: left;
     font-size: 200%;
     color: white;
     position: relative;
@@ -6,5 +7,5 @@
     left: -435px;
     font: normal normal normal 45px/1.4em Jura,sans-serif;
     width: 1250px;
-    height: 100px;
+    height: 10px;
 }

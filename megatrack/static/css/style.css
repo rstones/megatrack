@@ -127,7 +127,7 @@ nav {
 	color: grey;
 }
 
-#header li a:active {
+#header li a:active, #header li a:focus {
     color: grey;
 }
 
@@ -136,8 +136,6 @@ nav {
     height: 100px;
     float: right;
 }
-
-
 
 #content-wrapper {
 	width: 100%;

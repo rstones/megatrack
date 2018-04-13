@@ -218,7 +218,7 @@ mgtrk.TractTable = (function() {
             const numRowComponents = tractTable.rowComponents.length;
             for (let i=0; i<numRowComponents; i++) {
                 var rowComponent = tractTable.rowComponents[i];
-                const clickCallback = tractSettings.callbacks[rowComponent.label];
+                const clickCallback = tractSettings.callbacks ? tractSettings.callbacks[rowComponent.label] : undefined;
                 rowComponent.insert(tractCode, tractTable, i===0, i===numRowComponents-1, clickCallback);
             }
             $('#tract-table > tbody').append('</tr>');

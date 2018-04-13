@@ -113,13 +113,36 @@ mgtrk.Colormaps = (function() {
             var segmentLength = (max - min) / numSegments;
             var colormap = [{"index":0, "rgb":[0,0,0,0]}, {"index":min-0.0001, "rgb":[0,0,0,0]}];
             for (var i=0; i<numSegments+1; i++) {
-                var r = 150+(i*54/numSegments);
-                var g = 100+(i*53/numSegments);
+                var r = Math.round(150+(i*54/numSegments));
+                var g = Math.round(100+(i*53/numSegments));
                 var b = 0;
                 colormap.push({"index": min+(i*segmentLength), "rgb":[r,g,b,alpha]});
             }
             colormap.push({"index": 1, "rgb": [204,153,0,alpha]});
             return colormap;
+        };
+        
+        /**
+         * Define a css class in the html header for lesion colormap.
+         * @param {Boolean} fade    If true will include an opacity gradient. 
+         */
+        const createLesionColormapClass = function(fade) {
+            // generate css class for lesion colormap gradient
+            const colormap = lesionColormap(initColormapMin, initColormapMax, initColormapOpacity);
+            const rgbaColors = [];
+            const n = 8;
+            let fadeCount = 0;
+            const fadeGap = 0.25;
+            for (let i=3; i<n-1; i++) {
+                const color = colormap[i].rgb;
+                rgbaColors.push('rgba('+color[0]+','+color[1]+','+color[2]+','+(fade ? fadeCount++*fadeGap : color[3])+')');
+            }
+            $('head').append('<style>'
+                                    +'.lesion-colormap {'
+                                    +'background:-moz-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
+                                    +'background:-webkit-linear-gradient(left, '+rgbaColors[0]+','+rgbaColors[1]+','+rgbaColors[2]+','+rgbaColors[3]+');'
+                                    +'}'
+                                    +'</style>');
         };
     
         const colormapFunctions = {
@@ -183,7 +206,8 @@ mgtrk.Colormaps = (function() {
                                 numColormaps: numColormaps,
                                 colormapFunctions: colormapFunctions,
                                 generateXTKColormap: generateXTKColormap,
-                                lesionColormap: lesionColormap
+                                lesionColormap: lesionColormap,
+                                createLesionColormapClass: createLesionColormapClass
                             }
                 };
     };

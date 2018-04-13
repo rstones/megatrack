@@ -75,7 +75,7 @@ mgtrk.LesionMapping = (function() {
         const containerId = _parent.lesionAnalysisId;
         lesionMapping.tractTableContainerId = 'tract-table-wrapper';
         
-        //let currentLesionCode = null;
+        _parent.colormaps.createLesionColormapClass(true);
         
         $('#'+containerId).append('<div id="lesion-mapping-wrapper">'
                                         +'<div id="lesion-upload-button" class="button"><span>Lesion Upload</span><div class="upload-icon"></div></div>'
@@ -86,17 +86,13 @@ mgtrk.LesionMapping = (function() {
                                         +'</div>'
                                         +'<div id="lesion-opacity-slider-wrapper">'
                                             +'<div id="lesion-opacity-label">Lesion opacity (%):</div>'
-                                            +'<div id="lesion-opacity-slider">'
+                                            +'<div id="lesion-opacity-slider" class="lesion-colormap">'
                                                 +'<div id="lesion-opacity-slider-handle" class="ui-slider-handle opacity-slider-handle"></div>'
                                             +'</div>'
                                         +'</div>'
                                         +'<div class="clear"></div>'
                                         +'<hr>'
                                         +'<div id="'+lesionMapping.tractTableContainerId+'">'
-//                                             +'<table id="tract-table">'
-//                                             +'<tbody>'
-//                                             +'</tbody>'
-//                                             +'</table>'
                                         +'</div>'
                                         +'<div id="lesion-upload-popup"></div>'
                                         +'<div id="lesion-upload-popup-background-screen"></div>'
@@ -256,6 +252,8 @@ mgtrk.LesionMapping = (function() {
              // get current query from queryBuilder
              const currentQuery = _parent.currentQuery;
              
+             $('#run-lesion-analysis-button').html('<div class="loading-gif"></div>');
+             
              $.ajax({
                 url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
                 method: 'GET',
@@ -286,61 +284,7 @@ mgtrk.LesionMapping = (function() {
                          
                          tractTable.addRow(settings);
                          
-//                          // add row to tract table
-//                          $('#tract-table > tbody').append('<tr id="'+tractCode+'" class="tract-row">'
-//                                 +'<td id="tract-name" class="tract-table-cell">'+tractCode+'</td>'
-//                                 +'<td id="tract-colormap" class="tract-table-cell"><div id="'+tractCode+'-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div></td>'
-//                                 +'<td id="tract-settings" class="tract-table-cell"><div class="tract-icon clickable settings-icon" title="Tract settings"></div></td>'
-//                                 //+'<td id="tract-info" class="tract-table-cell"><div class="tract-icon clickable '+(showTractInfo ? 'metrics-icon-selected' : 'metrics-icon')+'" title="Tract metrics"></div></td>'
-//                                 +'<td id="tract-atlas" class="tract-table-cell"><div class="tract-icon clickable atlas-icon" title="3D tract atlas"></div></td>'
-//                                 +'<td id="tract-download" class="tract-table-cell"><div class="tract-icon clickable download-icon" title="Download density map"></td>'
-//                                 //+'<td id="tract-remove" class="tract-table-cell"><div class="tract-icon clickable remove-icon" title="Remove tract"></div></td>'
-//                                 +'</tr>'
-//                                 +'<tr id="'+tractCode+'-spacer" class="tract-spacer-row"><td></td><td></td><td></td><td></td></tr>');
-//                         
-//                         $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap');
-//                         
-//                         // add event listener on settings icon
-//                         $('#'+tractCode+' > #tract-settings').on('click', function(event) {
-//                             var tractCode = event.currentTarget.parentElement.id;
-//                             if (!tractSelect.selectedTracts[tractCode].disabled) {
-//                                 var settingsMenu = $('#tract-settings-menu');
-//                                 settingsMenu.data('tractCode', tractCode);
-//                                 $('#tract-settings-title').html('Settings:<br>'+tractSelect.availableTracts[tractCode].name);
-//                                 var min = 100*tractSelect.tractSettings[tractCode]["colormapMin"];
-//                                 var max = 100*tractSelect.tractSettings[tractCode]["colormapMax"];
-//                                 var opacity = 100*tractSelect.tractSettings[tractCode]["opacity"];
-//                                 $('#tract-prob-range-slider').slider('values', [min, max]);
-//                                 $('#tract-prob-range-min-handle').text(Math.floor(min));
-//                                 $('#tract-prob-range-max-handle').text(Math.floor(max));
-//                                 $('#tract-opacity-slider').slider('value', opacity);
-//                                 $('#tract-opacity-slider-handle').text(Math.floor(opacity));
-//                                 
-//                                 // position menu at settings button or mouse click?
-//                                 var buttonOffset = $('#'+tractCode+' > #tract-settings').offset();
-//                                 settingsMenu.show(); // show before setting offset as can't set offset of hidden elements
-//                                 settingsMenu.offset({top: buttonOffset.top - settingsMenu.height(), left: buttonOffset.left - 30});
-//                                 
-//                                 tractSelect.tractSettingsVisible = true;
-//                             }
-//                         });
-//                         
-//                         $('#'+tractCode+'-colormap-indicator').on('click', {tractCode:tractCode}, function(event) {
-//                             if (!tractSelect.selectedTracts[tractCode].disabled) {
-//                                 // hide first in case colormap-select is already open for another tract
-//                                 $('#colormap-select').hide();
-//                                 
-//                                 // work out position of colormap indicator for current tract
-//                                 var indicatorPos = $('#'+event.data.tractCode+'-colormap-indicator').position();
-//                                 $('#colormap-select').css('top', indicatorPos.top);
-//                                 $('#colormap-select').css('left', indicatorPos.left - 6);
-//                                 
-//                                 // attach selected tract code to colormap select
-//                                 $('#colormap-select').data('tractCode', event.data.tractCode);
-//                                 // show colormap select
-//                                 $('#colormap-select').show('blind');
-//                             }
-//                         });
+                         $('#run-lesion-analysis-button').html('Run Analysis');
                         
                     }
                     _parent.renderers.resetSlicesForDirtyFiles();
