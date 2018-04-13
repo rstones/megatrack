@@ -564,6 +564,9 @@ def lesion_analysis(lesion_code, threshold):
     tracts = Tract.query.filter(~Tract.code.like('%_R%') & ~Tract.code.like('%_L%')).all() # ~ negates the like
     check_lesion_tract_overlaps(tracts)
     
+    # sort tracts by overlap score (highest to lowest)
+    intersecting_tracts = sorted(intersecting_tracts, key=lambda tract: tract["overlapScore"])[::-1]
+    
     return make_response(jsonify(intersecting_tracts)), 200
 
 @megatrack.route('/_test_viewer')
