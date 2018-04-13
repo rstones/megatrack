@@ -208,3 +208,21 @@
 #post-upload-message {
     margin-top: 20px;
 }
+
+#lesion-analysis-running {
+    width: 435px;
+    height: 200px;
+    z-index: 1;
+    background: lightgrey;
+    opacity: 0.4;
+    display: none;
+    position: relative;
+    top: -200px;
+}
+
+.lesion-analysis-running-loading-gif {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}

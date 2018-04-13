@@ -92,8 +92,8 @@ mgtrk.LesionMapping = (function() {
                                         +'</div>'
                                         +'<div class="clear"></div>'
                                         +'<hr>'
-                                        +'<div id="'+lesionMapping.tractTableContainerId+'">'
-                                        +'</div>'
+                                        +'<div id="'+lesionMapping.tractTableContainerId+'"></div>'
+                                        +'<div id="lesion-analysis-running"><div class="loading-gif lesion-analysis-running-loading-gif"></div></div>'
                                         +'<div id="lesion-upload-popup"></div>'
                                         +'<div id="lesion-upload-popup-background-screen"></div>'
                                     +'</div>');
@@ -251,14 +251,13 @@ mgtrk.LesionMapping = (function() {
         });
         
         let lesionAnalysisButton = $('#run-lesion-analysis-button');
-        //lesionAnalysisButton.addClass('run-lesion-analysis-button-disabled');
         lesionAnalysisButton.on('click', function(event) {
         
             if (lesionAnalysisButton.hasClass('button')) {
                 // get current query from queryBuilder
                 const currentQuery = _parent.currentQuery;
                  
-                //lesionAnalysisButton.html('<div class="loading-gif"></div>');
+                $('#lesion-analysis-running').show();
                  
                 $.ajax({
                     url: '/megatrack/lesion_analysis/' + lesionMapping.currentLesionCode + '/25?' + $.param(currentQuery),
@@ -290,7 +289,7 @@ mgtrk.LesionMapping = (function() {
                              
                              tractTable.addRow(settings);
                              
-                             //$('#run-lesion-analysis-button').html('Run Analysis');
+                             $('#lesion-analysis-running').hide();
                             
                         }
                         _parent.renderers.resetSlicesForDirtyFiles();
