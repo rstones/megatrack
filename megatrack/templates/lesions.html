@@ -3,13 +3,14 @@
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/query-builder.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesion-mapping.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tract-select.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesion-mapping.css') }}">
   
   <link rel="stylesheet" href="{{ url_for('static', filename='external/jquery-ui.css') }}">
   <script src="{{ url_for('static', filename='external/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='external/jquery-ui.js') }}"></script>
   <script src="{{ url_for('static', filename='external/colormaps.js') }}"></script>
+  <script src="{{ url_for('static', filename='external/plotly-cartesian.min.js') }}"></script>
   
   <!--<script src="{{ url_for('static', filename='X/utils/xtk.js') }}"></script> -->
   <script src="{{ url_for('static', filename='X/lib/google-closure-library/closure/goog/base.js') }}"></script>
@@ -17,7 +18,6 @@
   <script>goog.require('X.renderer2D'); goog.require('X.volume'); goog.require('X.renderer3D'); goog.require('X.fibers');</script>
   
   <script src="{{ url_for('static', filename='js/Colormaps.js') }}"></script>
-  <!-- <script src="{{ url_for('static', filename='js/TractSelect.js') }}"></script> -->
   <script src="{{ url_for('static', filename='js/QueryBuilder.js') }}"></script>
   <script src="{{ url_for('static', filename='js/View.js') }}"></script>
   <script src="{{ url_for('static', filename='js/Renderers.js') }}"></script>

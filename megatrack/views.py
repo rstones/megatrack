@@ -384,6 +384,7 @@ import os
 import numpy.linalg as npla
 import numpy.ma as ma
 import datetime
+import megatrack.lesion_utils as lu
 
 ALLOWED_EXTENSIONS = ['nii.gz']
 
@@ -568,6 +569,41 @@ def lesion_analysis(lesion_code, threshold):
     intersecting_tracts = sorted(intersecting_tracts, key=lambda tract: tract["overlapScore"])[::-1]
     
     return make_response(jsonify(intersecting_tracts)), 200
+
+@megatrack.route('/lesion_tract_disconnect/<lesion_code>/<tract_code>')
+def lesion_tract_disconnect(lesion_code, tract_code):
+    # get the request query
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    if not len(subject_ids_dataset_path):
+        return 'No subjects in dataset query', 400
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    
+    lesion_upload = LesionUpload.query.get(lesion_code)
+    tract = Tract.query.get(tract_code)
+    
+    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+    
+    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    
+    percent_disconnect = []
+    for subject_id, dataset_dir in subject_ids_dataset_path:
+        file_path = du.file_path(data_dir, dataset_dir, tract.file_path, subject_id, 'MNI', tract_code, 'trk')
+        percent_disconnect.append(lu.calculate_tract_disconnection(file_path, lesion_data))
+        
+    average_disconnect = np.mean(percent_disconnect)
+    std_disconnect = np.std(percent_disconnect)
+    histogram = np.histogram(percent_disconnect, bins=4, range=(0,100))
+    
+    response_object = {
+                        'averageDisconnect': average_disconnect,
+                        'stdDisconnect': std_disconnect,
+                        'histogram': histogram[0].tolist(),
+                        'percentDisconnect': percent_disconnect
+                        }
+    
+    return make_response(jsonify(response_object)), 200
 
 @megatrack.route('/_test_viewer')
 def _test_viewer():

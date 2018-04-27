@@ -237,14 +237,13 @@
 }
 
 #lesion-analysis-running {
-    width: 435px;
+    width: 485px;
     height: 200px;
     z-index: 1;
     background: lightgrey;
     opacity: 0.4;
     display: none;
     position: relative;
-    top: -200px;
 }
 
 .lesion-analysis-running-loading-gif {
@@ -252,4 +251,83 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%,-50%);
+}
+
+#tract-table-wrapper {
+    width: 500px;
+    height: 200px;
+    overflow-y: scroll;
+    float: left;
+}
+
+#tract-table {
+    width: 485px;
+    /*height: 200px;*/
+    /*background: lightgrey;*/
+    /*border-collapse: collapse;*/
+    border-spacing: 0;
+}
+
+#disconnect-info-wrapper {
+    width: 170px;
+    height: 180px;
+    float: left;
+    margin-left: 10px;
+    padding: 5px;
+}
+
+#disconnect-title {
+
+}
+
+.disconnect-title {
+    font-size: 90%;
+    text-align: left;
+}
+
+#disconnect-info {
+    text-align: left;
+}
+
+#disconnect-info-loading {
+    width: 100%;
+    height: 100%;
+    background: lightgrey;
+    opacity: 0.4;
+    position: relative;
+}
+
+.disconnect-info-loading-gif {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+#disconnect-stats-popup {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px lightgrey;
+    width: 400px;
+    height: 580px;
+    background: white;
+    top: 100px;
+    /*left: 300px;*/
+    z-index: 10;
+    position: fixed;
+    padding: 15px;
+}
+
+#disconnect-stats-title {
+    float: left;
+    width: 50%;
+    text-align: left;
+    margin-bottom: 20px;
+    font-size: 110%;
+}
+
+#disconnect-stats-close {
+    float: right;
+    width: 10%;
+    margin-top: 5px;
 }
