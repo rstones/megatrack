@@ -1,12 +1,6 @@
 import numpy as np
 import nibabel as nib
 from nibabel.streamlines.trk import TrkFile
-import megatrack.data_utils as du
-
-
-# given a lesion, a tract code and a query I want to return the average % disconnection
-# of the tract over all subjects in the query as well as a histogram showing the number
-# of subjects with certain ranges of % disconnection (eg. 0-25%, 25-50%, 50-75%, 75-100%)
 
 def calculate_tract_disconnection(trk_file_path, lesion):
     ''' Calculates the percent disconnection of tract defined in trk_file_path 
@@ -29,8 +23,9 @@ def calculate_tract_disconnection(trk_file_path, lesion):
         start_indices.append((start_indices[i-1] if start_indices else 0) + len(streamline))
     
     # concatenate the streamline coords, floor then cast to int
-    # scale the streamline coords by 0.5 for now since they are in 1mm voxel space and we are comparing to 2mm voxel lesion
-    coords = np.floor(0.5 * np.vstack(streamlines)).astype('int16')
+    # first shift the streamline coords by 0.5 voxel to account for the default shift in nibabel
+    # then scale the streamline coords by 0.5 since they are in 1mm voxel space and we are comparing to 2mm voxel lesion
+    coords = np.floor(0.5 * (np.vstack(streamlines)+0.5)).astype('int16')
     
     # get value of lesion voxels at streamline coords
     overlap = lesion[coords[:,0], coords[:,1], coords[:,2]]
