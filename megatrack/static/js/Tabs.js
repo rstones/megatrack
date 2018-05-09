@@ -39,7 +39,7 @@ mgtrk.Tabs = (function() {
         Tabs.currentTabId = '';
         
         // insert DOM elements for general header and contents section
-        $(`#${_parent.tabsContainer}`).append(`<div id="tabs-wrapper">
+        $(`#${_parent.tabsContainerId}`).append(`<div id="tabs-wrapper">
                                                 <div id="tabs-header"></div>
                                                 <div id="tabs-contents"></div>
                                              </div>`);
@@ -48,7 +48,7 @@ mgtrk.Tabs = (function() {
         const tabsCacheKeys = Object.keys(Tabs.cache);
         for (let i=0; i<tabsCacheKeys.length; i++) {
             const state = Tabs.cache[tabsCacheKeys[i]];
-            Tabs.addRow(tabsCacheKeys[i], templates.header, templates.content, state);
+            Tabs.addTab(tabsCacheKeys[i], templates.header, templates.content, state);
         }
         
         // make first tab on the list visible
@@ -59,16 +59,17 @@ mgtrk.Tabs = (function() {
         return tabs;
     };
     
-    Tabs.addTab = (id, headerTemplate, contentTemplate, state) => {
+    Tabs.addTab = (id, headerTemplate, insertContent, state) => {
         // add elements to DOM (tab header)
-        $('#tabs-header').append(`<div id="${id}-tab-header"></div>`);
+        $('#tabs-header').append(`<div id="${id}-tab-header" class="tab-header clickable"></div>`);
         $(`#${id}-tab-header`).html(headerTemplate(state));
         // have an event handler for clicks on the tab to display the contents
         $(`#${id}-tab-header`).on('click', function(event) {
             Tabs.selectTab(id);
         });
         // add content template to cache
-        $('#tabs-contents').append(`<div id="${id}-tab-contents">${contentTemplate(state)}</div>`);
+        //$('#tabs-contents').append(`<div id="${id}-tab-contents">${contentTemplate(state)}</div>`);
+        insertContent(state, `${id}-tab-contents`, 'tabs-contents');
         $(`#${id}-tab-contents`).hide();
         
         // need some logic to decide on when to start scrolling the tab header if there are lots of tabs open
@@ -86,6 +87,7 @@ mgtrk.Tabs = (function() {
         $(`#${id}-tab-contents`).show();
         Tabs.selectedTabId = id; 
         // change the tab header style to selected
+        $('.tab-header').removeClass('tab-header-selected');
         $(`#${id}-tab-header`).toggleClass('tab-header-selected');
         // add icons like remove or toggle to the header
         // do I only want them visible when tab is selected?

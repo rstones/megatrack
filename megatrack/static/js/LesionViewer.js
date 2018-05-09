@@ -90,7 +90,7 @@ mgtrk.LesionViewer = (function() {
         viewContainer.append('<div id="coronal-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="sagittal-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="axial-panel" class="viewer-panel"></div>');
-        viewContainer.append('<div id="view-container-title">MegaTrack Lesion Mapping</div>');
+        viewContainer.append('<div id="view-container-title">MegaTrack Lesion Analysis</div>');
         //$('#view-container div').addClass('viewer-panel');
         container.append('<div class="clear"></div>');
         container.append('<div id="'+lesionViewer.queryBuilderId+'"></div>');

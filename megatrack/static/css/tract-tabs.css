@@ -1,0 +1,135 @@
+#tabs-header {
+    height: 30px;
+    border-bottom: 1px solid lightgrey;
+}
+
+.tab-header {
+    height: 22px;
+    width: 200px;
+    border-top: 1px solid lightgrey;
+    border-left: 1px solid lightgrey;
+    border-right: 1px solid lightgrey;
+    border-radius: 5px 5px 0 0;
+    padding: 4px;
+    float: left;
+    background-color: #ebebe0;
+}
+
+.tab-header:hover {
+    background-color: #e1e1d0;
+}
+
+.tab-header-selected {
+    background-color: white;
+}
+
+.tab-header-selected:hover {
+    background-color: white;
+}
+
+.tab-header-color-swatch {
+    width: 16px;
+    height: 16px;
+    background: red;  
+    border: 1px solid grey;
+    border-radius: 3px;
+    float: left;
+}
+
+.tab-header-tract-name {
+    width: 150px;
+    float: left;
+    text-overflow: ellipsis;
+    height: 22px;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 5px;
+    padding-top: 2px;
+    text-align: left;
+    font-size: 90%;
+}
+
+.tab-header-remove-icon {
+    float: left;
+}
+
+#tabs-contents {
+    height: 170px;
+    border-left: 1px solid lightgrey;
+    border-right: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    border-radius: 0 0 5px 5px;
+}
+
+.tract-contents {
+    height: 100%;
+}
+
+.tab-content-renderer-controls {
+    width: 30%;
+    height: 90%;
+    margin: 10px;
+    float: left;
+}
+
+.tab-content-tract-info {
+    width: 30%;
+    height: 90%;
+    margin: 10px;
+    float: left;
+    border-left: 1px solid lightgrey;
+    border-right: 1px solid lightgrey;
+}
+
+.tab-content-tract-disconnection {
+    width: 30%;
+    height: 90%;
+    margin: 10px;
+    float: left;
+}
+
+.tract-slider {
+    height: 8px !important;
+}
+
+.tract-slider-handle {
+    font-size: small;
+    width: 1.9em !important;
+    text-align: center;
+    top: -0.4em !important;
+}
+
+.tract-control-wrapper {
+    margin-bottom: 10px;
+    margin-left: 10px;
+    margin-right: 30px;
+}
+
+.tract-control-label {
+    font-size: 80%;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.download-button {
+    width: 40%;
+    float: left;
+    margin-top: 5px;
+    margin-left: 10px;
+    font-size: 80%;
+}
+
+.info-button {
+    width: 40%;
+    float: right;
+    margin-top: 5px;
+    margin-right: 10px;
+    font-size: 80%;
+}
+
+
+
+
+
+
+

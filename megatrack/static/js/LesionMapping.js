@@ -16,6 +16,7 @@ mgtrk.LesionMapping = (function() {
         
         const containerId = _parent.lesionAnalysisId;
         lesionMapping.tractTableContainerId = 'tract-table-wrapper';
+        lesionMapping.tractTabsContainerId = 'tract-tabs-container';
         
         _parent.colormaps.createLesionColormapClass(true);
         
@@ -34,7 +35,7 @@ mgtrk.LesionMapping = (function() {
                                         +'</div>'
                                         +'<div class="clear"></div>'
                                         +'<hr>'
-                                        +'<div id="'+lesionMapping.tractTableContainerId+'"></div>'
+                                        +'<div id="'+lesionMapping.tractTabsContainerId+'"></div>'
                                         +'<div id="disconnect-info-wrapper"></div>'
                                         +'<div id="lesion-analysis-running"><div class="loading-gif lesion-analysis-running-loading-gif"></div></div>'
                                         +'<div id="lesion-upload-popup"></div>'
@@ -43,10 +44,18 @@ mgtrk.LesionMapping = (function() {
                                     +'</div>');
                                     
         //lesionMapping.colormaps = _parent.colormaps;
-        const TractTable = mgtrk.TractTable;
-        const tractTableRowComponents = [TractTable.RowTitle, TractTable.RowColormapSelect, TractTable.RowSettings, TractTable.RowDownload, TractTable.RowDisconnect, TractTable.RowValue];
-        const tractTable = TractTable.init(lesionMapping, tractTableRowComponents);
-        lesionMapping.tractTable = tractTable;
+//         const TractTable = mgtrk.TractTable;
+//         const tractTableRowComponents = [TractTable.RowTitle, TractTable.RowColormapSelect, TractTable.RowSettings, TractTable.RowDownload, TractTable.RowDisconnect, TractTable.RowValue];
+//         const tractTable = TractTable.init(lesionMapping, tractTableRowComponents);
+//         lesionMapping.tractTable = tractTable;
+        
+        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {'AFLONG_L': {tractName: 'Arcuate fasiculus long',
+                                                                                    code: 'AFLONG_L',
+                                                                                    opacity: 1,
+                                                                                    colormapMin: 0.25,
+                                                                                    colormapMax: 1,
+                                                                                    color: 'red'},
+                                                                    'FAT_L': {'tractName': 'Frontal aslant tract'}}, function(event) {});
         
         // will store the disconnection data for each tract
         // needs emptying when query or lesion changes
