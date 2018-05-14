@@ -587,20 +587,30 @@ def lesion_tract_disconnect(lesion_code, tract_code):
     
     lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
     
-    percent_disconnect = []
+    num_streamlines_per_subject = []
+    disconnected_streamlines_per_subject = []
+    percent_disconnect_per_subject = []
     for subject_id, dataset_dir in subject_ids_dataset_path:
         file_path = du.file_path(data_dir, dataset_dir, tract.file_path, subject_id, 'MNI', tract_code, 'trk')
-        percent_disconnect.append(lu.calculate_tract_disconnection(file_path, lesion_data))
+        num_streamlines, disconnected_streamlines, percent_disconnect = lu.calculate_tract_disconnection(file_path, lesion_data)
+        num_streamlines_per_subject.append(num_streamlines)
+        disconnected_streamlines_per_subject.append(disconnected_streamlines)
+        percent_disconnect_per_subject.append(percent_disconnect)
         
-    average_disconnect = np.mean(percent_disconnect)
-    std_disconnect = np.std(percent_disconnect)
-    histogram = np.histogram(percent_disconnect, bins=4, range=(0,100))
+    average_disconnect = np.mean(percent_disconnect_per_subject)
+    std_disconnect = np.std(percent_disconnect_per_subject)
+    histogram = np.histogram(percent_disconnect_per_subject, bins=4, range=(0,100))
+    
+    average_num_streamlines = np.mean(num_streamlines_per_subject)
+    average_disconnected_streamlines = np.mean(disconnected_streamlines_per_subject)
     
     response_object = {
                         'averageDisconnect': average_disconnect,
                         'stdDisconnect': std_disconnect,
                         'histogram': histogram[0].tolist(),
-                        'percentDisconnect': percent_disconnect
+                        'percentDisconnect': percent_disconnect_per_subject,
+                        'averageNumStreamlines': average_num_streamlines,
+                        'averageDisconnectedStreamlines': average_disconnected_streamlines
                         }
     
     return make_response(jsonify(response_object)), 200

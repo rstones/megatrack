@@ -8,9 +8,6 @@ mgtrk.LesionTractTabs = (function() {
     const LesionTractTabs = {};
     
     LesionTractTabs.init = (_parent, initState, tabSelectHandler) => {
-        //var lesionTractTabs = {};
-        
-        //<!--<div id="tab-content-tract-title">${state.tractName}</div>-->
         
         // define the tab contents template of the LesionTractTabs then add the TractTabs object
         const contentTemplate = function(state, wrapperId, contentsId) {
@@ -41,16 +38,24 @@ mgtrk.LesionTractTabs = (function() {
                                         <div id="${state.code}-info-button" class="info-button button clickable">View info</div>
                                     </div>
                                 </div>
-                                <div class="tab-content-tract-info">
+                                <!--<div class="tab-content-tract-info">
                                     <div id=""overlap-score>Overlap score:</div>
-                                </div>
+                                </div>-->
                                 <div class="tab-content-tract-disconnection">
-                                    <div class="button clickable">Calculate tract disconnection</div>
+                                    <div id="${state.code}-disconnect-results" class="disconnect-results">
+                                        <span style="font-size: 110%">Overlap score: </span> ${state.overlapScore.toFixed(2)}<br><br>
+                                    </div>
+                                    <div id="${state.code}-disconnect-histogram-wrapper" class="disconnect-histogram-wrapper">
+                                        <div id="${state.code}-run-disconnect-button" class="run-disconnect-button button clickable">Calculate tract disconnection</div>    
+                                    </div>
                                 </div>
-                                <ul id="${state.code}-colormap-select"></ul>
+                                <ul id="${state.code}-colormap-select" class="colormap-select"></ul>
                             </div>`;
                             
             $(`#${contentsId}`).append(template);
+            
+            // show init color in colormap select
+            $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`); 
             
             // add sliders to appropriate divs with init settings
             var probRangeMinHandle = $(`#${state.code}-prob-range-min-handle`);
@@ -106,10 +111,10 @@ mgtrk.LesionTractTabs = (function() {
             Fire 'populate-colormap-select' event here so the following loop can move to AtlasViewer factory function?
             */
             for (let key in _parent._parent.colormaps.colormaps) {
-                $(`#${state.code}-colormap-select`).append('<div id="'+key+'-colormap-select-item" class="colormap-select-item clickable '+key+'-colormap">&nbsp&nbsp&nbsp</div>');
-                $('#'+key+'-colormap-select-item').on('click', {color: key}, function(event) {
+                $(`#${state.code}-colormap-select`).append(`<div id="${state.code}-${key}-colormap-select-item" class="colormap-select-item clickable ${key}-colormap">&nbsp&nbsp&nbsp</div>`);
+                $(`#${state.code}-${key}-colormap-select-item`).on('click', {color: key}, function(event) {
                     // fetch selected tract code from colormap select
-                    const tractCode = $('#colormap-select').data('tractCode');
+                    const tractCode = state.code;
                     const colormapMax = state.colormapMax;
                     const colormapMin = state.colormapMin;
                     const opacity = state.opacity;
@@ -120,8 +125,11 @@ mgtrk.LesionTractTabs = (function() {
                     if (oldColor != color) {
                         state.color = color;
                         $(document).trigger('colormap:change', [state]);
-                        $('#'+tractCode+'-colormap-indicator').removeClass(oldColor+'-colormap');
-                        $('#'+tractCode+'-colormap-indicator').addClass(color+'-colormap'); 
+                        $(`#${tractCode}-colormap-indicator`).removeClass(oldColor+'-colormap');
+                        $(`#${tractCode}-colormap-indicator`).addClass(color+'-colormap');
+                        
+                        $(`#${tractCode}-tab-header > .tab-header-color-swatch`).removeClass(oldColor+'-colormap');
+                        $(`#${tractCode}-tab-header > .tab-header-color-swatch`).addClass(color+'-colormap');
                     }
                 });
             }
@@ -131,14 +139,23 @@ mgtrk.LesionTractTabs = (function() {
                 const tractCode = event.data.tractCode;
                 // work out position of colormap indicator for current tract
                 const indicatorPos = $(`#${tractCode}-colormap-indicator`).position();
-                $(`#${tractCode}-colormap-select`).css('top', indicatorPos.top);
-                $(`#${tractCode}-colormap-select`).css('left', indicatorPos.left - 6);
+                const indicatorOffset = $(`#${tractCode}-colormap-indicator`).offset();
+                const colormapSelect = $(`#${tractCode}-colormap-select`);
                 
-                // attach selected tract code to colormap select
-                $(`#${tractCode}-colormap-select`).data('tractCode', event.data.tractCode);
+                console.log(indicatorOffset);
+                console.log(colormapSelect.height());
+                console.log(indicatorPos);
+                
+                if ((indicatorOffset.top - $(window).scrollTop()) + colormapSelect.height() + 20 > $(window).height()) {
+                    colormapSelect.css('top', indicatorPos.top - colormapSelect.height());
+                } else{
+                    colormapSelect.css('top', indicatorPos.top);
+                }
+                colormapSelect.css('left', indicatorPos.left - 6);
                 
                 // show colormap select
-                $(`#${tractCode}-colormap-select`).show('blind');
+                colormapSelect.show('blind');
+                //$(`#${tractCode}-colormap-select`).css('display', 'block');
             });
             
             $(document).on('click', function(event) {
@@ -150,14 +167,87 @@ mgtrk.LesionTractTabs = (function() {
             $(window).resize(function() {
                 $(`#${state.code}-colormap-select`).hide();
             });
-          
+            
+            $(`#${state.code}-download-button`).on('click', function(event) {
+                event.preventDefault();
+                window.location.href = `tract/${state.code}?${$.param(_parent._parent.currentQuery)}&file_type=.nii.gz`;
+            });
+            
+            $(`#${state.code}-info-button`).on('click', function(event) {
+                event.preventDefault();
+                
+            });
+            
+            $(`#${state.code}-run-disconnect-button`).on('click', function(event) {
+                event.preventDefault();
+                $(`#${state.code}-run-disconnect-button`).append('&nbsp<div class="loading-gif"></div>');
+                $.ajax({
+                    url: `/megatrack/lesion_tract_disconnect/${_parent.currentLesionCode}/${state.code}?${$.param(_parent._parent.currentQuery)}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    //data: {lesionCode: lesionMapping.currentLesionCode},
+                    success: function(data) {
+                        $(`#${state.code}-run-disconnect-button`).remove();
+                        $(`#${state.code}-disconnect-results`).append(
+                            `<span style="font-size: 110%">Disconnection results</span><br>
+                            Average num. streamlines: ${Math.round(data.averageNumStreamlines)}<br>
+                            Av. disconnected streamlines: ${Math.round(data.averageDisconnectedStreamlines)}<br>
+                            Av. % disconnection: ${data.averageDisconnect.toFixed(2)}%`
+                        );
+                    
+                        // display info
+                        const trace = {
+                            x: data.percentDisconnect,
+                            marker: {
+                                color: "rgba(0, 0, 255, 1)",
+                                line: {
+                                    color: "rgba(100, 100, 100, 1)",
+                                    width: 1
+                                }
+                            },
+                            type: 'histogram',
+                            xbins: {
+                                start: 0.0,
+                                end: 100.0,
+                                size: 5.0
+                            }
+                        };
+                        const layout = {
+                            bargap: 0.05,
+                            xaxis: {title: "% disconnection", dtick: 25},
+                            yaxis: {title: "Num subjects"},
+                            margin: {
+                                l: 30,
+                                r: 10,
+                                b: 30,
+                                t: 0
+                            }
+                        };
+                        Plotly.newPlot(`${state.code}-disconnect-histogram-wrapper`, [trace], layout, {staticPlot: true});
+                        
+                        // add data to cache
+//                             disconnectDataCache[tractCode] = {
+//                                 lesionCode: lesionMapping.currentLesionCode,
+//                                 query: currentQuery,
+//                                 data: data,
+//                                 name: tractName
+//                             }
+                    }
+                });
+            });
         };
-        
-        
         
         const lesionTractTabs = mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler);
         
+        lesionTractTabs.addTab = (state) => {
+            lesionTractTabs._addTab(state.code, lesionTractTabs.templates.header, lesionTractTabs.templates.content, state);
+        };
+        
         return lesionTractTabs;
+    };
+    
+    LesionTractTabs.newTab = (state) => {
+        LesionTractTabs.addTab(state.tractCode, LesionTractTabs.templates.header, LesionTractTabs.templates.content, state);
     };
     
     return LesionTractTabs;

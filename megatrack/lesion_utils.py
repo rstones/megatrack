@@ -14,7 +14,7 @@ def calculate_tract_disconnection(trk_file_path, lesion):
         trk = TrkFile.load(trk_file_path)
     except:
         print('Error during lesion analysis when loading file: ', trk_file_path)
-        return 0
+        return 0, 0, 0
     streamlines = trk.tractogram.streamlines # ArraySequence
     
     # get the start indices of each set of streamline coords if they were to be concatenated 
@@ -36,5 +36,8 @@ def calculate_tract_disconnection(trk_file_path, lesion):
     # see if streamlines pass through lesion
     overlap = np.array([np.any(i) for i in overlap])
     
-    return 100 * (np.count_nonzero(overlap) / len(streamlines))
+    num_streamlines = len(streamlines)
+    disconnected_streamlines = np.count_nonzero(overlap)
+    
+    return num_streamlines, disconnected_streamlines, 100 * (disconnected_streamlines / num_streamlines)
 

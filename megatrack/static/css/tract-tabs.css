@@ -82,10 +82,11 @@
 }
 
 .tab-content-tract-disconnection {
-    width: 30%;
+    width: 63%;
     height: 90%;
     margin: 10px;
     float: left;
+    border-left: 1px solid lightgrey;
 }
 
 .tract-slider {
@@ -111,10 +112,29 @@
     text-align: left;
 }
 
+.colormap-select {
+    position: absolute;
+    width: 170px;
+    height: 86px;
+    background: grey;
+    border: 1px solid lightgrey;
+    padding: 5px;
+    border-radius: 5px;
+    opacity: 0.9;
+    z-index: 5;
+}
+
+.colormap-select-item {
+    width: 167px;
+    height: 12px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+}
+
 .download-button {
     width: 40%;
     float: left;
-    margin-top: 5px;
     margin-left: 10px;
     font-size: 80%;
 }
@@ -122,9 +142,31 @@
 .info-button {
     width: 40%;
     float: right;
-    margin-top: 5px;
     margin-right: 10px;
     font-size: 80%;
+}
+
+.run-disconnect-button {
+    font-size: 80%;
+    width: 200px;
+    margin-left: 10px;
+}
+
+.disconnect-results {
+    float: left;
+    height: 100%;
+    width: 47%;
+    margin-left: 10px;
+    font-size: 80%;
+    text-align: left;
+    line-height: 20px;
+}
+
+.disconnect-histogram-wrapper {
+    float: left;
+    height: 100%;
+    width: 48%;
+    margin-left: 10px;
 }
 
 

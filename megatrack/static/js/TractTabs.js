@@ -9,11 +9,13 @@ mgtrk.TractTabs = (function() {
         //var tractTabs = {};
         
         const templates = {
-            header: function(state) {
+            header: function(state, wrapperId) {
                 // eventually the state object might define whether to use remove icon or toggle
-                return `<div class="tab-header-color-swatch"></div>
-                        <div class="tab-header-tract-name" title="${state.tractName}">${state.tractName}</div>
-                        <div class="tab-header-remove-icon clickable"></div>`;
+                $(`#${wrapperId}`).append(`<div class="tab-header-color-swatch"></div>
+                                    <div class="tab-header-tract-name" title="${state.name}">${state.name}</div>
+                                    <div class="tab-header-remove-icon clickable"></div>`);
+                // add init color to header color swatch
+                 $(`#${state.code}-tab-header > .tab-header-color-swatch`).addClass(`${state.color}-colormap`);
             },
             content: contentTemplate
         };

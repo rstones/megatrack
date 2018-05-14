@@ -49,13 +49,7 @@ mgtrk.LesionMapping = (function() {
 //         const tractTable = TractTable.init(lesionMapping, tractTableRowComponents);
 //         lesionMapping.tractTable = tractTable;
         
-        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {'AFLONG_L': {tractName: 'Arcuate fasiculus long',
-                                                                                    code: 'AFLONG_L',
-                                                                                    opacity: 1,
-                                                                                    colormapMin: 0.25,
-                                                                                    colormapMax: 1,
-                                                                                    color: 'red'},
-                                                                    'FAT_L': {'tractName': 'Frontal aslant tract'}}, function(event) {});
+        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {}, function(event) {});
         
         // will store the disconnection data for each tract
         // needs emptying when query or lesion changes
@@ -153,7 +147,9 @@ mgtrk.LesionMapping = (function() {
             
             $('#run-analysis-popup').hide();
             $('#popup-background-screen').hide();
-            $('#lesion-analysis-running').show();
+            //$('#lesion-analysis-running').show();
+            
+            $('#run-analysis-button').append('<div class="loading-gif"></div>')
             
             const threshold = $('#run-analysis-popup-prob-threshold-slider').slider('option', 'value');
             
@@ -163,8 +159,10 @@ mgtrk.LesionMapping = (function() {
                 dataType: 'json',
                 //data: {lesionCode: lesionMapping.currentLesionCode},
                 success: function(data) {
+                    $('#run-analysis-button > .loading-gif').remove();
                     // clear tract table and current tract labelmaps
-                    tractTable.clear();
+                    //tractTable.clear();
+                    tractTabs.removeAll();
                     _parent.clearTracts();
                      
                     const dataLen = data.length;
@@ -173,6 +171,7 @@ mgtrk.LesionMapping = (function() {
                         const tractName = data[i].tractName;
                         const color = Object.keys(_parent.colormaps.colormaps)[Math.floor(Math.random()*_parent.colormaps.numColormaps)];
                         const settings = {
+                                            id: tractCode,
                                             name: tractName,
                                             code: tractCode,
                                             overlapScore: data[i].overlapScore,
@@ -183,117 +182,18 @@ mgtrk.LesionMapping = (function() {
                                             opacity: _parent.colormaps.initColormapOpacity,
                                             colormapMinUpdate: 0,
                                             currentQuery: currentQuery,
-                                            callbacks: {
-                                                'disconnect': function(event) {
-                                                
-                                                                var displayDisconnectData = function(tractName, data) {
-                                                                    $('#disconnect-info-wrapper').html(
-                                                                        '<div id="disconnect-title" class="disconnect-title">Streamline disconnection:</div>'
-                                                                        +'<div id="disconnect-tract-name" class="disconnect-title">'+tractName+'</div>'
-                                                                        +'<br>'
-                                                                        +'<div id="disconnect-info">Average disconnection: '+Math.round(data.averageDisconnect)+' % of streamlines</div>'
-                                                                        //+'<div>Std disconnection: '+data.stdDisconnect+' %</div>'
-                                                                        +'<br>'
-                                                                        +'<div id="disconnect-stats-button" class="button clickable">View statistics</div>'
-                                                                        +'<div id="disconnect-stats-popup">'
-                                                                            +'<div id="disconnect-stats-title">Streamline disconnection statistics</div>'
-                                                                            +'<div id="disconnect-stats-close" class="remove-icon clickable"></div>'
-                                                                            +'<div class="clear"></div>'
-                                                                            +'<div>'+tractName+'</div><br>'
-                                                                            +'<div id="disconnect-histogram-wrapper"></div>'
-                                                                        +'</div>'
-                                                                    );
-                                                                    
-                                                                        const trace = {
-                                                                            x: data.percentDisconnect,
-                                                                            marker: {
-                                                                                color: "rgba(0, 0, 255, 1)",
-                                                                                line: {
-                                                                                    color: "rgba(100, 100, 100, 1)",
-                                                                                    width: 1
-                                                                                }
-                                                                            },
-                                                                            type: 'histogram',
-                                                                            xbins: {
-                                                                                start: 0.0,
-                                                                                end: 100.0,
-                                                                                size: 25.0
-                                                                            }
-                                                                        };
-                                                                        const layout = {
-                                                                            bargap: 0.05,
-                                                                            xaxis: {title: "% disconnection", dtick: 25},
-                                                                            yaxis: {title: "Num subjects"}
-                                                                        };
-                                                                        Plotly.newPlot('disconnect-histogram-wrapper', [trace], layout, {staticPlot: true});
-                                                                    
-                                                                    $('#disconnect-stats-popup').hide();
-                                                                    $('#disconnect-stats-button').on('click', function(event) {
-//                                                                         $('#popup-background-screen').show();
-//                                                                         $('#disconnect-stats-popup').show();
-                                                                        // dim the background
-                                                                        const backgroundScreen = $('#popup-background-screen');
-                                                                        backgroundScreen.show();
-                                                                        backgroundScreen.css('width', $(window).width());
-                                                                        backgroundScreen.css('height', $(window).height());
-                                                                        
-                                                                        const popup = $('#disconnect-stats-popup');
-                                                                        popup.show();
-                                                                        popup.css('left', ($(window).width()/2) - (popup.width()/2));
-                                                                    });
-                                                                    
-                                                                    $('#disconnect-stats-close').on('click', function(event) {
-                                                                        $('#disconnect-stats-popup').hide();
-                                                                        $('#popup-background-screen').hide();
-                                                                    });
-                                                                }
-                                                
-                                                                // check if required data for given tract/query/lesion is already
-                                                                // in cache before sending request 
-                                                                if (disconnectDataCache[tractCode]
-                                                                        && disconnectDataCache[tractCode].lesionCode === lesionMapping.currentLesionCode
-                                                                        && disconnectDataCache[tractCode].query === currentQuery) {
-                                                                    // update disconnect-info-wrapper
-                                                                    displayDisconnectData(disconnectDataCache[tractCode].name, disconnectDataCache[tractCode].data);
-                                                                } else{
-                                                                    // display loading gif first
-                                                                    $('#disconnect-info-wrapper').html('<div id="disconnect-info-loading">'
-                                                                                                            +'<div class="loading-gif disconnect-info-loading-gif"></div>'
-                                                                                                        +'</div>');
-                                                                    
-                                                                    $.ajax({
-                                                                        url: '/megatrack/lesion_tract_disconnect/' + lesionMapping.currentLesionCode + '/'+tractCode+'?' + $.param(currentQuery),
-                                                                        method: 'GET',
-                                                                        dataType: 'json',
-                                                                        //data: {lesionCode: lesionMapping.currentLesionCode},
-                                                                        success: function(data) {
-                                                                            console.log(data);
-                                                                            
-                                                                            // display info
-                                                                            displayDisconnectData(tractName, data);
-                                                                            
-                                                                            // add data to cache
-                                                                            disconnectDataCache[tractCode] = {
-                                                                                lesionCode: lesionMapping.currentLesionCode,
-                                                                                query: currentQuery,
-                                                                                data: data,
-                                                                                name: tractName
-                                                                            }
-                                                                        }
-                                                                    });
-                                                                }
-                                                            }
-                                            }
                                         };
                         _parent.labelmaps.tracts.push(settings);
                         const idx = _parent.findVolumeLabelmapIndex(tractCode);
                          _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
                          
-                         tractTable.addRow(settings);
+                         //tractTable.addRow(settings);
+                         tractTabs.addTab(settings);
                          
-                         $('#lesion-analysis-running').hide();
+                         //$('#lesion-analysis-running').hide();
                         
                     }
+                    tractTabs.selectTab(data[0].tractCode);
                     _parent.renderers.resetSlicesForDirtyFiles();
                 },
                 error: function(xhr) {
