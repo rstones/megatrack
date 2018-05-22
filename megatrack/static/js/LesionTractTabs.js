@@ -65,7 +65,7 @@ mgtrk.LesionTractTabs = (function() {
                 min: 0,
                 max: 100,
                 //step: 0.02,
-                values: [25,100],
+                values: [state.colormapMin*100,100],
                 create: function() {
                     probRangeMinHandle.text($(this).slider("values",0));
                     probRangeMaxHandle.text($(this).slider("values",1));

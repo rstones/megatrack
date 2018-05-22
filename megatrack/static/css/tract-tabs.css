@@ -169,6 +169,33 @@
     margin-left: 10px;
 }
 
+.tabs-scroll {
+    width: 20px;
+    height: 100%;
+    line-height: 23px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.tabs-scroll:hover {
+    background-color: #ebebe0;
+}
+
+.tabs-scroll-disabled {
+    color: rgb(180,180,180);
+}
+
+.tabs-scroll-disabled:hover {
+    background-color: white;
+}
+
+#tabs-left-scroll {
+    float: left;
+}
+
+#tabs-right-scroll {
+    float: right;
+}
 
 
 
