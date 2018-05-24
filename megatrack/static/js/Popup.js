@@ -26,15 +26,16 @@ mgtrk.Popup = (function() {
      * @param {String} containerId      The id of the element to insert the popup div into.
      * @param {String} popupId          The id of the popup.
      * @param {Function} insertContent  Function taking argument contentContainerId which inserts
-     *                                  content elements and sets up event listeners etc. 
+     *                                  content elements and sets up event listeners etc.
+     * @param {String} popupCls         CSS class for styling the popup.
      **/
-    Popup.init = (_parent, containerId, popupId, insertContent) => {
+    Popup.init = (_parent, containerId, popupId, insertContent, popupCls) => {
     
         // need something to control popup height/width. Or this can be done with css obvs.
     
         const popup = {};
         
-        $(`#${containerId}`).append(`<div id="${popupId}">
+        $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''}">
                                         <div id="${popupId}-close" class="popup-remove-icon clickable"></div>
                                         <div id="${popupId}-content"></div>
                                     </div>`);

@@ -173,9 +173,29 @@ mgtrk.LesionTractTabs = (function() {
                 window.location.href = `tract/${state.code}?${$.param(_parent._parent.currentQuery)}&file_type=.nii.gz`;
             });
             
+            var infoPopupContent = function(popupContentId) {
+                $(`#${popupContentId}`).append(`<div id="tract-info-overlay-title"></div>
+                                                <div id="tract-info-overlay-trk"></div>
+                                                <div id="tract-info-overlay-description"></div>
+                                                <div id="tract-info-overlay-citations"></div>`);
+                                                
+                tractSelect.trkRenderer = new X.renderer3D();
+                tractSelect.trkRenderer.container = 'tract-info-overlay-trk';
+                tractSelect.trkRenderer.config.PICKING_ENABLED = false;
+                tractSelect.trkRenderer.init();
+                tractSelect.trk = new X.fibers();
+                
+                $('#tract-info-overlay-close').on('click', function(event) {
+                    clearInterval(tractSelect.cameraMotion);
+                    $('#tract-info-overlay').hide();
+                });
+            };
+            
+            var infoPopup = mgtrk.Popup.init(lesionTractTabs, 'contentsId', `${state.code}-info-popup`, infoPopupContent, 'info-popup');
+            
             $(`#${state.code}-info-button`).on('click', function(event) {
                 event.preventDefault();
-                
+                infoPopup.open();
             });
             
             $(`#${state.code}-run-disconnect-button`).on('click', function(event) {
