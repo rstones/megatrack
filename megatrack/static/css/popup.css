@@ -1,0 +1,16 @@
+.popup-remove-icon {
+    width: 10px;
+    height: 10px;
+    position: relative;
+    top: -0.2em;
+    background: url("../images/remove-icon.png") 96% / 9px no-repeat;
+    float: right;
+}
+
+#popup-background-screen {
+    background-color: rgba(50, 50, 50, 0.5);
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    z-index: 9;
+}

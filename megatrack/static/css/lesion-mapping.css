@@ -134,13 +134,13 @@
     font-size: small;
 }
 
-#popup-background-screen {
+/*#popup-background-screen {
     background-color: rgba(50, 50, 50, 0.5);
     position: fixed;
     left: 0px;
     top: 0px;
     z-index: 9;
-}
+}*/
 
 #lesion-upload-popup {
     border: 1px solid lightgrey;
