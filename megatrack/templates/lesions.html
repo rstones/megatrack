@@ -1,38 +1,26 @@
 {% extends "base.html" %}
 {% block head %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/query-builder.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tract-select.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tract-tabs.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lesion-mapping.css') }}">
   
-  <link rel="stylesheet" href="{{ url_for('static', filename='external/jquery-ui.css') }}">
-  <script src="{{ url_for('static', filename='external/jquery.js') }}"></script>
-  <script src="{{ url_for('static', filename='external/jquery-ui.js') }}"></script>
-  <script src="{{ url_for('static', filename='external/colormaps.js') }}"></script>
-  <script src="{{ url_for('static', filename='external/plotly-cartesian.min.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/external/jquery-ui.min.css') }}">
+  <script src="{{ url_for('static', filename='js/external/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/external/jquery-ui.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/external/colormaps.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/external/plotly-cartesian.min.js') }}"></script>
   
-  <!--<script src="{{ url_for('static', filename='X/utils/xtk.js') }}"></script> -->
-  <script src="{{ url_for('static', filename='X/lib/google-closure-library/closure/goog/base.js') }}"></script>
-  <script src="{{ url_for('static', filename='X/xtk-deps.js') }}"></script>
-  <script>goog.require('X.renderer2D'); goog.require('X.volume'); goog.require('X.renderer3D'); goog.require('X.fibers');</script>
+  <script src="{{ url_for('static', filename='js/external/X/utils/xtk.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='js/external/X/lib/google-closure-library/closure/goog/base.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/external/X/xtk-deps.js') }}"></script>
+  <script>goog.require('X.renderer2D'); goog.require('X.volume'); goog.require('X.renderer3D'); goog.require('X.fibers');</script> -->
   
-  <script src="{{ url_for('static', filename='js/Colormaps.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/QueryBuilder.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/View.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/Renderers.js') }}"></script>
-  <!--<script src="{{ url_for('static', filename='js/TractTable.js') }}"></script>-->
+  {% assets "core-css" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}">
+  {% endassets %}
   
-  <script src="{{ url_for('static', filename='js/Tabs.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/TractTabs.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/LesionTractTabs.js') }}"></script>
-  
-  <script src="{{ url_for('static', filename='js/Popup.js') }}"></script>
-  
-  <script src="{{ url_for('static', filename='js/LesionViewer.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/LesionMapping.js') }}"></script>
+  {% assets "core-js" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
   <script src="{{ url_for('static', filename='js/lesions.js') }}"></script>
   
   <link rel="prefetch" href="{{ url_for('static', filename='images/loading.gif') }}" />

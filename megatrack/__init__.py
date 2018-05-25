@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .alchemy_encoder import AlchemyEncoder
 from werkzeug.contrib.cache import MemcachedCache, RedisCache
 from flask_bcrypt import Bcrypt
+from flask_assets import Environment, Bundle
 
 # set up application
 application = Flask(__name__)
@@ -14,6 +15,18 @@ application.cache = RedisCache(application.config['REDIS_HOST'], application.con
 
 # set up authentication
 bcrypt = Bcrypt(application)
+
+# bundle js and css code
+assets = Environment(application)
+
+js = Bundle('js/core/*', filters='rjsmin', output='js/core/mgtrk-core.min.js')
+assets.register('core-js', js)
+
+css = Bundle('css/core/*', filters='cssmin', output='css/core/mgtrk-core.min.css')
+assets.register('core-css', css)
+
+# switch off bundling if app is in debug mode
+#assets.debug = application.config['FLASK_DEBUG']
 
 # set up database
 db = SQLAlchemy()

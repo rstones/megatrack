@@ -34,3 +34,10 @@ megatrack/bin/
 
 # file containing data on unit test coverage
 .coverage
+
+# minified js/css files
+megatrack/static/js/core/*.min.js
+megatrack/static/css/core/*.min.css
+
+# webassets cache
+megatrack/static/.webassets-cache/
