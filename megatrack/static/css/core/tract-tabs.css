@@ -1,32 +1,3 @@
-#tabs-header {
-    height: 30px;
-    border-bottom: 1px solid lightgrey;
-}
-
-.tab-header {
-    height: 22px;
-    width: 200px;
-    border-top: 1px solid lightgrey;
-    border-left: 1px solid lightgrey;
-    border-right: 1px solid lightgrey;
-    border-radius: 5px 5px 0 0;
-    padding: 4px;
-    float: left;
-    background-color: #ebebe0;
-}
-
-.tab-header:hover {
-    background-color: #e1e1d0;
-}
-
-.tab-header-selected {
-    background-color: white;
-}
-
-.tab-header-selected:hover {
-    background-color: white;
-}
-
 .tab-header-color-swatch {
     width: 16px;
     height: 16px;
@@ -51,14 +22,6 @@
 
 .tab-header-remove-icon {
     float: left;
-}
-
-#tabs-contents {
-    height: 170px;
-    border-left: 1px solid lightgrey;
-    border-right: 1px solid lightgrey;
-    border-bottom: 1px solid lightgrey;
-    border-radius: 0 0 5px 5px;
 }
 
 .tract-contents {
@@ -168,37 +131,4 @@
     width: 48%;
     margin-left: 10px;
 }
-
-.tabs-scroll {
-    width: 20px;
-    height: 100%;
-    line-height: 23px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
-
-.tabs-scroll:hover {
-    background-color: #ebebe0;
-}
-
-.tabs-scroll-disabled {
-    color: rgb(180,180,180);
-}
-
-.tabs-scroll-disabled:hover {
-    background-color: white;
-}
-
-#tabs-left-scroll {
-    float: left;
-}
-
-#tabs-right-scroll {
-    float: right;
-}
-
-
-
-
-
 
