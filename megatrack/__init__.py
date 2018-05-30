@@ -26,7 +26,7 @@ css = Bundle('css/core/*', filters='cssmin', output='css/core/mgtrk-core.min.css
 assets.register('core-css', css)
 
 # switch off bundling if app is in debug mode
-#assets.debug = application.config['FLASK_DEBUG']
+assets.debug = application.config['FLASK_DEBUG']
 
 # set up database
 db = SQLAlchemy()
