@@ -68,16 +68,8 @@
 }
 
 #run-analysis-popup {
-    border: 1px solid lightgrey;
-    border-radius: 5px;
-    box-shadow: 2px 2px 2px lightgrey;
     width: 400px;
     height: 120px;
-    background: white;
-    top: 100px;
-    z-index: 10;
-    position: fixed;
-    padding: 15px;
 }
 
 #run-analysis-popup-text {
@@ -134,26 +126,9 @@
     font-size: small;
 }
 
-/*#popup-background-screen {
-    background-color: rgba(50, 50, 50, 0.5);
-    position: fixed;
-    left: 0px;
-    top: 0px;
-    z-index: 9;
-}*/
-
 #lesion-upload-popup {
-    border: 1px solid lightgrey;
-    border-radius: 5px;
-    box-shadow: 2px 2px 2px lightgrey;
     width: 400px;
     height: 380px;
-    background: white;
-    top: 100px;
-    /*left: 300px;*/
-    z-index: 10;
-    position: fixed;
-    padding: 15px;
 }
 
 #lesion-upload-title {
@@ -330,4 +305,33 @@
     float: right;
     width: 10%;
     margin-top: 5px;
+}
+
+#tract-info-popup {
+    width: 800px;
+    height: 500px;
+}
+
+#tract-info-popup-title {
+    width: 700px;
+    text-align: left;
+    font-size: 130%;
+    float: left;
+}
+
+#tract-info-popup-trk {
+    width: 250px;
+    height: 250px;
+    /*border: 1px solid lightgrey;*/
+    margin-top: 30px;
+    float: left;
+}
+
+#tract-info-popup-description {
+    width: 450px;
+    float: left;
+    text-align: left;
+    margin-top: 30px;
+    margin-left: 50px;
+    line-height: 25px;
 }

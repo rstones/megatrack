@@ -35,7 +35,7 @@ mgtrk.Popup = (function() {
     
         const popup = {};
         
-        $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''}">
+        $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''} popup">
                                         <div id="${popupId}-close" class="popup-remove-icon clickable"></div>
                                         <div id="${popupId}-content"></div>
                                     </div>`);
@@ -44,11 +44,19 @@ mgtrk.Popup = (function() {
         
         $(`#${popupId}`).hide();
         
-        popup.open = () => {
+        /**
+         * Open the popup.
+         * @param {Function} updateContent      Update the content popup before opening.
+         */
+        popup.open = (updateContent) => {
             Popup.showScreen();
             const popup = $(`#${popupId}`);
             popup.show();
             popup.css('left', ($(window).width()/2) - (popup.width()/2));
+            
+            if (updateContent) {
+                updateContent();
+            }
         };
         
         popup.close = () => {

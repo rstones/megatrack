@@ -8,6 +8,35 @@ mgtrk.LesionTractTabs = (function() {
     const LesionTractTabs = {};
     
     LesionTractTabs.init = (_parent, initState, tabSelectHandler) => {
+    
+        // insert a popup to show tract info
+        var infoPopupContent = function(popupContentId) {
+            $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
+                                            <div id="tract-info-popup-trk"></div>
+                                            <div id="tract-info-popup-description"></div>
+                                            <div id="tract-info-popup-citations"></div>`);
+                                            
+//             const trkRenderer = new X.renderer3D();
+//             trkRenderer.container = 'tract-info-popup-trk';
+//             trkRenderer.config.PICKING_ENABLED = false;
+//             trkRenderer.init();
+//             const trk = new X.fibers();
+//             
+//                 $('#tract-info-overlay-close').on('click', function(event) {
+//                     clearInterval(tractSelect.cameraMotion);
+//                     $('#tract-info-overlay').hide();
+//                 });
+        };
+        
+        var infoPopup = mgtrk.Popup.init({}, `${_parent.tractTabsContainerId}`, 'tract-info-popup', infoPopupContent, 'info-popup');
+        
+        // setup trk renderer within the popup
+        var lesionTractTabs = {};
+        lesionTractTabs.trkRenderer = new X.renderer3D();
+        lesionTractTabs.trkRenderer.container = 'tract-info-popup-trk';
+        lesionTractTabs.trkRenderer.config.PICKING_ENABLED = false;
+        lesionTractTabs.trkRenderer.init();
+        lesionTractTabs.trk = new X.fibers();
         
         // define the tab contents template of the LesionTractTabs then add the TractTabs object
         const contentTemplate = function(state, wrapperId, contentsId) {
@@ -173,29 +202,32 @@ mgtrk.LesionTractTabs = (function() {
                 window.location.href = `tract/${state.code}?${$.param(_parent._parent.currentQuery)}&file_type=.nii.gz`;
             });
             
-            var infoPopupContent = function(popupContentId) {
-                $(`#${popupContentId}`).append(`<div id="tract-info-overlay-title"></div>
-                                                <div id="tract-info-overlay-trk"></div>
-                                                <div id="tract-info-overlay-description"></div>
-                                                <div id="tract-info-overlay-citations"></div>`);
-                                                
-                const trkRenderer = new X.renderer3D();
-                trkRenderer.container = 'tract-info-overlay-trk';
-                trkRenderer.config.PICKING_ENABLED = false;
-                trkRenderer.init();
-                const trk = new X.fibers();
-                
-//                 $('#tract-info-overlay-close').on('click', function(event) {
-//                     clearInterval(tractSelect.cameraMotion);
-//                     $('#tract-info-overlay').hide();
-//                 });
-            };
-            
-            var infoPopup = mgtrk.Popup.init(lesionTractTabs, contentsId, `${state.code}-info-popup`, infoPopupContent, 'info-popup');
-            
             $(`#${state.code}-info-button`).on('click', function(event) {
                 event.preventDefault();
-                infoPopup.open();
+                
+                const updatePopupContent = function() {
+                    if (state.name) {
+                        $('#tract-info-popup-title').html(state.name);
+                        $('#tract-info-popup-description').html(state.description);
+                        $('#tract-info-popup-citations').html(state.citations);
+                        
+                        var renderer = lesionTractTabs.trkRenderer;
+                        renderer.remove(lesionTractTabs.trk);
+                        renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
+                        
+                        lesionTractTabs.trk.file = `${_parent.rootPath}/get_trk/${state.code}?.trk`;
+                        lesionTractTabs.trk.opacity = 1.0;
+                        
+                        renderer.add(lesionTractTabs.trk);
+                        renderer.render();
+                        
+                        lesionTractTabs.cameraMotion = setInterval(function() {
+                            renderer.camera.rotate([3,0]);
+                        }, 50);
+                    }
+                };
+                
+                infoPopup.open(updatePopupContent);
             });
             
             $(`#${state.code}-run-disconnect-button`).on('click', function(event) {
@@ -257,7 +289,7 @@ mgtrk.LesionTractTabs = (function() {
             });
         };
         
-        const lesionTractTabs = mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler);
+        lesionTractTabs = Object.assign(lesionTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler));
         
         lesionTractTabs.addTab = (state) => {
             lesionTractTabs._addTab(state.code, lesionTractTabs.templates.header, lesionTractTabs.templates.content, state);

@@ -13,6 +13,7 @@ mgtrk.LesionMapping = (function() {
         
         const lesionMapping = {};
         lesionMapping._parent = _parent;
+        lesionMapping.rootPath = _parent.rootPath;
         
         const containerId = _parent.lesionAnalysisId;
         lesionMapping.tractTableContainerId = 'tract-table-wrapper';
@@ -258,6 +259,7 @@ mgtrk.LesionMapping = (function() {
                                                 opacity: _parent.colormaps.initColormapOpacity,
                                                 colormapMinUpdate: 0,
                                                 currentQuery: currentQuery,
+                                                description: data[i].description
                                             };
                             _parent.labelmaps.tracts.push(settings);
                             const idx = _parent.findVolumeLabelmapIndex(tractCode);

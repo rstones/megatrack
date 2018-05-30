@@ -544,7 +544,10 @@ def lesion_analysis(lesion_code, threshold):
             if over_threshold_overlap_count:
                 overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
                 # add dict to intersecting_tracts list
-                intersecting_tracts.append({"tractName": tract.name, "tractCode": tract.code, "overlapScore": overlap_percent})
+                intersecting_tracts.append({"tractName": tract.name,
+                                            "tractCode": tract.code,
+                                            "overlapScore": overlap_percent,
+                                            "description": tract.description})
     
     '''Can speed up the loop through tracts by using multiprocessing pool'''
     

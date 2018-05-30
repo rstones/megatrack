@@ -7,6 +7,17 @@
     float: right;
 }
 
+.popup {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    /*box-shadow: 2px 2px 2px lightgrey;*/
+    background: white;
+    top: 100px;
+    z-index: 10;
+    position: fixed;
+    padding: 15px;
+}
+
 #popup-background-screen {
     background-color: rgba(50, 50, 50, 0.5);
     position: fixed;
