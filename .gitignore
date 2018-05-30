@@ -10,6 +10,8 @@ __pycache__/
 # eclipse files
 .project
 .pydevproject
+.javascript.liclipseprefs
+.settings
 
 # data files
 data/
@@ -25,9 +27,17 @@ config.py
 
 # python virtual environment
 megatrackvenv
+megatrackvenv3.6
 
 # a folder that suddenly appeared
 megatrack/bin/
 
 # file containing data on unit test coverage
 .coverage
+
+# minified js/css files
+megatrack/static/js/core/*.min.js
+megatrack/static/css/core/*.min.css
+
+# webassets cache
+megatrack/static/.webassets-cache/

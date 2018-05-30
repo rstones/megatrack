@@ -48,7 +48,7 @@ def temp_file(data_dir, code, file_type):
     else:
         raise ValueError('Unexpected file type ' + str(file_type) + ' passed to data_utils.temp_file')
     
-    return data_dir + '/' + 'temp/' + code + '_' + '{:%d-%m-%Y_%H:%M:%S:%s}'.format(datetime.datetime.now()) + file_type
+    return data_dir + '/' + 'temp/' + code + '_' + '{:%d-%m-%Y_%H:%M:%S:%f}'.format(datetime.datetime.now()) + file_type
         
             
 def generate_average_density_map(data_dir, subject_ids_dataset_paths, tract, space):

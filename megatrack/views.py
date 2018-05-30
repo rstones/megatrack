@@ -1,5 +1,5 @@
-from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
-from flask import current_app, Blueprint, render_template, request, send_file, jsonify
+from .models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts, User, LesionUpload
+from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
 import numpy as np
 import nibabel as nib
@@ -11,7 +11,8 @@ import megatrack.cache_utils as cu
 import megatrack.data_utils as du
 import megatrack.database_utils as dbu
 import time
- 
+from megatrack import bcrypt, db
+
 megatrack = Blueprint('megatrack', __name__)
 
 def file_path_relative_to_root_path(file_path):
@@ -24,6 +25,10 @@ def file_path_relative_to_root_path(file_path):
 def index():
     return render_template('index.html')
 
+@megatrack.route('/lesions')
+def lesions():
+    return render_template('lesions.html')
+
 @megatrack.route('/about')
 def about():
     return render_template('about.html')
@@ -31,6 +36,131 @@ def about():
 @megatrack.route('/contact')
 def contact():
     return render_template('contact.html')
+
+@megatrack.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+@megatrack.route('/login', methods=['POST'])
+def login():
+    try:
+        user = User.query.filter(User.user_name == request.form['username']).first()
+        if user and bcrypt.check_password_hash(user.password, request.form['password']):
+            auth_token = user.encode_auth_token(user.user_id)
+            if auth_token:
+                responseObject = {
+                    'status': 'success',
+                    'message': 'Successfully logged in!',
+                    'authToken': auth_token.decode()
+                }
+                return make_response(jsonify(responseObject)), 200
+        else:
+            return 'User does not exist or incorrect password used. Please try again.', 404
+    except Exception as e:
+        current_app.logger.error(e)
+        return 'Log in failed. Please try again.', 500
+    
+@megatrack.route('/tracts', methods=['GET','POST','PUT','DELETE'])
+def modify_tracts():
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        pass
+    elif request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        pass
+
+@megatrack.route('/datasets', methods=['GET','POST','PUT','DELETE'])
+def modify_datasets():
+    # get auth header and split to get the token string
+    auth_header = request.headers.get('Authorization')
+    auth_token = auth_header.split(" ")[1] if auth_header else ''
+    
+    if auth_token:
+        # if auth token sent, deocde to get user id
+        user_id = User.decode_auth_token(auth_token)
+        # get user from database
+        # is it necessary to check the user id exists in the database?
+        # or is it sufficient that the token could be decoded using our secret key?
+        # its useful to have the user name for logging purposes anyway 
+        user = User.query.filter(User.user_id == user_id).first()
+        
+        if user:
+            if request.method == 'GET':
+                try:
+                    datasets = Dataset.query.all()
+                    response_object = {
+                        'message': 'Successfully retrieved dataset records',
+                        'datasets': datasets
+                    }
+                    current_app.logger.info(f'User {user.user_name} retrieved all dataset records.')
+                    return make_response(jsonify(response_object)), 200
+                except Exception as e:
+                    current_app.logger.error(f'Error occurred while user "{user.user_name}" was attempting to get all dataset records.')
+                    current_app.logger.error(e)
+                    return 'An error occurred while getting datasets.', 500
+                
+            elif request.method == 'POST':
+                form = request.form
+                try:
+                    dataset = Dataset(form['code'], form['name'], form['filePath'], form['queryParams'])
+                    db.session.add(dataset)
+                    db.session.commit()
+                    current_app.logger.info(f'User "{user.user_name}" inserted a new dataset with code "{dataset.code}"')
+                    return 'New dataset successfully created.', 201
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'Error occurred while user "{user.user_name}" was attempting to insert dataset.')
+                    current_app.logger.error(e)
+                    return 'An error occurred while creating a dataset record.', 500
+                
+            elif request.method == 'PUT':
+                form = request.form
+                try:
+                    dataset = Dataset.query.filter(Dataset.code == form['code']).first()
+                    if dataset:
+                        dataset.name = form['name']
+                        dataset.file_path = form['filePath']
+                        dataset.query_params = form['queryParams']
+                        db.session.commit()
+                        current_app.logger.info(f'User {user.user_name} updated dataset {dataset.code}.')
+                        return 'Dataset successfully updated.', 200
+                    else:
+                        raise Exception('Can\'t update dataset that doesn\'t exist.')
+                except Exception as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'Error occurred while user {user.user_name} was attempting to update dataset {dataset}.')
+                    current_app.logger.error(e)
+                    return 'An error occurred while updating dataset.', 500
+            
+            elif request.method == 'DELETE':
+                code = request.args['code']
+                if code:
+                    try:
+                        dataset = Dataset.query.filter(Dataset.code == code).first()
+                        if dataset:
+                            Dataset.query.filter(Dataset.code == code).delete()
+                            db.session.commit()
+                        else:
+                            raise Exception(f'Cannot delete dataset with code "{code}" since a record doesn\'t exist.')
+                        current_app.logger.info(f'User {user.user_name} deleted dataset {code}.')
+                        return 'Dataset successfully deleted.', 200
+                    except Exception as e:
+                        db.session.rollback()
+                        current_app.logger.error(f'Error occurred while user {user.user_name} was attempting to delete dataset with code {code}.')
+                        current_app.logger.error(e)
+                        return 'An error occurred while deleting dataset.', 500
+                else:
+                    current_app.logger.warn('No code sent with dataset DELETE request')
+                    return 'No dataset code was sent with DELETE request.', 400
+         
+        else:
+            current_app.logger.warn(f'No user with id "{user_id}" found in database.')
+            return 'Invalid user id passed with authentication token', 401
+    else:
+        current_app.logger.warn('No authentication token sent with request to /datasets')
+        return 'No authentication token sent with request.', 401
 
 @megatrack.route('/get_template')
 def get_template():
@@ -241,7 +371,253 @@ def get_trk(tract_code):
     tract = dbu.get_tract(tract_code)
     data_dir = current_app.config['DATA_FILE_PATH']
     return send_file('../'+data_dir+'/trk/'+tract.file_path+'.trk', as_attachment=True, attachment_filename=tract.code+'.trk', conditional=True, add_etags=True)
+
+
+################################################################################
+#
+# Lesion mapping routes
+#
+################################################################################
+
+from werkzeug.utils import secure_filename
+import os
+import numpy.linalg as npla
+import numpy.ma as ma
+import datetime
+import megatrack.lesion_utils as lu
+
+ALLOWED_EXTENSIONS = ['nii.gz']
+
+def allowed_filename(filename):
+    return '.' in filename \
+                and filename.split('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@megatrack.route('/lesion_upload', methods=['POST'])
+def lesion_upload():
+    current_app.logger.info('Received request to upload lesion map.')
+    if 'lesionmap' not in request.files:
+        current_app.logger.info('Request did not contain a file part.')
+        return 'Request did not contain a file part', 400
+    file = request.files['lesionmap']
+    if file.filename == '':
+        current_app.logger.info('No file selected.')
+        return 'No file selected', 400
     
+    filename = secure_filename(file.filename)
+    
+    if not allowed_filename(filename):
+        current_app.logger.info(f'Invalid filename extension for uploaded file {filename}')
+        return f'Invalid filename extension {filename.split(".", 1)[1]}', 400
+    
+    current_app.logger.info(f'Filename allowed so saving lesion map {filename}...')
+    filename_components = filename.split('.', 1)
+    filename = filename_components[0]
+    extension = filename_components[1]
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    lesion_upload_dir = current_app.config['LESION_UPLOAD_FOLDER']
+    saved_filename = du.temp_file(lesion_upload_dir, filename, extension)
+    lesion_upload = LesionUpload(filename, saved_filename)
+    #db.session.add(lesion_upload)
+    
+    #path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], saved_filename)
+    file.save(saved_filename)
+    
+    # now check the nifti MNI transformation matches template
+    
+    lesion_map = nib.load(saved_filename) #nib.load(file_path_relative_to_root_path(saved_filename))
+    lesion_map_header = lesion_map.header
+    lesion_map_affine = lesion_map.get_sform()
+    template = nib.load(data_dir+'/'+du.TEMPLATE_FILE_NAME) #nib.load(file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME))
+    template_header = template.header
+    
+    if not np.all(lesion_map_header['dim'][1:4] == template_header['dim'][1:4]):
+        lesion_upload.dim_match = 'N'
+        db.session.add(lesion_upload)
+        db.session.commit()
+        return 'Nifti dimensions do not match template', 400
+    elif not np.all(lesion_map_header['pixdim'][1:4] == template_header['pixdim'][1:4]):
+        lesion_upload.dim_match = 'Y'
+        lesion_upload.pixdim_match = 'N'
+        db.session.add(lesion_upload)
+        db.session.commit()
+        return 'Voxel size does not match template', 400
+    elif npla.det(lesion_map_affine) < 0: # determinant of the affine should be positive for RAS coords
+        lesion_upload.dim_match = 'Y'
+        lesion_upload.pixdim_match = 'Y'
+        lesion_upload.RAS = 'N'
+        db.session.add(lesion_upload)
+        db.session.commit()
+        return 'Nifti not in RAS coordinates', 400
+    
+    lesion_upload.dim_match = 'Y'
+    lesion_upload.pixdim_match = 'Y'
+    lesion_upload.RAS = 'Y'
+    db.session.add(lesion_upload)
+    db.session.commit()
+    
+    # calculate lesion volume
+    volume = du.averaged_tract_volume(lesion_map.get_data(), 1.e-6)
+    
+    response_object = {
+            'lesionCode': lesion_upload.lesion_id,
+            'volume': volume,
+            'message': 'Lesion map successfully uploaded'
+        }
+    return make_response(jsonify(response_object)), 200
+        
+@megatrack.route('/lesion/<lesion_code>')
+def get_lesion(lesion_code):
+    lesion_upload = LesionUpload.query.get(lesion_code) #filter(LesionUpload.lesion_id == lesion_code).all()[0]
+    #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+    return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+
+@megatrack.route('/lesion_analysis/<lesion_code>/<threshold>')
+def lesion_analysis(lesion_code, threshold):
+    
+    cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+    
+    
+    # get the request query
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    if not len(subject_ids_dataset_path):
+        return 'No subjects in dataset query', 400
+    
+    try:
+        threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+    except ValueError:
+        current_app.logger.info('Invalid threshold value applied returning 404...')
+        return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    
+    lesion_upload = LesionUpload.query.get(lesion_code)
+    
+    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+    
+    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    rh = nib.load(current_app.config['RIGHT_HEMISPHERE_MASK']).get_data()
+    lh = nib.load(current_app.config['LEFT_HEMISPHERE_MASK']).get_data()
+    
+    rh_overlap = lesion_data * rh
+    lh_overlap = lesion_data * lh
+    
+    intersecting_tracts = []
+    
+    def check_lesion_tract_overlaps(tracts):
+        
+        cached_data = current_app.cache.get(cache_key)
+        
+        for tract in tracts:
+            # average density maps for this tract based on current query
+            # save averaged map and cache the file path
+            if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
+                tract_code = tract.code
+                tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+                current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+                cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+                current_app.cache.set(cache_key, cached_data)
+            else:
+                tract_file_path = cached_data[tract.code]
+                
+            
+#             # perform weighted overlap: lesion * tract
+#             tract_data = du.get_nifti_data(tract_file_path)
+#             overlap = lesion_data * tract_data
+#             # weighted sum of voxels occupied by overlap
+#             # figure out percentage of tract overlapping with lesion
+#             overlap_sum = np.sum(overlap)
+#             if overlap_sum:
+#                 overlap_score = overlap_sum / np.sum(tract_data)
+#                 # add dict to intersecting_tracts list
+#                 intersecting_tracts.append({"tractCode": tract.code, "overlapScore": overlap_score})
+            
+            # alternative overlap score
+            tract_data = du.get_nifti_data(tract_file_path)
+            masked_tract_data = ma.masked_where(tract_data < threshold, tract_data)
+            overlap = lesion_data * masked_tract_data
+            over_threshold_count = masked_tract_data.count()
+            print(tract.code, over_threshold_count)
+            over_threshold_overlap_count = len(overlap.nonzero()[0]) # np.count_nonzero(overlap)
+            print(tract.code, over_threshold_overlap_count)
+            if over_threshold_overlap_count:
+                overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
+                # add dict to intersecting_tracts list
+                intersecting_tracts.append({"tractName": tract.name,
+                                            "tractCode": tract.code,
+                                            "overlapScore": overlap_percent,
+                                            "description": tract.description})
+    
+    '''Can speed up the loop through tracts by using multiprocessing pool'''
+    
+    if np.any(rh_overlap):
+        current_app.logger.info('Checking lesion overlap with right hemisphere tracts.')
+        # loop through right hemisphere tracts
+        tracts = Tract.query.filter(Tract.code.like('%_R%')).all()
+        check_lesion_tract_overlaps(tracts)
+    
+    if np.any(lh_overlap):
+        current_app.logger.info('Checking lesion overlap with left hemisphere tracts.')
+        # loop through left hemisphere tracts
+        tracts = Tract.query.filter(Tract.code.like('%_L%')).all()
+        check_lesion_tract_overlaps(tracts)
+    
+    # loop through tracts connecting hemispheres
+    current_app.logger.info('Checking lesion overlap with tracts connecting hemispheres.')
+    tracts = Tract.query.filter(~Tract.code.like('%_R%') & ~Tract.code.like('%_L%')).all() # ~ negates the like
+    check_lesion_tract_overlaps(tracts)
+    
+    # sort tracts by overlap score (highest to lowest)
+    intersecting_tracts = sorted(intersecting_tracts, key=lambda tract: tract["overlapScore"])[::-1]
+    
+    return make_response(jsonify(intersecting_tracts)), 200
+
+@megatrack.route('/lesion_tract_disconnect/<lesion_code>/<tract_code>')
+def lesion_tract_disconnect(lesion_code, tract_code):
+    # get the request query
+    request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    if not len(subject_ids_dataset_path):
+        return 'No subjects in dataset query', 400
+    
+    data_dir = current_app.config['DATA_FILE_PATH']
+    
+    lesion_upload = LesionUpload.query.get(lesion_code)
+    tract = Tract.query.get(tract_code)
+    
+    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+    
+    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    
+    num_streamlines_per_subject = []
+    disconnected_streamlines_per_subject = []
+    percent_disconnect_per_subject = []
+    for subject_id, dataset_dir in subject_ids_dataset_path:
+        file_path = du.file_path(data_dir, dataset_dir, tract.file_path, subject_id, 'MNI', tract_code, 'trk')
+        num_streamlines, disconnected_streamlines, percent_disconnect = lu.calculate_tract_disconnection(file_path, lesion_data)
+        num_streamlines_per_subject.append(num_streamlines)
+        disconnected_streamlines_per_subject.append(disconnected_streamlines)
+        percent_disconnect_per_subject.append(percent_disconnect)
+        
+    average_disconnect = np.mean(percent_disconnect_per_subject)
+    std_disconnect = np.std(percent_disconnect_per_subject)
+    histogram = np.histogram(percent_disconnect_per_subject, bins=4, range=(0,100))
+    
+    average_num_streamlines = np.mean(num_streamlines_per_subject)
+    average_disconnected_streamlines = np.mean(disconnected_streamlines_per_subject)
+    
+    response_object = {
+                        'averageDisconnect': average_disconnect,
+                        'stdDisconnect': std_disconnect,
+                        'histogram': histogram[0].tolist(),
+                        'percentDisconnect': percent_disconnect_per_subject,
+                        'averageNumStreamlines': average_num_streamlines,
+                        'averageDisconnectedStreamlines': average_disconnected_streamlines
+                        }
+    
+    return make_response(jsonify(response_object)), 200
+
 @megatrack.route('/_test_viewer')
 def _test_viewer():
     '''Serve QUnit test file for javascript Viewer.'''

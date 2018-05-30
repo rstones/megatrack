@@ -8,7 +8,8 @@ from flask_testing import TestCase
 import mock
 import numpy as np
 import megatrack.database_utils as dbu
-from megatrack.models import db, AlchemyEncoder, Tract, Dataset, Subject, DatasetTracts, SubjectTractMetrics
+from megatrack.models import db, Tract, Dataset, Subject, DatasetTracts, SubjectTractMetrics
+from megatrack.alchemy_encoder import AlchemyEncoder
 from sqlalchemy.sql.expression import BinaryExpression
 from flask import Flask
 from megatrack.views import megatrack

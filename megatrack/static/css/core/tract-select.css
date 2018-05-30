@@ -1,0 +1,474 @@
+
+/* Colormap select styling */
+
+.colormap-indicator {
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 12px;
+}
+
+.colormap-indicator:hover {
+    border: 1px solid grey;
+}
+
+.colormap-indicator-caret {
+    float: right;
+    position: relative;
+    top: 0.08em;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: -.25em;
+    background: url("../../images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+}
+
+.colormap-indicator-disabled {
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 12px;
+    background-color: lightgrey;
+}
+
+.colormap-indicator-caret-disabled {
+    float: right;
+    position: relative;
+    top: 0.08em;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: -.25em;
+    background: url("../../images/select-caret-disabled.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
+}
+
+#colormap-select {
+    position: absolute;
+    width: 160px;
+    height: 86px;
+    background: grey;
+    border: 1px solid lightgrey;
+    padding: 5px;
+    border-radius: 5px;
+    opacity: 0.9;
+}
+
+.colormap-select-item {
+    width: 117px;
+    height: 12px;
+    margin-bottom: 4px;
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+}
+
+.colormap-select-item:hover {
+    border: 1px solid grey;
+}
+
+.colormap-select-indicator {
+    border: 1px solid lightgrey;
+    border-radius: 10px;
+}
+
+
+/* Tract select specific styles */ 
+
+
+#tract-panel {
+    width: 722px;
+    float: left;
+    /*padding-left: 10px;*/ 
+    /*padding-right: 2px;*/
+    /*margin-top: 10px;*/
+    border: 1px solid darkgrey;
+    margin-left: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.tract-select-container {
+    width: 45%;
+    float: left;
+    margin-bottom: 7px;
+}
+
+#add-tract-select {
+    width: 100%;    
+}
+
+#tract-disabled-msg-container {
+    width: 50%;
+    float: left;
+    text-align: left;
+    padding-left: 10px;
+    position: relative;
+    top: 2px;
+}
+
+#tract-disabled-msg-text {
+    color: #F00202;
+    font-size: 75%;
+    /*width: 50%;
+    float: left;
+    text-align: left;
+    padding-left: 10px;
+    position: relative;
+    top: 4px;*/
+    vertical-align: middle;
+    vertical-align: -webkit-baseline-middle;
+}
+
+#tract-select-wrapper {
+    height: 250px;
+    width: 450px;
+    /*border: 1px solid darkgrey;
+    border-radius: 5px;*/
+    overflow: scrollable;
+    padding: 10px;
+    float: left;
+}
+
+#tract-table-wrapper {
+    width: 450px;
+    height: 200px;
+    overflow-y: scroll;
+}
+
+#tract-table {
+    width: 435px;
+    /*height: 200px;*/
+    /*background: lightgrey;*/
+    /*border-collapse: collapse;*/
+    border-spacing: 0;
+}
+
+.tract-table-row-left-cell {
+    border-left: 1px solid lightgrey;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.tract-table-row-right-cell {
+    border-right: 1px solid lightgrey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.tract-table-cell {
+    background: #fcfff4; /* Old browsers */
+    background: -moz-linear-gradient(top, #fcfff4 0%, #e9e9ce 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #fcfff4 0%,#e9e9ce 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #fcfff4 0%,#e9e9ce 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+}
+
+#tract-table tr {
+    /*border: 1px solid darkgrey;
+    border-radius: 10px;*/
+    width: inherit;
+}
+
+.tract-row {
+    height: 25px;
+}
+
+.tract-disabled {
+    color: lightgrey;
+}
+
+#tract-name {
+    /*border-left: 1px solid lightgrey;
+    border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;*/
+    width: 50%;
+    font-size: 85%;
+    text-align: left;
+    padding-left: 10px;
+    vertical-align: middle;
+}
+
+#tract-colormap {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
+    width: 20%;
+    margin-right: 3px;
+    vertical-align: middle;
+}
+
+#tract-settings {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
+    padding-left: 8px;
+}
+
+#tract-download {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
+    padding-left: 3px;
+}
+
+#tract-info {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
+    padding-left: 9px;
+}
+
+#tract-atlas {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;*/
+    padding-left: 9px;
+}
+
+#tract-remove {
+    /*border-top: 1px solid lightgrey;
+    border-bottom: 1px solid lightgrey;
+    border-right: 1px solid lightgrey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;*/
+    padding-left: 12px;
+    padding-right: 8px;
+}
+
+#tract-value {
+    font-size: 80%;
+}
+
+#tract-value > div {
+    position: relative;
+    top: -3px;
+}
+
+.tract-icon {
+    margin: 0 auto;
+}
+
+.tract-spacer-row {
+    height: 3px;
+}
+
+.tract-spacer-col {
+    border-top: 1px solid darkgrey;
+    border-bottom: 1px solid darkgrey;
+    width: 0%;
+}
+
+#tract-select-container {
+    float: left;
+    cursor: pointer;
+}
+
+#tract-select {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    box-shadow: 2px 2px 2px lightgrey;
+    border-radius: 5px;
+    z-index: 3;
+}
+
+#tract-prob-range-slider-wrapper {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 30px;
+}
+
+#tract-prob-range-slider {
+    height: 8px;
+}
+
+.tract-prob-range-slider-handle {
+    font-size: small;
+}
+
+#tract-prob-range-min-handle {
+    width: 1.7em;
+    text-align: center;
+    top: -0.4em;
+}
+
+#tract-prob-range-max-handle {
+    width: 1.7em;
+    text-align: center;
+    top: -0.4em;
+}
+
+#tract-prob-range-label {
+    font-size: 80%;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+#tract-settings-menu {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px lightgrey;
+    width: 250px;
+    height: 155px;
+    background: white;
+    z-index: 10;
+    position: relative;
+}
+
+#tract-settings-menu-header {
+    margin: 10px;
+}
+
+#tract-settings-title {
+    width: 90%;
+    float: left;
+    text-align: left;
+    font-size: 90%;
+}
+
+#tract-settings-close {
+    float: left;
+    width: 20px;
+    height: 20px;
+    top: 10px;
+}
+
+#tract-opacity-slider-wrapper {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 30px;
+}
+
+#tract-opacity-slider {
+    height: 8px;
+}
+
+#tract-opacity-slider-handle {
+    width: 1.7em;
+    top: -0.4em;
+    text-align: center;
+    font-size: small;
+}
+
+#tract-opacity-label {
+    font-size: 80%;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.triangle{
+    position: absolute;
+    top: 150px;
+    left: 49px;
+    margin-left: -15px;
+    border-top: 15px solid white;
+    border-right: 15px solid transparent;
+    border-left: 15px solid transparent;
+}
+
+#tract-info-container {
+    width: 230px;
+    height: 250px;
+    /*border: 1px solid darkgrey;*/
+    border-radius: 5px;
+    /*overflow: scrollable;*/
+    padding: 3px 10px 10px 10px;
+    float: left;
+    line-height: 21px;
+}
+
+#tract-info-heading {
+    width: 100%;
+    height: 8%;
+    text-align: left;
+    font-size: 90%;
+}
+
+#tract-info-name {
+    width: 100%;
+    height: 9%;
+    text-align: left;
+    /*border-bottom: 1px solid lightgrey;*/
+}
+
+.tract-info-metrics {
+    width: 220px;
+    height: 35%;
+    font-size: 90%;
+    text-align: left;
+    /*border-bottom: 1px solid lightgrey;*/
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    padding: 4px;
+    margin-bottom: 8px;
+}
+
+.metrics-display {
+    width: 220px;
+    height: 70px;
+}
+
+.tract-metrics-loading-gif {
+    width: 12px;
+    height: 12px;
+    background: url("../../images/loading.gif") 100% / 12px no-repeat;
+    position: relative;
+    margin: 0 auto;
+    top: 27px;
+}
+
+.metric-info {
+    float: right
+}
+
+#tract-info-description {
+    width: 100%;
+    height: 55%;
+    overflow: auto;
+    text-align: left;
+    font-size: 85%;
+    border: 1px solid lightgrey;
+    padding: 3px;
+}
+
+#tract-info-overlay {
+    /* The #viewer element is positioned relative so this element can be positioned
+    absolutely relative to it.*/
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 1199px;
+    height: 419px;
+    background: white;
+    opacity: 0.95;
+    border-radius: 10px;
+    z-index: 9;
+    border: 1px solid grey;
+    padding: 30px;
+}
+
+#tract-info-overlay-title {
+    width: 1150px;
+    text-align: left;
+    font-size: 130%;
+    float: left;
+}
+
+#tract-info-overlay-close {
+    float: left;
+    width: 20px;
+    height: 20px;
+}
+
+#tract-info-overlay-trk {
+    width: 350px;
+    height: 350px;
+    /*border: 1px solid lightgrey;*/
+    margin-top: 30px;
+    float: left;
+}
+
+#tract-info-overlay-description {
+    width: 750px;
+    float: left;
+    text-align: left;
+    margin-top: 30px;
+    margin-left: 50px;
+    line-height: 25px;
+}

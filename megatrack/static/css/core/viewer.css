@@ -1,0 +1,336 @@
+
+body {
+	background: white;
+}
+
+hr {
+	background-color: lightgrey;
+	color: lightgrey;
+	border: none;
+	height: 1px;
+	margin-top: 3px;
+}
+
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
+.button {
+    border: 1px solid darkgrey;
+    border-radius: 5px;
+    height: 23px;
+    padding-top: 3px;
+}
+
+.button:hover {
+    background-color: #F5F5F5;
+    border: 1px solid grey;
+    cursor: pointer;
+}
+
+.button-disabled {
+    border: 1px solid lightgrey;
+    color: lightgrey;
+}
+
+.ui-slider {
+    clear: both;
+}
+
+.overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#viewer {
+    width: 1260px;
+    display: inline-block;
+    background: white;
+    border: 1px solid darkgrey;
+    border-radius: 10px;
+    padding: 10px;
+    position: relative;
+}
+
+#view-container {
+    width: inherit;
+    height: 480px;
+    background: black;
+    border-radius: 10px;
+}
+
+.viewer-panel {
+    /*border: 1px solid grey;*/
+    float: left;
+    background: black;
+    margin: 20px;
+    position: relative;
+}
+
+.view-border {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.view {
+    background: black;
+    position: relative;
+    /*margin: auto;*/
+    z-index: 1;
+}
+
+/* Custom select menu style */
+
+select {
+	background-color: white;
+	color: grey;
+	border: 1px solid darkgrey;
+	border-radius: 5px;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 28px;
+	background: url("../../images/select-caret.png") 96% / 10px no-repeat white;
+	padding-left: 3px;
+}
+
+select:hover {
+	background-color: #F5F5F5;
+	border: 1px solid grey;
+	cursor: pointer;
+}
+
+select[disabled] {
+	background-color: white;
+	color: lightgrey;
+	border: 1px solid lightgrey;
+	border-radius: 5px;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 28px;
+	background: url("../../images/select-caret-disabled.png") 96% / 10px no-repeat white;
+}
+
+select[disabled]:hover {
+	cursor: default;
+}
+
+select > option {
+	background: white;
+	padding-left: 3px;
+}
+
+select > option:hover {
+	background: white;
+}
+
+select > option[disabled] {
+	color: lightgrey;
+}
+
+select::-ms-expand { 
+    display: none; /* remove default arrow in IE 10 and 11 */
+}
+
+/* target Internet Explorer 9 to undo the custom arrow */
+@media screen and (min-width:0\0) {
+    select {
+        background:none\9;
+        padding: 5px\9;
+    }
+}
+
+
+/* Icons */
+
+
+.remove-icon {
+	width: 10px;
+	height: 10px;
+	position: relative;
+	top: -0.2em;
+	background: url("../../images/remove-icon.png") 96% / 9px no-repeat;
+}
+
+.remove-icon-disabled {
+	width: 10px;
+	height: 10px;
+	position: relative;
+	top: -0.2em;
+	background: url("../../images/remove-icon-disabled.png") 96% / 9px no-repeat;
+}
+
+.download-icon {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 0.09em;
+	background: url("../../images/download-icon.png") 96% / 13px no-repeat;
+}
+
+.download-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("../../images/download-icon-disabled.png") 96% / 13px no-repeat;
+}
+
+.settings-icon {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 0.09em;
+	background: url("../../images/settings-icon.png") 96% / 12px no-repeat;
+}
+
+.settings-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("../../images/settings-icon-disabled.png") 96% / 12px no-repeat;
+}
+
+.atlas-icon {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 0.13em;
+	background: url("../../images/3d-icon.png") 96% / 18px no-repeat;
+}
+
+.atlas-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.13em;
+    background: url("../../images/3d-icon-disabled.png") 96% / 18px no-repeat;
+}
+
+.metrics-icon {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 0.09em;
+	background: url("../../images/metrics-icon.png") 96% / 12px no-repeat;
+}
+
+.metrics-icon-selected {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 0.09em;
+	background: url("../../images/metrics-icon-selected.png") 100% 50% / 16px no-repeat;
+}
+
+.metrics-icon-disabled {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.09em;
+    background: url("../../images/metrics-icon-disabled.png") 96% / 12px no-repeat;
+}
+
+.info-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    /*top: -0.15em;*/
+    background: url("../../images/info-icon.png") 10% / 15px no-repeat;
+}
+
+.upload-icon {
+    width: 15px;
+    height: 15px;
+    position: relative;
+    /*top: -0.15em;*/
+    background: url("../../images/upload-icon.png") 10% / 13px no-repeat;
+    display: inline-block;
+    padding-top: 4px;
+}
+
+.disconnect-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 0.12em;
+    background: url("../../images/disconnect-icon.png") 100% / 15px no-repeat;
+}
+
+/* Gifs */
+
+.loading-gif {
+	width: 12px;
+	height: 12px;
+	background: url("../../images/loading.gif") 100% / 12px no-repeat;
+	float: right;
+	position: relative;
+	top: 5px;
+	left: -12px;
+	margin: 0 auto;
+}
+
+.view-loading-gif {
+    width: 15px;
+    height: 15px;
+    background: url("../../images/loading.gif") 100% / 15px no-repeat;
+    position: absolute;
+    /*top: -130px;
+    left: 130px;*/
+}
+
+
+
+/*
+#query-report {
+	width: 98%;
+	float: left;
+	background: black;
+}
+
+#prob-range-slider-wrapper {
+	width: 50%;
+	float: left;
+	top: -7px;
+	position: relative;
+	left: 18px;
+}
+
+#prob-range-slider {
+	height: 8px;
+}
+
+.prob-range-slider-handle {
+	font-size: small;
+}
+
+#prob-range-min-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#prob-range-max-handle {
+	width: 1.7em;
+	text-align: center;
+	top: -0.4em;
+}
+
+#prob-range-label {
+	font-size: 80%;
+	margin-bottom: 5px;
+	text-align: left;
+}
+
+*/
+
+
+

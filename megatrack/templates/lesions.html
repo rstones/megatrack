@@ -6,6 +6,7 @@
   <script src="{{ url_for('static', filename='js/external/jquery.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/external/jquery-ui.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/external/colormaps.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/external/plotly-cartesian.min.js') }}"></script>
   
   <script src="{{ url_for('static', filename='X/utils/xtk.js') }}"></script>
   <!-- <script src="{{ url_for('static', filename='X/lib/google-closure-library/closure/goog/base.js') }}"></script>
@@ -19,8 +20,8 @@
   {% assets "core-js" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
-  
-  <script src="{{ url_for('static', filename='js/atlas.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/lesions.js') }}"></script>
   
   <link rel="prefetch" href="{{ url_for('static', filename='images/loading.gif') }}" />
   <link rel="prefetch" href="{{ url_for('static', filename='images/settings-icon.png') }}" />
