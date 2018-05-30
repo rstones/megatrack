@@ -63,7 +63,7 @@ mgtrk.AtlasViewer = (function() {
         viewContainer.append('<div id="coronal-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="sagittal-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="axial-panel" class="viewer-panel"></div>');
-        viewContainer.append('<div id="view-container-title">MegaTrack Atlas</div>');
+        viewContainer.append('<div id="atlas-viewer-title">MegaTrack Atlas</div>');
         //$('#view-container div').addClass('viewer-panel');
         container.append('<div class="clear"></div>');
         container.append('<div id="'+atlasViewer.queryBuilderId+'"></div>');
