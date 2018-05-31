@@ -35,14 +35,14 @@
     float: left;
 }
 
-.tab-content-tract-info {
+/* .tab-content-tract-info {
     width: 30%;
     height: 90%;
     margin: 10px;
     float: left;
     border-left: 1px solid lightgrey;
     border-right: 1px solid lightgrey;
-}
+} */
 
 .tab-content-tract-disconnection {
     width: 63%;

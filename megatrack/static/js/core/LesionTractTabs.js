@@ -84,7 +84,7 @@ mgtrk.LesionTractTabs = (function() {
             $(`#${contentsId}`).append(template);
             
             // show init color in colormap select
-            $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`); 
+            $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`);
             
             // add sliders to appropriate divs with init settings
             var probRangeMinHandle = $(`#${state.code}-prob-range-min-handle`);

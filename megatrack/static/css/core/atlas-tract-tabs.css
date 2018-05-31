@@ -1,0 +1,16 @@
+
+.tab-content-tract-metrics {
+    width: 30%;
+    height: 90%;
+    margin: 10px;
+    float: left;
+    border-left: 1px solid lightgrey;
+}
+
+.tab-content-tract-info {
+    width: 30%;
+    height: 90%;
+    margin: 10px;
+    float: left;
+    border-left: 1px solid lightgrey;
+}

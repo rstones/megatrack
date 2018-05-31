@@ -1,18 +1,5 @@
 var mgtrk = mgtrk || {};
 
-// basics:
-// a target element to insert into
-// common html template for headers and contents section
-// default behaviour on tab header click
-// contents cache 
-// functions to add and remove tabs
-// scrolling (either horizontally or vertically) if many tabs are open
-//
-// to generalise we need:
-// tab header html template
-// tab contents html template
-// tab header click event handle (auto show the contents too)
-// 
 mgtrk.Tabs = (function() {
     const Tabs = {};
     
