@@ -8,9 +8,13 @@
 }
 
 .tab-content-tract-info {
-    width: 30%;
-    height: 90%;
+    width: 28%;
+    height: 85%;
     margin: 10px;
     float: left;
     border-left: 1px solid lightgrey;
+    overflow-y: scroll;
+    text-align: left;
+    font-size: 85%;
+    padding: 0px 10px 10px 10px;
 }

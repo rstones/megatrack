@@ -114,7 +114,7 @@ mgtrk.TractSelect = (function() {
             }
         });
           
-        const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {}, function() {});
+        const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {}, function(tabId) {});
         
         $('#add-tract-select').change(function(event) {
             var tractCode = event.currentTarget.value;
@@ -146,6 +146,7 @@ mgtrk.TractSelect = (function() {
                                 opacity: _parent.colormaps.initColormapOpacity,
                                 colormapMinUpdate: 0,
                                 currentQuery: _parent.currentQuery,
+                                description: tractSelect.availableTracts[tractCode].description
                             };
             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, 0, settings, _parent.currentQuery);
             _parent.renderers.resetSlicesForDirtyFiles();
