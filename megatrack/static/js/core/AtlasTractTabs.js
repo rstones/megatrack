@@ -274,7 +274,7 @@ mgtrk.AtlasTractTabs = (function() {
             
         };
         
-        atlasTractTabs = Object.assign(atlasTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler));
+        atlasTractTabs = Object.assign(atlasTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, true));
         
         atlasTractTabs.addTab = (state) => {
             atlasTractTabs._addTab(state.code, atlasTractTabs.templates.header, atlasTractTabs.templates.content, state);

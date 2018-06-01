@@ -114,7 +114,7 @@ mgtrk.TractSelect = (function() {
             }
         });
           
-        const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {}, function(tabId) {});
+        const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {});
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);

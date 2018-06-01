@@ -7,7 +7,7 @@ var mgtrk = mgtrk || {};
 mgtrk.LesionTractTabs = (function() {
     const LesionTractTabs = {};
     
-    LesionTractTabs.init = (_parent, initState, tabSelectHandler) => {
+    LesionTractTabs.init = (_parent, initState) => {
     
         // insert a popup to show tract info
         var infoPopupContent = function(popupContentId) {
@@ -289,7 +289,7 @@ mgtrk.LesionTractTabs = (function() {
             });
         };
         
-        lesionTractTabs = Object.assign(lesionTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler));
+        lesionTractTabs = Object.assign(lesionTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState));
         
         lesionTractTabs.addTab = (state) => {
             lesionTractTabs._addTab(state.code, lesionTractTabs.templates.header, lesionTractTabs.templates.content, state);

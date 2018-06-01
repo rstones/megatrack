@@ -9,7 +9,7 @@ mgtrk.Tabs = (function() {
      * @param {Object} contents             Contains inital tab headers and contents.
      * @param {Function} tabSelectHandler   Called when a tab is selected. Will be passed the tab id.
      */
-    Tabs.init = (_parent, templates, initState, tabSelectHandler, tabRemoveHandler) => {
+    Tabs.init = (_parent, templates, initState) => {
         const tabs = {};
         
         /*
@@ -25,8 +25,6 @@ mgtrk.Tabs = (function() {
         tabs.leftMostTab = 0;
         tabs.leftScrollDisabled = true;
         tabs.rightScrollDisabled = true;
-        
-        tabs.tabSelectHandler = tabSelectHandler;
         
         tabs.selectedTabId = '';
         
@@ -71,7 +69,7 @@ mgtrk.Tabs = (function() {
             
             // fire further event which can initiate other actions
             // ie. reordering the tract in the renderers
-            tabs.tabSelectHandler(id);
+            $(document).trigger('tabs:select', [id]);
         };
         
         tabs._addTab = (id, insertHeader, insertContent, state) => {
