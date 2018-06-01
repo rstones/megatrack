@@ -9,7 +9,7 @@ mgtrk.Tabs = (function() {
      * @param {Object} contents             Contains inital tab headers and contents.
      * @param {Function} tabSelectHandler   Called when a tab is selected. Will be passed the tab id.
      */
-    Tabs.init = (_parent, templates, initState, tabSelectHandler) => {
+    Tabs.init = (_parent, templates, initState, tabSelectHandler, tabRemoveHandler) => {
         const tabs = {};
         
         /*
@@ -28,7 +28,7 @@ mgtrk.Tabs = (function() {
         
         tabs.tabSelectHandler = tabSelectHandler;
         
-        tabs.currentTabId = '';
+        tabs.selectedTabId = '';
         
         tabs.templates = templates;
         
@@ -38,6 +38,7 @@ mgtrk.Tabs = (function() {
             $(`#${id}-tab-contents`).remove();
             $(`#${id}-tab-header`).remove();
             delete tabs.cache[id];
+            $(document).trigger('tabs:remove', [id]);
         };
         
         tabs.removeAll = () => {

@@ -116,6 +116,11 @@ mgtrk.TractSelect = (function() {
           
         const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {}, function(tabId) {});
         
+        $(document).on('tabs:remove', function(event, tractCode) {
+             $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
+             _parent.renderers.removeLabelmapFromVolumeNew(_parent.renderers.findVolumeLabelmapIndex(tractCode));
+        });
+        
         $('#add-tract-select').change(function(event) {
             var tractCode = event.currentTarget.value;
             $('#add-tract-select option[value='+tractCode+']').prop('disabled', true);
