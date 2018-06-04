@@ -101,7 +101,7 @@ mgtrk.AtlasTractTabs = (function() {
                     state.colormapMax = max;
                     // Fire 'colormap:change' event to trigger renderer update
                     $(document).trigger('colormap:change', [state]);
-                    $(document).trigger('prob-metrics:update', [parseInt(min*100)]);
+                    $(document).trigger('prob-metrics:update', [_parent.currentQuery, parseInt(min*100)]);
                 }
             });
             
@@ -217,61 +217,58 @@ mgtrk.AtlasTractTabs = (function() {
                 infoPopup.open(updatePopupContent);
             });
             
+            var updateProbMetrics = function(query, threshold) {
+                $.ajax({
+                    url: `${_parent.rootPath}/get_tract_info/${state.code}/${threshold}?${$.param(query)}`,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data) {
+                            $(`#${state.code}-prob-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
+                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
+                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
+                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
+                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                        }
+                    }
+                });
+            };
+            
             $(`#${state.code}-prob-metrics`).html('<div class="tract-metrics-loading-gif"></div>');
             const initThreshold = parseInt(_parent._parent.colormaps.initColormapMin * 100);
-            $.ajax({
-                url: `${_parent.rootPath}/get_tract_info/${state.code}/${initThreshold}?${$.param(state.currentQuery)}`,
-                dataType: 'json',
-                success: function(data) {
-                    if (data) {
-                        $(`#${state.code}-prob-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                            Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                            Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                            Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                            Std FA: ${data.stdFA.toFixed(3)}<br>`);   
-                    }
-                }
-            });
-            
+            updateProbMetrics(_parent.currentQuery, initThreshold);
             
             var probMetricsUpdateTimeout = null;
-            $(document).on('prob-metrics:update', function(event, threshold) {
+            $(document).on('prob-metrics:update', function(event, query, threshold) {
                 $(`#${state.code}-prob-metrics`).html('<div class="tract-metrics-loading-gif"></div>');
                 clearTimeout(probMetricsUpdateTimeout);
                 probMetricsUpdateTimeout = setTimeout(function() {
-                    $.ajax({
-                        url: `${_parent.rootPath}/get_tract_info/${state.code}/${threshold}?${$.param(state.currentQuery)}`,
-                        dataType: 'json',
-                        success: function(data) {
-                            if (data) {
-                                $(`#${state.code}-prob-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                                    Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                                    Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                                    Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                                    Std FA: ${data.stdFA.toFixed(3)}<br>`);   
-                            }
-                        }
-                    });
+                    updateProbMetrics(query, threshold || $(`#${state.code}-prob-range-slider`).slider('values', 0));
                 }, 1000);
             });
             
+            var updatePopMetrics = function(query) {
+                $.ajax({
+                    url: `${_parent.rootPath}/get_tract_info/${state.code}?${$.param(query)}`,
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data) {
+                            $(`#${state.code}-pop-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
+                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
+                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
+                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
+                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                        }
+                    }
+                });
+            };
             
             $(`#${state.code}-pop-metrics`).html('<div class="tract-metrics-loading-gif"></div>');
-            $.ajax({
-                url: `${_parent.rootPath}/get_tract_info/${state.code}?${$.param(state.currentQuery)}`,
-                dataType: 'json',
-                success: function(data) {
-                    if (data) {
-                        $(`#${state.code}-pop-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                            Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                            Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                            Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                            Std FA: ${data.stdFA.toFixed(3)}<br>`);   
-                    }
-                }
+            updatePopMetrics(_parent.currentQuery);
+            
+            $(document).on('pop-metrics:update', function(event, query) {
+                 $(`#${state.code}-pop-metrics`).html('<div class="tract-metrics-loading-gif"></div>');
+                 updatePopMetrics(query);
             });
-            
-            
         };
         
         atlasTractTabs = Object.assign(atlasTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, true));

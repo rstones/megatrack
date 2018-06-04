@@ -195,7 +195,7 @@ mgtrk.TractSelect = (function() {
         
         $(document).on('query-update', function(event, newQuery) {
         
-           _parent.currentQuery = newQuery;
+           _parent.currentQuery = tractSelect.currentQuery = newQuery;
             
             // remove the disabled tract select message
             if ($('#add-tract-select').prop('disabled')) {
@@ -226,6 +226,9 @@ mgtrk.TractSelect = (function() {
             if (Object.keys(tractSelect.selectedTracts).length) {
                 _parent.renderers.resetSlicesForDirtyFiles();
             }
+            
+            $(document).trigger('pop-metrics:update', [newQuery]);
+            $(document).trigger('prob-metrics:update', [newQuery]);
             
 //             for (var tractCode in tractSelect.selectedTracts) {
 //                 // check to see if we want to disable the tract
