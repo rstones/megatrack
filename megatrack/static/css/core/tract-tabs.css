@@ -22,6 +22,11 @@
 
 .tab-header-remove-icon {
     float: left;
+    width: 20px;
+    height: 25px;
+    position: relative;
+    top: -0.2em;
+    background: url("../../images/remove-icon.png") 96% / 9px no-repeat;
 }
 
 .tract-contents {
@@ -35,14 +40,14 @@
     float: left;
 }
 
-.tab-content-tract-info {
+/* .tab-content-tract-info {
     width: 30%;
     height: 90%;
     margin: 10px;
     float: left;
     border-left: 1px solid lightgrey;
     border-right: 1px solid lightgrey;
-}
+} */
 
 .tab-content-tract-disconnection {
     width: 63%;

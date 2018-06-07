@@ -1,18 +1,5 @@
 var mgtrk = mgtrk || {};
 
-// basics:
-// a target element to insert into
-// common html template for headers and contents section
-// default behaviour on tab header click
-// contents cache 
-// functions to add and remove tabs
-// scrolling (either horizontally or vertically) if many tabs are open
-//
-// to generalise we need:
-// tab header html template
-// tab contents html template
-// tab header click event handle (auto show the contents too)
-// 
 mgtrk.Tabs = (function() {
     const Tabs = {};
     
@@ -22,7 +9,7 @@ mgtrk.Tabs = (function() {
      * @param {Object} contents             Contains inital tab headers and contents.
      * @param {Function} tabSelectHandler   Called when a tab is selected. Will be passed the tab id.
      */
-    Tabs.init = (_parent, templates, initState, tabSelectHandler) => {
+    Tabs.init = (_parent, templates, initState) => {
         const tabs = {};
         
         /*
@@ -39,9 +26,7 @@ mgtrk.Tabs = (function() {
         tabs.leftScrollDisabled = true;
         tabs.rightScrollDisabled = true;
         
-        tabs.tabSelectHandler = tabSelectHandler;
-        
-        tabs.currentTabId = '';
+        tabs.selectedTabId = '';
         
         tabs.templates = templates;
         
@@ -51,6 +36,7 @@ mgtrk.Tabs = (function() {
             $(`#${id}-tab-contents`).remove();
             $(`#${id}-tab-header`).remove();
             delete tabs.cache[id];
+            $(document).trigger('tabs:remove', [id]);
         };
         
         tabs.removeAll = () => {
@@ -83,7 +69,7 @@ mgtrk.Tabs = (function() {
             
             // fire further event which can initiate other actions
             // ie. reordering the tract in the renderers
-            tabs.tabSelectHandler(id);
+            $(document).trigger('tabs:select', [id]);
         };
         
         tabs._addTab = (id, insertHeader, insertContent, state) => {

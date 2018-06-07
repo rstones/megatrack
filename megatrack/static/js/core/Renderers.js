@@ -32,6 +32,18 @@ mgtrk.Renderers = (function() {
         renderers.initSetup = true;
         renderers.views = {};
         
+        renderers.findVolumeLabelmapIndex = function(code) {
+            const labelmaps = renderers.volume.labelmap;
+            let idx = 0;
+            for (let i=0; i<labelmaps.length; i++) {
+                if (labelmaps[i].code === code) {
+                    idx = i;
+                    break;
+                }
+            }
+            return idx;
+        };
+        
         /*
          * Resets volume slices when a new labelmap is added and the file needs loading
          */

@@ -7,7 +7,7 @@ var mgtrk = mgtrk || {};
 mgtrk.LesionTractTabs = (function() {
     const LesionTractTabs = {};
     
-    LesionTractTabs.init = (_parent, initState, tabSelectHandler) => {
+    LesionTractTabs.init = (_parent, initState) => {
     
         // insert a popup to show tract info
         var infoPopupContent = function(popupContentId) {
@@ -84,7 +84,7 @@ mgtrk.LesionTractTabs = (function() {
             $(`#${contentsId}`).append(template);
             
             // show init color in colormap select
-            $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`); 
+            $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`);
             
             // add sliders to appropriate divs with init settings
             var probRangeMinHandle = $(`#${state.code}-prob-range-min-handle`);
@@ -289,7 +289,7 @@ mgtrk.LesionTractTabs = (function() {
             });
         };
         
-        lesionTractTabs = Object.assign(lesionTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState, tabSelectHandler));
+        lesionTractTabs = Object.assign(lesionTractTabs, mgtrk.TractTabs.init(_parent, contentTemplate, initState));
         
         lesionTractTabs.addTab = (state) => {
             lesionTractTabs._addTab(state.code, lesionTractTabs.templates.header, lesionTractTabs.templates.content, state);

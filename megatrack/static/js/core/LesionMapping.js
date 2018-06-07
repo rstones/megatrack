@@ -41,7 +41,7 @@ mgtrk.LesionMapping = (function() {
                                         +'<div id="lesion-analysis-running"><div class="loading-gif lesion-analysis-running-loading-gif"></div></div>'
                                     +'</div>');
         
-        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {}, function(event) {});
+        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {});
         
         // will store the disconnection data for each tract
         // needs emptying when query or lesion changes
