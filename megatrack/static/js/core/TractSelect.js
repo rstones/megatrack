@@ -195,7 +195,7 @@ mgtrk.TractSelect = (function() {
         
         $(document).on('query-update', function(event, newQuery) {
         
-           _parent.currentQuery = newQuery;
+           _parent.currentQuery = tractSelect.currentQuery = newQuery;
             
             // remove the disabled tract select message
             if ($('#add-tract-select').prop('disabled')) {
@@ -210,6 +210,25 @@ mgtrk.TractSelect = (function() {
             if (Object.keys(tractSelect.selectedTracts).length) {
                 $(document).trigger('view:disable');
             }
+            
+//             for (var tractCode in tractSelect.selectedTracts) {
+//                 /*
+//                 Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
+//                 */
+//                 _parent.renderers.updateLabelmapFile(tractCode, newQuery);
+//             }
+
+            for (var tractCode in tractSelect.selectedTracts) {
+                var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
+                _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+            }
+            
+            if (Object.keys(tractSelect.selectedTracts).length) {
+                _parent.renderers.resetSlicesForDirtyFiles();
+            }
+            
+            $(document).trigger('pop-metrics:update', [newQuery]);
+            $(document).trigger('prob-metrics:update', [newQuery]);
             
 //             for (var tractCode in tractSelect.selectedTracts) {
 //                 // check to see if we want to disable the tract
@@ -303,12 +322,12 @@ mgtrk.TractSelect = (function() {
 //                 }
 //                 tractSelect.availableTracts[tractCode].disabled = disable;
 //             }
-            /*
-            Fire an event here so the following code can move to AtlasViewer factory function
-            */
-            if (Object.keys(tractSelect.selectedTracts).length) {
-                _parent.renderers.resetSlicesForDirtyFiles();
-            }
+//             /*
+//             Fire an event here so the following code can move to AtlasViewer factory function
+//             */
+//             if (Object.keys(tractSelect.selectedTracts).length) {
+//                 _parent.renderers.resetSlicesForDirtyFiles();
+//             }
             
             // also loop through all the options in the tract select and disable the the required tracts 
 //             $('#add-tract-select option[value!=default]').each(function(idx) {

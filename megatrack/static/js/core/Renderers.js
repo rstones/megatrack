@@ -81,7 +81,7 @@ mgtrk.Renderers = (function() {
                 for (let j=0; j<renderers.volume.children[i].children.length; j++) {
                     if (renderers.volume.children[i].children[j]) {
                         // remove labelmap from slice
-                        renderers.volume.children[i].children[j]._labelmap.splice(mapToRemoveIdx, 1);
+                        renderers.volume.children[i].children[j].labelmap.splice(mapToRemoveIdx, 1);
                     }
                 }
             }
@@ -121,7 +121,7 @@ mgtrk.Renderers = (function() {
                 for (let j=0; j<renderers.volume.children[i].children.length; j++) {
                     if (renderers.volume.children[i].children[j]) {
                         // remove labelmap from slice
-                        renderers.volume.children[i].children[j]._labelmap.splice(idx, 1);
+                        renderers.volume.children[i].children[j].labelmap.splice(idx, 1);
                     }
                 }
             }
