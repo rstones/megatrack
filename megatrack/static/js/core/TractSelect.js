@@ -193,6 +193,34 @@ mgtrk.TractSelect = (function() {
             
         });
         
+        $(document).on('dataset:change', function(event, datasetCode) {
+            /*
+             * Loop through tract select and disable tracts not available for new dataset
+             * Remove tracts from renderers
+             * Remove tabs from AtlasTractTabs
+             * Disable tract select
+             */
+            for (let i=0; _parent.renderers.volume.length; i++) {
+                _parent.renderers.removeLabelmapFromVolumeNew(i);
+            }
+            
+            tractSelect.selectedTracts = {};
+            
+            tractTabs.removeAll();
+            
+            $('#add-tract-select option[value!=default]').each(function(idx) {
+                var tractCode = $(this).val();
+                var disable = false;
+                if (tractSelect.availableTracts[tractCode].datasets.indexOf(datasetCode) < 0) {
+                    disable = true;
+                }
+                $(this).prop('disabled', disable);
+            });
+            
+            $('#add-tract-select').prop('disabled', true);
+            $('#tract-disabled-msg-text').show();
+        });
+        
         $(document).on('query-update', function(event, newQuery) {
         
            _parent.currentQuery = tractSelect.currentQuery = newQuery;

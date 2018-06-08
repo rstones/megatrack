@@ -77,7 +77,7 @@ mgtrk.QueryBuilder = (function() {
             $('#'+tableId+' > tbody').append('<tr id="'+datasetQuery.dataset.code+'-query" class="dataset-query-row"><td class="dataset-query-cell">'
                     +'<div class="dataset-query-heading">'+datasetQuery.dataset.name+'</div>'
                     +'<div class="dataset-query-constraint-select"><select id="'+datasetQuery.dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
-                    +'<div class="dataset-exclude"><form><input id="'+datasetQuery.dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+datasetQuery.dataset.code+'-exclude">Exclude</label></form></div>'
+                    //+'<div class="dataset-exclude"><form><input id="'+datasetQuery.dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+datasetQuery.dataset.code+'-exclude">Exclude</label></form></div>'
                     +'<div class="dataset-remove"><div id="'+datasetQuery.dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
                     +'<div class="clear"></div>'
                     +'<table id="'+datasetQuery.dataset.code+'-query-constraints-table" class="query-constraints-table"><tbody></tbody></table>'
@@ -102,70 +102,98 @@ mgtrk.QueryBuilder = (function() {
                 $('#'+datasetQuery.dataset.code+'-query-select option[value='+queryCode+']').prop('disabled', true);
                 // set selected value to 'Add query field...
                 $('#'+datasetQuery.dataset.code+'-query-select option[value=default]').prop('selected', true);
-                $('#update-query-button').trigger('query:change');
+                $('#update-query-button').trigger('constraint:change');
                 return false;
+                
+                /*
+                 * enable 'Update' button
+                 * add constraint to dataset
+                 */
+                
             });
             
-            // on exclude checkbox being ticked, disable the dataset from future queries
-            $('#'+datasetQuery.dataset.code+'-exclude').on('change', function() {
-                if ($('#'+datasetQuery.dataset.code+'-exclude').prop('checked')) {
-                    // switch class to excluded style for this dataset
-                    $('#'+datasetQuery.dataset.code+'-query').addClass('dataset-query-row-excluded');
-                    // disable the "Add constraint..." select
-                    $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', true);
-                    // switch the class of the query constraint rows to excluded style, disable their inputs
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
-                                                                                                $(this).prop('disabled', true);
-                                                                                            });
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
-                        $(this).slider('option', 'disabled', true);
-                    });
-                    // disable the remove icons of the query constraint rows
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon').each(function() {
-                        $(this).removeClass('clickable');
-                        $(this).removeClass('remove-icon');
-                        $(this).addClass('remove-icon-disabled');
-                    });
-                    
-                    // exclude in all future updates (ie. in buildQuery function), set a flag on the DatasetQuery obj for this
-                    datasetQuery.excluded = true;
-                    // enable "Update" button
-                    $('#update-query-button').trigger('query:change');
-                } else {
-                    $('#'+datasetQuery.dataset.code+'-query').removeClass('dataset-query-row-excluded');
-                    $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', false);
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
-                                                                                                $(this).prop('disabled', false);
-                                                                                            });
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
-                        $(this).slider('option', 'disabled', false);
-                    });
-                    $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon-disabled').each(function() {
-                        $(this).addClass('clickable');
-                        $(this).removeClass('remove-icon-disabled');
-                        $(this).addClass('remove-icon');
-                    });
-                    datasetQuery.excluded = false;
-                    // enable "Update" button
-                    $('#update-query-button').trigger('query:change');
-                }
-            });
+//             // on exclude checkbox being ticked, disable the dataset from future queries
+//             $('#'+datasetQuery.dataset.code+'-exclude').on('change', function() {
+//                 if ($('#'+datasetQuery.dataset.code+'-exclude').prop('checked')) {
+//                     // switch class to excluded style for this dataset
+//                     $('#'+datasetQuery.dataset.code+'-query').addClass('dataset-query-row-excluded');
+//                     // disable the "Add constraint..." select
+//                     $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', true);
+//                     // switch the class of the query constraint rows to excluded style, disable their inputs
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
+//                                                                                                 $(this).prop('disabled', true);
+//                                                                                             });
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
+//                         $(this).slider('option', 'disabled', true);
+//                     });
+//                     // disable the remove icons of the query constraint rows
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon').each(function() {
+//                         $(this).removeClass('clickable');
+//                         $(this).removeClass('remove-icon');
+//                         $(this).addClass('remove-icon-disabled');
+//                     });
+//                     
+//                     // exclude in all future updates (ie. in buildQuery function), set a flag on the DatasetQuery obj for this
+//                     datasetQuery.excluded = true;
+//                     // enable "Update" button
+//                     $('#update-query-button').trigger('constraint:change');
+//                 } else {
+//                     $('#'+datasetQuery.dataset.code+'-query').removeClass('dataset-query-row-excluded');
+//                     $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', false);
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
+//                                                                                                 $(this).prop('disabled', false);
+//                                                                                             });
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
+//                         $(this).slider('option', 'disabled', false);
+//                     });
+//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon-disabled').each(function() {
+//                         $(this).addClass('clickable');
+//                         $(this).removeClass('remove-icon-disabled');
+//                         $(this).addClass('remove-icon');
+//                     });
+//                     datasetQuery.excluded = false;
+//                     // enable "Update" button
+//                     $('#update-query-button').trigger('constraint:change');
+//                 }
+//             });
             
             $('#'+datasetQuery.dataset.code+'-remove').on('click', function(event) {
-                $('#add-dataset-select option[value='+datasetQuery.dataset.code+']').prop('disabled', false);
-                var datasetQueries = queryBuilder.datasetQueries;
-                for (let i=0; i<datasetQueries.length; i++) {
-                    if (datasetQueries[i].datasetCode == queryBuilder.datasetCode) {
-                        datasetQueries.splice(i, 1);
-                        break;
-                    }
-                }
-                $('#'+datasetQuery.dataset.code+'-query').remove();
-                $('#update-query-button').trigger('query:change');
+//                 $('#add-dataset-select option[value='+datasetQuery.dataset.code+']').prop('disabled', false);
+//                 var datasetQueries = queryBuilder.datasetQueries;
+//                 for (let i=0; i<datasetQueries.length; i++) {
+//                     if (datasetQueries[i].datasetCode == datasetQuery.dataset.code) {
+//                         datasetQueries.splice(i, 1);
+//                         break;
+//                     }
+//                 }
+//                 $('#'+datasetQuery.dataset.code+'-query').remove();
+//                 $('#update-query-button').trigger('constraint:change');
+                
+                /*
+                 * Remove current dataset from table
+                 * Change dataset select default to 'Add dataset...' and enable all datasets
+                 * Fire 'dataset:remove' event to trigger removal of tracts in renderers and TractSelect?
+                 */
+                $(`#add-dataset-select option[value=${datasetCode}]`).prop('disabled', false);
+                $(`#add-dataset-select option[value=default`).html('Add dataset...');
+                removeDatasetQuery(datasetQuery.dataset.code);
+                $('#update-query-button').trigger('constraint:change');
             });
             
             return datasetQuery;
             
+        };
+        
+        const removeDatasetQuery = (datasetCode) => {
+              var datasetQueries = queryBuilder.datasetQueries;
+              for (let i=datasetQueries.length; i--;) {
+                  if (datasetQueries[i].datasetCode === datasetCode) {
+                      datasetQueries.splice(i,1);
+                      break;
+                  }
+              }
+              $(`#${datasetCode}-query`).remove();
+              $(`#${datasetCode}-spacer`).remove();
         };
         
         const addQueryConstraint = (type, queryCode, queryParams, datasetCode, parent) => {
@@ -202,8 +230,14 @@ mgtrk.QueryBuilder = (function() {
                     // remove query row and spacer row
                     $('#'+datasetCode+'-'+queryCode+'-query').remove();
                     $('#'+datasetCode+'-'+queryCode+'-spacer').remove();
-                    $('#update-query-button').trigger('query:change');
+                    $('#update-query-button').trigger('constraint:change');
                 }
+                
+                /*
+                 * enable 'Update' button if there are still other constraints active
+                 * disable 'Update' button if no more constraints active
+                 * remove constraint from dataset
+                 */
             });
             
             const rangeConstraint = function() {
@@ -228,7 +262,7 @@ mgtrk.QueryBuilder = (function() {
                         // update age range slider label
                         minHandle.text(ui.values[0]);
                         maxHandle.text(ui.values[1]);
-                        $('#update-query-button').trigger('query:change');
+                        $('#update-query-button').trigger('constraint:change');
                     }
                 });
             };
@@ -321,9 +355,28 @@ mgtrk.QueryBuilder = (function() {
         
         $('#add-dataset-select').change(function(event) {
             const datasetCode = event.currentTarget.value;
-            $('#add-dataset-select option[value='+datasetCode+']').prop('disabled', true);
-            $('#add-dataset-select option[value=default]').prop('selected', true);
+//             $('#add-dataset-select option[value='+datasetCode+']').prop('disabled', true);
+//             $('#add-dataset-select option[value=default]').prop('selected', true);
+//             queryBuilder.datasetQueries.push(addDatasetQuery(queryBuilder.datasetTableId, datasetCode, queryBuilder.data[datasetCode]));
+            
+            /*
+             * Remove any current dataset from the query builder table
+             * Insert new dataset into the table
+             * Change the select default to 'Change dataset...' and disable selected dataset
+             * Fire 'dataset:change' so TractSelect can update with tracts available for current dataset
+             */
+            if (queryBuilder.datasetQueries.length) {
+                var oldDatasetCode = queryBuilder.datasetQueries[0].datasetCode;
+                removeDatasetQuery(oldDatasetCode);
+                $(`#add-dataset-select option[value=${oldDatasetCode}]`).prop('disabled', false);
+                queryBuilder.datasetQueries = [];
+            }
             queryBuilder.datasetQueries.push(addDatasetQuery(queryBuilder.datasetTableId, datasetCode, queryBuilder.data[datasetCode]));
+            $(`#add-dataset-select option[value=${datasetCode}]`).prop('disabled', true);
+            $(`#add-dataset-select option[value=default]`).html('Change dataset...');
+            $('#add-dataset-select option[value=default]').prop('selected', true);
+            
+            $(document).trigger('dataset:change', [datasetCode]);
         });
         
         /*
@@ -366,7 +419,7 @@ mgtrk.QueryBuilder = (function() {
             }
         });
         
-        updateButton.on('query:change', function() {
+        updateButton.on('constraint:change', function() {
             var newQuery = buildQueryObject();
             // This object comparison will fail if two objects have the same properties
             // but ordered differently
@@ -382,7 +435,11 @@ mgtrk.QueryBuilder = (function() {
         });
         
         $('#dataset-table').on('change', 'input', function(event) {
-            updateButton.trigger('query:change');
+            updateButton.trigger('constraint:change');
+            
+            /*
+             * Enable 'Update' button
+             */
         });
         
         return {
