@@ -57,11 +57,11 @@ mgtrk.AtlasTractTabs = (function() {
                                 </div>
                                 <div class="tab-content-tract-metrics">
                                     <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span>Probabalistic atlas metrics:</span>
+                                        <span class="metrics-label">Probabalistic metrics:</span><div id="prob-metrics-help" class="metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-prob-metrics"></div>
                                     </div>
                                     <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span>Population metrics:</span>
+                                        <span class="metrics-label">Population metrics:</span><div id="pop-metrics-help" class="metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
@@ -223,11 +223,15 @@ mgtrk.AtlasTractTabs = (function() {
                     dataType: 'json',
                     success: function(data) {
                         if (data) {
-                            $(`#${state.code}-prob-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                            $(`#${state.code}-prob-metrics`).html(`<div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">Vol:</div> ${data.volume.toFixed(1)}ml
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">MD:</div> ${data.meanMD.toFixed(3)} (${data.stdMD.toFixed(3)})
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">FA:</div> ${data.meanFA.toFixed(3)} (${data.stdFA.toFixed(3)})
+                                                                    </div>`);   
                         }
                     }
                 });
@@ -252,11 +256,15 @@ mgtrk.AtlasTractTabs = (function() {
                     dataType: 'json',
                     success: function(data) {
                         if (data) {
-                            $(`#${state.code}-pop-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                            $(`#${state.code}-pop-metrics`).html(`<div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">Vol:</div> ${data.volume.toFixed(1)}ml
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">MD:</div> ${data.meanMD.toFixed(3)} (${data.stdMD.toFixed(3)})
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">FA:</div> ${data.meanFA.toFixed(3)} (${data.stdFA.toFixed(3)})
+                                                                    </div>`);   
                         }
                     }
                 });
