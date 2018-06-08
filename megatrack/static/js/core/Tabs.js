@@ -43,7 +43,7 @@ mgtrk.Tabs = (function() {
             if (tabs.cache) {
                 const cacheKeys = Object.keys(tabs.cache);
                 for (let i=0; i<cacheKeys.length; i++) {
-                    tabs.removeTab(tabs.cache[cacheKeys[i]].id);
+                    tabs.removeTab(cacheKeys[i]);
                 }
             }
             // reset scroll controls
