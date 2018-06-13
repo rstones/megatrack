@@ -417,6 +417,29 @@
     float: right
 }
 
+#metrics-help-popup {
+    width: 700px;
+    height: 500px;
+}
+
+#metrics-help-popup-title { 
+    text-align: left;
+    font-size: 120%;
+    float: left;
+    width: 700px;
+    margin-bottom: 20px;
+}
+
+#metrics-help-popup-description {
+    text-align: left;
+}
+
+#metrics-help-popup-description > ul {
+    list-style: circle;
+    padding: 20px;
+    line-height: 22px;
+}
+
 #tract-info-description {
     width: 100%;
     height: 55%;

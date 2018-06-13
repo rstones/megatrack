@@ -44,11 +44,11 @@
 .tab-content-tract-info {
     width: 62%;
     height: 25%;
-    /*margin: 10px 0px;*/
+    margin: 5px 0px;
     float: left;
     border-left: 1px solid lightgrey;
     overflow-y: scroll;
     text-align: left;
-    font-size: 85%;
+    font-size: 95%;
     padding: 0px 10px 10px 10px;
 }
