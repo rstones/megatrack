@@ -64,11 +64,11 @@ mgtrk.AtlasTractTabs = (function() {
                                 </div>
                                 <div class="tab-content-tract-metrics">
                                     <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Probabalistic metrics:</span><div id="prob-metrics-help" class="metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Probabalistic metrics:</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-prob-metrics"></div>
                                     </div>
                                     <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Population metrics:</span><div id="pop-metrics-help" class="metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Population metrics:</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@ mgtrk.AtlasTractTabs = (function() {
                 infoPopup.open(updatePopupContent);
             });
             
-            $(`#prob-metrics-help`).on('click', function(event) {
+            $(`.prob-metrics-help`).on('click', function(event) {
                 const updatePopupContent = function() {
                     $('#metrics-help-popup-title').html('Probabilistic metrics');
                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
@@ -246,7 +246,7 @@ mgtrk.AtlasTractTabs = (function() {
                 metricsHelpPopup.open(updatePopupContent);
             });
             
-            $(`#pop-metrics-help`).on('click', function(event) {
+            $(`.pop-metrics-help`).on('click', function(event) {
                 const updatePopupContent = function() {
                     $('#metrics-help-popup-title').html('Population metrics');
                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
