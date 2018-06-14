@@ -118,6 +118,7 @@ mgtrk.TractSelect = (function() {
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
+             delete tractSelect.selectedTracts[tractCode];
              _parent.renderers.removeLabelmapFromVolumeNew(_parent.renderers.findVolumeLabelmapIndex(tractCode));
         });
         
@@ -232,32 +233,21 @@ mgtrk.TractSelect = (function() {
             }
             
             var datasets = Object.keys(newQuery);
-            //var currentInfoTractCode = currentInfoTractCode;
             
-            // fire event to disable the views while tracts are updated
             if (Object.keys(tractSelect.selectedTracts).length) {
+                // fire event to disable the views while tracts are updated
                 $(document).trigger('view:disable');
-            }
-            
-//             for (var tractCode in tractSelect.selectedTracts) {
-//                 /*
-//                 Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
-//                 */
-//                 _parent.renderers.updateLabelmapFile(tractCode, newQuery);
-//             }
-
-            for (var tractCode in tractSelect.selectedTracts) {
-                var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
-                _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
-            }
-            
-            if (Object.keys(tractSelect.selectedTracts).length) {
+                // update tracts
+                for (var tractCode in tractSelect.selectedTracts) {
+                    var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
+                    _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+                }
                 _parent.renderers.resetSlicesForDirtyFiles();
+                // trigger update of metrics
+                $(document).trigger('pop-metrics:update', [newQuery]);
+                $(document).trigger('prob-metrics:update', [newQuery]);
             }
-            
-            $(document).trigger('pop-metrics:update', [newQuery]);
-            $(document).trigger('prob-metrics:update', [newQuery]);
-            
+
 //             for (var tractCode in tractSelect.selectedTracts) {
 //                 // check to see if we want to disable the tract
 //                 var disable = false;
