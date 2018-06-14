@@ -221,7 +221,7 @@ mgtrk.TractSelect = (function() {
             $('#tract-disabled-msg-text').show();
         });
         
-        $(document).on('query-update', function(event, newQuery) {
+        $(document).on('query:update', function(event, newQuery) {
         
            _parent.currentQuery = tractSelect.currentQuery = newQuery;
             

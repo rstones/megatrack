@@ -391,7 +391,7 @@ mgtrk.QueryBuilder = (function() {
             if (updateButton.hasClass('update-query-button-active')) {
                 var newQuery = buildQueryObject();
                 if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
-                    $.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
+                    $.event.trigger('query:update', newQuery); // trigger updating for tract explorer etc...
                     // show loading gif in #query-info div here
                     $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+'<div class="loading-gif"></div></span>');
                     $.ajax({
