@@ -3,12 +3,26 @@ Created on 14 Sep 2017
 
 @author: richard
 '''
-from megatrack.models import Tract, Subject, Dataset, DatasetTracts, SubjectTractMetrics
+from megatrack.models import Tract, Subject, Dataset, Method, DatasetTracts, SubjectTractMetrics
 import numpy as np
 
 def get_dataset_select_info():
     '''Get all the datasets for select menu'''
-    return Dataset.query.all()
+    dataset_methods = DatasetTracts.query.with_entities(DatasetTracts.dataset_code, DatasetTracts.method_code).all()
+    # get unique dataset/method combinations
+    dataset_methods = set(dataset_methods)
+    
+    # construct list of dicts with all dataset info
+    result = {}
+    for dm in dataset_methods:
+        try:
+            dataset = result[dm[0]]
+            dataset['methods'].append(dm[1])
+        except KeyError:
+            dataset = Dataset.query.filter(Dataset.code == dm[0]).first()
+            result[dm[0]] = {"code": dm[0], "name": dataset.name, "query_params": dataset.query_params, "methods": [dm[1]]}
+    
+    return list(result.values())
 
 def get_tract_select_info():
     '''Get tracts for select menu, grouped by the those attached to at least one dataset and those unattached.
