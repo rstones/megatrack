@@ -11,6 +11,7 @@ import jwt
 import datetime
 import json
 from json.decoder import JSONDecodeError
+import code
 
 class Subject(db.Model):
     '''
@@ -162,14 +163,29 @@ class SubjectTractMetrics(db.Model):
         
 class DatasetTracts(db.Model):
     dataset_code = db.Column(db.String(12), db.ForeignKey('dataset.code', onupdate='CASCADE'), primary_key=True)
+    method_code = db.Column(db.String(12), db.ForeignKey('method.code', onupdate='CASCADE'), primary_key=True)
     tract_code = db.Column(db.String(10), db.ForeignKey('tract.code', onupdate='CASCADE'), primary_key=True)
     
-    def __init__(self, dataset_code, tract_code):
+    def __init__(self, dataset_code, method_code, tract_code):
         self.dataset_code = dataset_code
+        self.method_code = method_code
         self.tract_code = tract_code
         
     def __repr__(self):
-        return '<DatasetTracts %r>' % (self.dataset_code + ' ' + self.tract_code)
+        return '<DatasetTracts %r>' % (self.dataset_code + ' ' + self.method_code + ' ' + self.tract_code)
+    
+class Method(db.Model):
+    code = db.Column(db.String(12), primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(1000))
+    
+    def __init__(self, code, name, description):
+        self.code = code
+        self.name = name
+        self.description = description
+        
+    def __repr__(self):
+        return '<Method %r>' % (self.code + ' ' + self.name)
     
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
