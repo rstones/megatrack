@@ -8,7 +8,7 @@ from flask_testing import TestCase
 import mock
 import numpy as np
 import megatrack.database_utils as dbu
-from megatrack.models import db, Tract, Dataset, Subject, DatasetTracts, SubjectTractMetrics
+from megatrack.models import db, Tract, Dataset, Method, Subject, DatasetTracts, SubjectTractMetrics
 from megatrack.alchemy_encoder import AlchemyEncoder
 from sqlalchemy.sql.expression import BinaryExpression
 from flask import Flask
@@ -42,6 +42,14 @@ class DatabaseUtilsTestCase(TestCase):
     dataset2_name = 'Test Dataset 2'
     dataset2_file_path = 'test_dataset_2'
     dataset2_query_params = '{}'
+    
+    method1_code = 'DTI'
+    method1_name = 'Diffusion Tensor Imaging'
+    method1_description = ''
+    
+    method2_code = 'SD'
+    method2_name = 'Spherical Deconvolution'
+    method2_description = ''
     
     sbjct1_subject_id = 'BRCATLAS001'
     sbjct1_gender = 'M'
@@ -106,17 +114,62 @@ class DatabaseUtilsTestCase(TestCase):
                           file_path=DatabaseUtilsTestCase.dataset1_file_path,
                           query_params=DatabaseUtilsTestCase.dataset1_query_params)
         db.session.add(dataset1)
+        
         dataset2 = Dataset(code=DatabaseUtilsTestCase.dataset2_code,
                           name=DatabaseUtilsTestCase.dataset2_name,
                           file_path=DatabaseUtilsTestCase.dataset2_file_path,
                           query_params=DatabaseUtilsTestCase.dataset2_query_params)
         db.session.add(dataset2)
+        
+        method1 = Method(code=DatabaseUtilsTestCase.method1_code,
+                         name=DatabaseUtilsTestCase.method1_name,
+                         description=DatabaseUtilsTestCase.method1_description)
+        db.session.add(method1)
+        
+        method2 = Method(code=DatabaseUtilsTestCase.method2_code,
+                         name=DatabaseUtilsTestCase.method2_name,
+                         description=DatabaseUtilsTestCase.method2_description)
+        db.session.add(method2)
+        
+        dataset_tracts1 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset1_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
+                                     tract_code=DatabaseUtilsTestCase.tract1_code)
+        db.session.add(dataset_tracts1)
+        
+        dataset_tracts2 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset1_code,
+                                     method_code=DatabaseUtilsTestCase.method2_code,
+                                     tract_code=DatabaseUtilsTestCase.tract1_code)
+        db.session.add(dataset_tracts2)
+        
+        dataset_tracts3 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset2_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
+                                     tract_code=DatabaseUtilsTestCase.tract1_code)
+        db.session.add(dataset_tracts3)
+        
+        dataset_tracts4 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset2_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
+                                     tract_code=DatabaseUtilsTestCase.tract2_code)
+        db.session.add(dataset_tracts4)
+        
         db.session.commit()
         
+        dataset_codes = set([DatabaseUtilsTestCase.dataset1_code, DatabaseUtilsTestCase.dataset2_code])
+        method_codes = set([DatabaseUtilsTestCase.method1_code, DatabaseUtilsTestCase.method2_code])
+        
         datasets = dbu.get_dataset_select_info()
+        
         assert len(datasets) == 2
-        assert datasets[0].code == DatabaseUtilsTestCase.dataset1_code
-        assert datasets[1].code == DatabaseUtilsTestCase.dataset2_code
+        assert datasets[0]['code'] in dataset_codes
+        assert datasets[1]['code'] in dataset_codes.symmetric_difference([datasets[0]['code']])
+        
+        for dataset in datasets:
+            if dataset['code'] == DatabaseUtilsTestCase.dataset1_code:
+                assert len(dataset['methods']) == 2
+                assert dataset['methods'][0] in method_codes
+                assert dataset['methods'][1] in method_codes.symmetric_difference([dataset['methods'][0]])
+            else:
+                assert len(dataset['methods']) == 1
+                assert dataset['methods'][0] == DatabaseUtilsTestCase.method1_code
         
     def test_get_tract_select_info(self):
         
