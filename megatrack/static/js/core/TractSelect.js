@@ -212,10 +212,10 @@ mgtrk.TractSelect = (function() {
             $('#add-tract-select option[value!=default]').each(function(idx) {
                 var tractCode = $(this).val();
                 var disable = false;
-                if (tractSelect.availableTracts[tractCode].datasets.indexOf(datasetCode) < 0) {
-                    disable = true;
-                }
-                $(this).prop('disabled', disable);
+//                 if (tractSelect.availableTracts[tractCode].datasets.indexOf(datasetCode) < 0) {
+//                     disable = true;
+//                 }
+//                 $(this).prop('disabled', disable);
             });
             
             $('#add-tract-select').prop('disabled', true);

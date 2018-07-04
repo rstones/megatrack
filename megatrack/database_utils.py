@@ -102,6 +102,19 @@ def subject_id_dataset_file_path(request_query):
         ids_file_paths += Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).filter(*dataset_filter).all()
     return ids_file_paths
 
+def density_map_file_path_data(request_query):
+    '''Returns a list of lists containing subject id, the associated dataset file path and method code for the given query'''
+    data = []
+    for key in request_query:
+        dataset_filter = construct_subject_query_filter(request_query[key]['constraints'])
+        dataset_filter.append(Subject.dataset_code == key)
+        sbjct_data = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).filter(*dataset_filter).all()
+        sbjct_data = np.array(sbjct_data)
+        method_column = np.empty((sbjct_data.shape[0], 1), dtype=object)
+        method_column.fill(request_query[key]['method'])
+        data += np.append(sbjct_data, method_column, axis=1).tolist()
+    return data
+
 def subject_tract_metrics(request_query, tract_code):
     '''Get the subject tract metrics for the subjects returned from the given query and the given tract code.'''
     subject_ids = []
