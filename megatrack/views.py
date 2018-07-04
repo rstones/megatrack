@@ -251,7 +251,7 @@ def get_tract(tract_code):
         subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
         
         if len(subject_ids_dataset_path) > 0:
-            temp_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            temp_file_path = du.generate_average_density_map(data_dir, request_query['method'], subject_ids_dataset_path, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
             current_app.cache.set(cache_key, cached_data)
@@ -289,7 +289,7 @@ def get_dynamic_tract_info(tract_code, threshold):
         
         if len(subject_ids_dataset_path) > 0:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            tract_file_path = du.generate_average_density_map(data_dir, request_query['method'], subject_ids_dataset_path, tract, 'MNI')
         
         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
@@ -344,7 +344,7 @@ def get_static_tract_info(tract_code):
         
         if len(subject_ids_dataset_path) > 0:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            tract_file_path = du.generate_average_density_map(data_dir, request_query['method'], subject_ids_dataset_path, tract, 'MNI')
         
         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
@@ -514,7 +514,7 @@ def lesion_analysis(lesion_code, threshold):
             # save averaged map and cache the file path
             if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
                 tract_code = tract.code
-                tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+                tract_file_path = du.generate_average_density_map(data_dir, request_query['method'], subject_ids_dataset_path, tract, 'MNI')
                 current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
                 cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
                 current_app.cache.set(cache_key, cached_data)
