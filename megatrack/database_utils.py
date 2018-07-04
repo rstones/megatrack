@@ -54,15 +54,6 @@ def get_tract_select_info():
                         result[tract.code]['datasets'][dm[0]].append(dm[1])
                     except KeyError:
                         result[tract.code]['datasets'][dm[0]] = [dm[1]]
-                
-#                 dataset_tracts = dataset_method_tracts[:,[0,1]]
-#                 method_tracts = dataset_method_tracts[:,[1,2]]
-#                 dataset_idx = np.where(dataset_tracts[:,1] == tract.code)[0]
-#                 methods_idx = np.where(method_tracts[:,1] == tract.code)[0]
-#                 result[tract.code] = {"name": tract.name,
-#                                        "description": tract.description,
-#                                        "datasets": dataset_tracts[:,0][dataset_idx].tolist(),
-#                                        "methods": method_tracts[:,0][methods_idx].tolist()}
             else:
                 ignored_tracts.append(tract.code)
             
