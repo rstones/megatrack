@@ -142,6 +142,7 @@ class Dataset(db.Model):
         
 class SubjectTractMetrics(db.Model):
     subject_id = db.Column(db.String(12), db.ForeignKey('subject.subject_id', onupdate='CASCADE'), primary_key=True)
+    method_code = db.Column(db.String(12), db.ForeignKey('method.code'), onupdate='CASCADE', primary_key=True)
     tract_code = db.Column(db.String(10), db.ForeignKey('tract.code', onupdate='CASCADE'), primary_key=True)
     mean_MD = db.Column(db.Float(5), nullable=False)
     std_MD = db.Column(db.Float(5), nullable=False)
@@ -149,8 +150,9 @@ class SubjectTractMetrics(db.Model):
     std_FA = db.Column(db.Float(5), nullable=False)
     volume = db.Column(db.Float(5), nullable=False)
     
-    def __init__(self, subject_id, tract_code, mean_MD, std_MD, mean_FA, std_FA, volume):
+    def __init__(self, subject_id, method_code, tract_code, mean_MD, std_MD, mean_FA, std_FA, volume):
         self.subject_id = subject_id
+        self.method_code = method_code
         self.tract_code = tract_code
         self.mean_MD = mean_MD
         self.std_MD = std_MD
@@ -159,7 +161,7 @@ class SubjectTractMetrics(db.Model):
         self.volume = volume
         
     def __repr__(self):
-        return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.tract_code
+        return '<SubjectTractMetrics %r>' % self.subject_id + ' ' + self.method_code + ' ' + self.tract_code
         
 class DatasetTracts(db.Model):
     dataset_code = db.Column(db.String(12), db.ForeignKey('dataset.code', onupdate='CASCADE'), primary_key=True)
