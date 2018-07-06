@@ -19,6 +19,13 @@ mgtrk.AtlasTractTabs = (function() {
         
         var infoPopup = mgtrk.Popup.init({}, `${_parent.tractTabsContainerId}`, 'tract-info-popup', infoPopupContent, 'info-popup');
         
+        var metricsHelpContent = function(popupContentId) {
+            $(`#${popupContentId}`).append(`<div id="metrics-help-popup-title"></div>
+                                            <div id="metrics-help-popup-description"></div>`);
+        };
+        
+        var metricsHelpPopup = mgtrk.Popup.init({}, `${_parent.tractTabsContainerId}`, 'metrics-help-popup', metricsHelpContent, 'info-popup');
+        
         // setup trk renderer within the popup
         var atlasTractTabs = {};
         atlasTractTabs.trkRenderer = new X.renderer3D();
@@ -57,11 +64,11 @@ mgtrk.AtlasTractTabs = (function() {
                                 </div>
                                 <div class="tab-content-tract-metrics">
                                     <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span>Probabalistic atlas metrics:</span>
+                                        <span class="metrics-label">Probabalistic metrics:</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-prob-metrics"></div>
                                     </div>
                                     <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span>Population metrics:</span>
+                                        <span class="metrics-label">Population metrics:</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
@@ -217,17 +224,63 @@ mgtrk.AtlasTractTabs = (function() {
                 infoPopup.open(updatePopupContent);
             });
             
+            $(`.prob-metrics-help`).on('click', function(event) {
+                const updatePopupContent = function() {
+                    $('#metrics-help-popup-title').html('Probabilistic metrics');
+                    $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
+                                                                are calculated as follows:
+                                                                <ul>
+                                                                    <li>We obtain a tract population map from binarised density maps
+                                                                     of individual subject in a certain demographic.</li>
+                                                                    <li>The individual MD and FA maps for the subjects in a demographic
+                                                                     are averaged.</li>
+                                                                    <li>We use the thresholded tract population map (taking only voxels above
+                                                                     a given probability) as a mask for the averaged MD (FA) map.</li>
+                                                                     <li>A weighted mean of the unmasked averaged MD (FA) map voxels is then 
+                                                                     taken. The tract population voxels are used as the weights.</li>
+                                                                     <li>The volume of the tract is calculated by counting the number of
+                                                                     voxels in the thresholded tract population map.</li>
+                                                                     <li>All maps are in MNI space.</li>
+                                                                </ul>`);
+                };
+                metricsHelpPopup.open(updatePopupContent);
+            });
+            
+            $(`.pop-metrics-help`).on('click', function(event) {
+                const updatePopupContent = function() {
+                    $('#metrics-help-popup-title').html('Population metrics');
+                    $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
+                                                                are calculated as follows:
+                                                                <ul>
+                                                                    <li>The volumes of the individual subject tract density maps are averaged
+                                                                     to get the mean volume.</li>
+                                                                    <li>For individual subjects the tract density map is used as a mask for
+                                                                     MD (FA) map.</li>
+                                                                    <li>A weighted average of the unmasked MD (FA) voxels is carried out
+                                                                     using tract voxel densities as weights.</li>
+                                                                    <li>The individual subject MD (FA) results are then averaged among the 
+                                                                    subjects in the query.</li>
+                                                                    <li>All maps are in native space.</li>
+                                                                </ul>`);
+                };
+                metricsHelpPopup.open(updatePopupContent);
+            });
+            
             var updateProbMetrics = function(query, threshold) {
                 $.ajax({
                     url: `${_parent.rootPath}/get_tract_info/${state.code}/${threshold}?${$.param(query)}`,
                     dataType: 'json',
                     success: function(data) {
                         if (data) {
-                            $(`#${state.code}-prob-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                            $(`#${state.code}-prob-metrics`).html(`<div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">Vol:</div> ${data.volume.toFixed(1)}ml
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">MD:</div> ${data.meanMD.toFixed(3)} (${data.stdMD.toFixed(3)})
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">FA:</div> ${data.meanFA.toFixed(3)} (${data.stdFA.toFixed(3)})
+                                                                    </div>`);   
                         }
                     }
                 });
@@ -252,11 +305,15 @@ mgtrk.AtlasTractTabs = (function() {
                     dataType: 'json',
                     success: function(data) {
                         if (data) {
-                            $(`#${state.code}-pop-metrics`).html(`Volume: ${data.volume.toFixed(1)}ml<br>
-                                                                Mean MD: ${data.meanMD.toFixed(3)}&nbsp
-                                                                Std MD: ${data.stdMD.toFixed(3)}<br>
-                                                                Mean FA: ${data.meanFA.toFixed(3)}&nbsp
-                                                                Std FA: ${data.stdFA.toFixed(3)}<br>`);   
+                            $(`#${state.code}-pop-metrics`).html(`<div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">Vol:</div> ${data.volume.toFixed(1)}ml
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">MD:</div> ${data.meanMD.toFixed(3)} (${data.stdMD.toFixed(3)})
+                                                                    </div>
+                                                                    <div class="tract-metrics-row">
+                                                                        <div class="tract-metrics-row-label">FA:</div> ${data.meanFA.toFixed(3)} (${data.stdFA.toFixed(3)})
+                                                                    </div>`);   
                         }
                     }
                 });

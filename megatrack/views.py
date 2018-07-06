@@ -248,10 +248,11 @@ def get_tract(tract_code):
         data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
         request_query = jquery_unparam(request.query_string.decode('utf-8'))
         request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
-        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        file_path_data = dbu.density_map_file_path_data(request_query)
         
-        if len(subject_ids_dataset_path) > 0:
-            temp_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+        if len(file_path_data) > 0:
+            temp_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
             current_app.cache.set(cache_key, cached_data)
@@ -285,11 +286,12 @@ def get_dynamic_tract_info(tract_code, threshold):
 
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
         # recalculate average density map for tract
-        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        file_path_data = dbu.density_map_file_path_data(request_query)
         
-        if len(subject_ids_dataset_path) > 0:
+        if len(file_path_data) > 0:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
         
         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
@@ -337,14 +339,15 @@ def get_static_tract_info(tract_code):
     
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
         # recalculate average density map for tract
-        subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+        file_path_data = dbu.density_map_file_path_data(request_query)
         tract = dbu.get_tract(tract_code)
         if not tract:
             return 'The requested tract ' + tract_code + ' does not exist', 404
         
-        if len(subject_ids_dataset_path) > 0:
+        if len(file_path_data) > 0:
             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-            tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+            tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
         
         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
@@ -480,8 +483,9 @@ def lesion_analysis(lesion_code, threshold):
     
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
-    if not len(subject_ids_dataset_path):
+    #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    file_path_data = dbu.density_map_file_path_data(request_query)
+    if not len(file_path_data):
         return 'No subjects in dataset query', 400
     
     try:
@@ -514,7 +518,7 @@ def lesion_analysis(lesion_code, threshold):
             # save averaged map and cache the file path
             if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
                 tract_code = tract.code
-                tract_file_path = du.generate_average_density_map(data_dir, subject_ids_dataset_path, tract, 'MNI')
+                tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
                 current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
                 cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
                 current_app.cache.set(cache_key, cached_data)
@@ -577,8 +581,9 @@ def lesion_analysis(lesion_code, threshold):
 def lesion_tract_disconnect(lesion_code, tract_code):
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
-    if not len(subject_ids_dataset_path):
+    #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    file_path_data = dbu.density_map_file_path_data(request_query)
+    if not len(file_path_data):
         return 'No subjects in dataset query', 400
     
     data_dir = current_app.config['DATA_FILE_PATH']
@@ -593,8 +598,8 @@ def lesion_tract_disconnect(lesion_code, tract_code):
     num_streamlines_per_subject = []
     disconnected_streamlines_per_subject = []
     percent_disconnect_per_subject = []
-    for subject_id, dataset_dir in subject_ids_dataset_path:
-        file_path = du.file_path(data_dir, dataset_dir, tract.file_path, subject_id, 'MNI', tract_code, 'trk')
+    for subject_id, dataset_dir, method in file_path_data:
+        file_path = du.file_path(data_dir, dataset_dir, tract.file_path, method, subject_id, 'MNI', tract_code, 'trk')
         num_streamlines, disconnected_streamlines, percent_disconnect = lu.calculate_tract_disconnection(file_path, lesion_data)
         num_streamlines_per_subject.append(num_streamlines)
         disconnected_streamlines_per_subject.append(disconnected_streamlines)

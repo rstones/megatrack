@@ -3,10 +3,20 @@ var mgtrk = mgtrk || {};
 mgtrk.Popup = (function() {
     const Popup = {};
     
+    Popup.popupIds = [];
+    
     // insert popup background screen once for page
     $(document).ready(function() {
         $('body').append('<div id="popup-background-screen"></div>');
         $('#popup-background-screen').hide();
+        
+        // hide popups and background screen on background click
+        $('#popup-background-screen').on('click', function(event) {
+            for (let i=0; i<Popup.popupIds.length; i++) {
+                $(`#${Popup.popupIds[i]}`).hide();
+            }
+            Popup.hideScreen();
+        });
     });
     
     Popup.showScreen = () => {
@@ -43,6 +53,9 @@ mgtrk.Popup = (function() {
         insertContent(`${popupId}-content`);
         
         $(`#${popupId}`).hide();
+        
+        // keep track of all popups in app
+        Popup.popupIds.push(popupId);
         
         /**
          * Open the popup.

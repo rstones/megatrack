@@ -26,17 +26,20 @@ mgtrk.QueryBuilder = (function() {
             let queries = queryBuilder.datasetQueries;
             for (let i=0; i<queries.length; i++) {
                 if (Object.keys(queries[i].constraints).length > 0 && !queries[i].excluded) {
-                    newQuery[queries[i].datasetCode] = {};
+                    newQuery[queries[i].datasetCode] = {
+                                                            "method":$(`#${queries[i].datasetCode}-method-select`).val(),
+                                                            "constraints": {}
+                                                        };
                     for (let key in queries[i].constraints) {
                         let constraint = queries[i].constraints[key];
-                        newQuery[queries[i].datasetCode][key] = {"type": queries[i].constraints[key].type};
-                        switch (newQuery[queries[i].datasetCode][key].type) {
+                        newQuery[queries[i].datasetCode].constraints[key] = {"type": queries[i].constraints[key].type};
+                        switch (newQuery[queries[i].datasetCode].constraints[key].type) {
                             case "radio":
-                                newQuery[queries[i].datasetCode][key].value = constraint.queryRow.find('input[name="'+key+'"]:checked').val();
+                                newQuery[queries[i].datasetCode].constraints[key].value = constraint.queryRow.find('input[name="'+key+'"]:checked').val();
                                 break;
                             case "range":
-                                newQuery[queries[i].datasetCode][key].min = $(constraint.sliderDiv).slider('values',0);
-                                newQuery[queries[i].datasetCode][key].max = $(constraint.sliderDiv).slider('values',1);
+                                newQuery[queries[i].datasetCode].constraints[key].min = $(constraint.sliderDiv).slider('values',0);
+                                newQuery[queries[i].datasetCode].constraints[key].max = $(constraint.sliderDiv).slider('values',1);
                                 break;
                             case "checkbox":
                                 // not sure if the following selector + .val() gets all the vals or just one. need to check.
@@ -45,7 +48,7 @@ mgtrk.QueryBuilder = (function() {
                                                                                                     vals.push($(this).val());
                                                                                                 });
                                 if (vals.length > 0) {
-                                    newQuery[queries[i].datasetCode][key].values = vals;
+                                    newQuery[queries[i].datasetCode].constraints[key].values = vals;
                                 } else {
                                     // This is a bit of a hack to get round if there are no checkboxes selected.
                                     // I've got a bit of a dilemma about what's most logical for users when
@@ -53,7 +56,7 @@ mgtrk.QueryBuilder = (function() {
                                     // remove constraint when they want to include all values. Or checkboxes and have
                                     // all checked and none checked meaning the same thing of include all values. Or all
                                     // checkboxes empty meaning no query?
-                                    delete newQuery[queries[i].datasetCode][key];
+                                    delete newQuery[queries[i].datasetCode].constraints[key];
                                 }
                                 break;
                         }
@@ -77,6 +80,7 @@ mgtrk.QueryBuilder = (function() {
             $('#'+tableId+' > tbody').append('<tr id="'+datasetQuery.dataset.code+'-query" class="dataset-query-row"><td class="dataset-query-cell">'
                     +'<div class="dataset-query-heading">'+datasetQuery.dataset.name+'</div>'
                     +'<div class="dataset-query-constraint-select"><select id="'+datasetQuery.dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
+                    +'<div class="dataset-query-method-select"><select id="'+datasetQuery.dataset.code+'-method-select"><option value="default" disabled selected>Method...</option></select></div>'
                     //+'<div class="dataset-exclude"><form><input id="'+datasetQuery.dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+datasetQuery.dataset.code+'-exclude">Exclude</label></form></div>'
                     +'<div class="dataset-remove"><div id="'+datasetQuery.dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
                     +'<div class="clear"></div>'
@@ -86,10 +90,22 @@ mgtrk.QueryBuilder = (function() {
             
             // populate query select menu from query builder data for this dataset
             for (let key in dataset.queryParams) {
-                $('#'+datasetQuery.dataset.code+'-query-select').append('<option id="'+key+'" value="'+key+'">'+datasetQuery.dataset.queryParams[key].label+'</option>');
+                $(`#${datasetQuery.dataset.code}-query-select`).append(`<option id="${key}" value="${key}">${datasetQuery.dataset.queryParams[key].label}</option>`);
             }
+            
+            // populate method select menu
+            for (let i=0; i<datasetQuery.dataset.methods.length; i++) {
+                const methodCode = datasetQuery.dataset.methods[i];
+                $(`#${datasetQuery.dataset.code}-method-select`).append(`<option id="" value="${methodCode}">${methodCode}</option>`);
+            }
+            if ($(`#${datasetQuery.dataset.code}-method-select option[value=DTI]`)) {
+                $(`#${datasetQuery.dataset.code}-method-select option[value=DTI]`).prop('selected', true);
+            } else {
+                $(`#${datasetQuery.dataset.code}-method-select option[value=${datasetQuery.dataset.methods[0]}]`).prop('selected', true);
+            }
+            
             // on query select, init a new QueryConstraint and add to list, disable that query from select
-            $('#'+datasetQuery.dataset.code+'-query-select').change(function(event) {
+            $(`#${datasetQuery.dataset.code}-query-select`).change(function(event) {
                 var queryCode = event.currentTarget.value;
                 datasetQuery.constraints[queryCode] = addQueryConstraint(datasetQuery.dataset.queryParams[queryCode].type,
                                                                          queryCode, 
@@ -110,6 +126,11 @@ mgtrk.QueryBuilder = (function() {
                  * add constraint to dataset
                  */
                 
+            });
+            
+            // on method select, enable update query button
+            $(`#${datasetQuery.dataset.code}-method-select`).change(function(event) {
+                $('#update-query-button').trigger('constraint:change');
             });
             
 //             // on exclude checkbox being ticked, disable the dataset from future queries
@@ -346,6 +367,7 @@ mgtrk.QueryBuilder = (function() {
                     $('#add-dataset-select').append('<option id="'+data[i].code+'" value="'+data[i].code+'">'+data[i].name+'</option>');
                     queryBuilder.data[data[i].code] = {
                                                         "code": data[i].code,
+                                                        "methods": data[i].methods,
                                                         "name": data[i].name,
                                                         "queryParams":JSON.parse(data[i].query_params)
                                                     };
@@ -391,7 +413,7 @@ mgtrk.QueryBuilder = (function() {
             if (updateButton.hasClass('update-query-button-active')) {
                 var newQuery = buildQueryObject();
                 if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
-                    $.event.trigger('query-update', newQuery); // trigger updating for tract explorer etc...
+                    $.event.trigger('query:update', newQuery); // trigger updating for tract explorer etc...
                     // show loading gif in #query-info div here
                     $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+'<div class="loading-gif"></div></span>');
                     $.ajax({

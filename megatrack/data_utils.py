@@ -12,9 +12,9 @@ from nibabel.nifti1 import Nifti1Image
 
 TEMPLATE_FILE_NAME = 'Template_T1_2mm_new_RAS.nii.gz'
 
-def file_path(data_dir, dataset_dir, subdir, subject_id, space, code, file_type):
+def file_path(data_dir, dataset_dir, subdir, method, subject_id, space, code, file_type):
     '''Constructs a file path to some data following the convention
-    <data dir>/<dataset dir>/<subdir>/<space_dir:mni|native>/<subject_id>_<space:MNI|Native>_<code>.<file_type:nii.gz|trk>'''
+    <data dir>/<dataset dir>/<subdir>/<method_dir>/<space_dir:mni|native>/<subject_id>_<space:MNI|Native>_<code>.<file_type:nii.gz|trk>'''
     
     # check space code and ensure capitalisation is correct for later
     if space.lower() == 'mni':
@@ -36,6 +36,7 @@ def file_path(data_dir, dataset_dir, subdir, subject_id, space, code, file_type)
     return data_dir + '/' \
             + dataset_dir + '/' \
             + subdir + '/' \
+            + (method.lower() + '/' if method else '') \
             + ('mni/' if space == 'MNI' else 'native/') \
             + subject_id + '_' \
             + space + '_' \
@@ -51,16 +52,39 @@ def temp_file(data_dir, code, file_type):
     return data_dir + '/' + 'temp/' + code + '_' + '{:%d-%m-%Y_%H:%M:%S:%f}'.format(datetime.datetime.now()) + file_type
         
             
-def generate_average_density_map(data_dir, subject_ids_dataset_paths, tract, space):
+# def generate_average_density_map(data_dir, method, subject_ids_dataset_paths, tract, space):
+#     '''Loads and averages the tract density maps in the file_paths list.
+#     Then saves averaged density map in data/temp folder so it can be sent in 
+#     a response later.
+#     '''
+#     data = np.zeros((len(subject_ids_dataset_paths), 91, 109, 91), dtype=np.int16)
+#     for i in range(len(subject_ids_dataset_paths)):
+#         subject_id = subject_ids_dataset_paths[i][0]
+#         dataset_dir = subject_ids_dataset_paths[i][1]
+#         data[i] = nib.load(file_path(data_dir, dataset_dir, tract.file_path, method, subject_id, space, tract.code, 'nii.gz')).get_data()
+#     
+#     data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
+#     mean = np.mean(data, axis=0)
+#     
+#     # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
+#     # maybe cache the template affine and header on startup so we don't need to do this load here?
+#     template = nib.load(data_dir+'/'+TEMPLATE_FILE_NAME)
+#     new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
+#     temp_file_path = temp_file(data_dir, tract.code , '.nii.gz')
+#     nib.save(new_img, temp_file_path)
+#     return temp_file_path
+
+def generate_average_density_map(data_dir, file_path_data, tract, space):
     '''Loads and averages the tract density maps in the file_paths list.
     Then saves averaged density map in data/temp folder so it can be sent in 
     a response later.
     '''
-    data = np.zeros((len(subject_ids_dataset_paths), 91, 109, 91), dtype=np.int16)
-    for i in range(len(subject_ids_dataset_paths)):
-        subject_id = subject_ids_dataset_paths[i][0]
-        dataset_dir = subject_ids_dataset_paths[i][1]
-        data[i] = nib.load(file_path(data_dir, dataset_dir, tract.file_path, subject_id, space, tract.code, 'nii.gz')).get_data()
+    data = np.zeros((len(file_path_data), 91, 109, 91), dtype=np.int16)
+    for i in range(len(file_path_data)):
+        subject_id = file_path_data[i][0]
+        dataset_dir = file_path_data[i][1]
+        method = file_path_data[i][2]
+        data[i] = nib.load(file_path(data_dir, dataset_dir, tract.file_path, method, subject_id, space, tract.code, 'nii.gz')).get_data()
     
     data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
     mean = np.mean(data, axis=0)
@@ -94,7 +118,7 @@ def subject_averaged_map(subject_ids_dataset_paths, map_code, data_dir):
         for i in range(len(subject_ids_dataset_paths)):
             dataset_dir = subject_ids_dataset_paths[i][1]
             subject_id = subject_ids_dataset_paths[i][0]
-            fp = file_path(data_dir, dataset_dir, 'full_brain_maps', subject_id, 'MNI', map_code, '.nii.gz')
+            fp = file_path(data_dir, dataset_dir, 'full_brain_maps', None, subject_id, 'MNI', map_code, '.nii.gz')
             subject_averaged_map[i] = get_nifti_data(fp)
     except IOError:
         raise IOError('No files found for map code ' + map_code + '. (Or possibly for the subject file names passed in)')

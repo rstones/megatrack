@@ -79,6 +79,12 @@
     float: left;
 }
 
+.dataset-query-method-select {
+    width: 22%;
+    float: left;
+    margin-left: 20px;
+}
+
 .dataset-exclude {
     width: 20%;
     float: left;

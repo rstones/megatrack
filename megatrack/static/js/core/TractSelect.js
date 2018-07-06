@@ -20,75 +20,11 @@ mgtrk.TractSelect = (function() {
         
         tractSelect.tractTabsContainerId = 'tract-tabs-container';
         
-//         tractSelect.tractSettings = {};
-//         tractSelect.tractMetrics = {};
-        
         tractSelect.availableTracts = {};
         tractSelect.selectedTracts = {};
         
         const probabilisticMetricsDescription = 'Metrics for the averaged density map as displayed in the viewer';
         const populationMetricsDescription = 'Averaged metrics of the individual subjects';
-        
-//         const populateDynamicTractInfo = function(data) {
-//             $('#tract-info-name').html(data ? data.tractName : '');
-//             $('#prob-atlas-metrics').html((data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
-//                                             +'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
-//                                             +'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
-//                                             +'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
-//                                             +'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
-//         };
-//         
-//         const populateStaticTractInfo = function(data) {
-//             $('#pop-metrics').html((data ? ('Volume: ' + data.volume.toFixed(1)  + ' ml<br>'
-//                                     +'Mean MD: ' + data.meanMD.toFixed(3) + '&nbsp&nbsp&nbsp'
-//                                     +'Std MD: ' + data.stdMD.toFixed(3) + '<br>'
-//                                     +'Mean FA: ' + data.meanFA.toFixed(3) + '&nbsp&nbsp&nbsp'
-//                                     +'Std FA: ' + data.stdFA.toFixed(3) + '<br>') : ''));
-//         };
-//         
-//         const updateDynamicTractInfo = function(tractCode) {
-//             var settings = tractSelect.tractSettings[tractCode];
-//             if (settings && settings.colormapMin != settings.colormapMinUpdate) {
-//                 var threshold = parseInt(100*settings.colormapMin);
-//                 if (tractCode == tractSelect.currentInfoTractCode) {
-//                     $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-//                 }
-//                 $.ajax({
-//                     dataType: 'json',
-//                     url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+threshold+'?'+$.param(_parent.currentQuery),
-//                     success: function(data) {
-//                         tractSelect.tractMetrics[data.tractCode].dynamic = data;
-//                         if (tractCode == tractSelect.currentInfoTractCode) {
-//                             populateDynamicTractInfo(data);
-//                         }
-//                         tractSelect.tractSettings[data.tractCode].colormapMinUpdate = tractSelect.tractSettings[data.tractCode].colormapMin;
-//                     }
-//                 });
-//             }
-//         };
-//         
-//         const updateStaticTractInfo = function() {
-//             var tractCode = tractSelect.currentInfoTractCode;
-//             //var tractSettings = tractSelect.tractSettings[tractCode];
-//             $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-//             $.ajax({
-//                 dataType: 'json',
-//                 url: _parent.rootPath + '/get_tract_info/' + tractCode + '?' + $.param(_parent.currentQuery),
-//                 success: function(data) {
-//                     tractSelect.currentInfoTractCode = data.tractCode;
-//                     populateStaticTractInfo(data);
-//                 }
-//             });
-//         };
-//         
-//         const closeTractSettings = function() {
-//             if (tractSelect.tractSettingsVisible) {
-//                 var settingsMenu = $('#tract-settings-menu');
-//                 updateDynamicTractInfo(settingsMenu.data('tractCode'));
-//                 settingsMenu.hide();
-//                 tractSelect.tractSettingsVisible = false;
-//             }
-//         };
         
         $('#'+containerId).append(`<div id="tract-select-wrapper">
                                         <div class="tract-select-container">
@@ -118,6 +54,7 @@ mgtrk.TractSelect = (function() {
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
+             delete tractSelect.selectedTracts[tractCode];
              _parent.renderers.removeLabelmapFromVolumeNew(_parent.renderers.findVolumeLabelmapIndex(tractCode));
         });
         
@@ -126,15 +63,7 @@ mgtrk.TractSelect = (function() {
             $('#add-tract-select option[value='+tractCode+']').prop('disabled', true);
             $('#add-tract-select option[value=default]').prop('selected', true);
             
-//             tractSelect.tractMetrics[tractCode] = {};
-            
             tractSelect.selectedTracts[tractCode] = tractSelect.availableTracts[tractCode];
-            
-            // check if this is the first tract to be added, if so we want to show tract info immediately
-//             var showTractInfo = Object.keys(tractSelect.selectedTracts).length == 1;
-//             if (showTractInfo) {
-//                 tractSelect.currentInfoTractCode = tractCode;
-//             }
             
             /*
             Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
@@ -155,42 +84,9 @@ mgtrk.TractSelect = (function() {
                             };
             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, 0, settings, _parent.currentQuery);
             _parent.renderers.resetSlicesForDirtyFiles();
-//             var color = tractSelect.tractSettings[tractCode].color;
-            
-            
+
             tractTabs.addTab(settings);
-            tractTabs.selectTab(settings.code);
-            
-//             // pre-fetch the tract metrics and put in cache
-//             var initThreshold = parseInt(_parent.colormaps.initColormapMin * 100);
-//             if (showTractInfo) {
-//                 $('#prob-atlas-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-//                 $('#pop-metrics').html('<div class="tract-metrics-loading-gif"></div>');
-//             }
-//             // wait to allow request for density map to be sent before fetching tract metrics 
-//             setTimeout(function() {
-//                 $.ajax({
-//                     dataType: 'json',
-//                     url: _parent.rootPath + '/get_tract_info/' + tractCode + '/'+initThreshold+'?'+$.param(_parent.currentQuery),
-//                     success: function(data) {
-//                         tractSelect.tractMetrics[data.tractCode]['dynamic'] = data;
-//                         if (showTractInfo) {
-//                             populateDynamicTractInfo(data);
-//                         }
-//                     }
-//                 });
-//                 $.ajax({
-//                     dataType: 'json',
-//                     url: _parent.rootPath + '/get_tract_info/' + tractCode + '?'+$.param(_parent.currentQuery),
-//                     success: function(data) {
-//                         tractSelect.tractMetrics[data.tractCode]['static'] = data;
-//                         if (showTractInfo) {
-//                             populateStaticTractInfo(data);
-//                         }
-//                     }
-//                 });
-//             }, 500);
-            
+            tractTabs.selectTab(settings.code);           
         });
         
         $(document).on('dataset:change', function(event, datasetCode) {
@@ -200,7 +96,7 @@ mgtrk.TractSelect = (function() {
              * Remove tabs from AtlasTractTabs
              * Disable tract select
              */
-            for (let i=0; _parent.renderers.volume.length; i++) {
+            for (let i=0; _parent.renderers.volume.labelmap.length; i++) {
                 _parent.renderers.removeLabelmapFromVolumeNew(i);
             }
             
@@ -211,17 +107,14 @@ mgtrk.TractSelect = (function() {
             $('#add-tract-select option[value!=default]').each(function(idx) {
                 var tractCode = $(this).val();
                 var disable = false;
-                if (tractSelect.availableTracts[tractCode].datasets.indexOf(datasetCode) < 0) {
-                    disable = true;
-                }
-                $(this).prop('disabled', disable);
+                $(this).prop('disabled', Object.keys(tractSelect.availableTracts[tractCode].datasets).indexOf(datasetCode) < 0);
             });
             
             $('#add-tract-select').prop('disabled', true);
             $('#tract-disabled-msg-text').show();
         });
         
-        $(document).on('query-update', function(event, newQuery) {
+        $(document).on('query:update', function(event, newQuery) {
         
            _parent.currentQuery = tractSelect.currentQuery = newQuery;
             
@@ -231,33 +124,62 @@ mgtrk.TractSelect = (function() {
                 $('#tract-disabled-msg-text').hide();
             }
             
+            // we are restricting the user to selecting only a single
+            // dataset currently so the logic below will change once
+            // multiple datasets can be selected at the same time
             var datasets = Object.keys(newQuery);
-            //var currentInfoTractCode = currentInfoTractCode;
-            
-            // fire event to disable the views while tracts are updated
-            if (Object.keys(tractSelect.selectedTracts).length) {
-                $(document).trigger('view:disable');
+            if (datasets.length > 1) {
+                console.warn('Multiple datasets selected! This shouldnt be possible.')
             }
-            
-//             for (var tractCode in tractSelect.selectedTracts) {
-//                 /*
-//                 Fire 'add-tract' event here so the following code can move to AtlasViewer factory function
-//                 */
-//                 _parent.renderers.updateLabelmapFile(tractCode, newQuery);
-//             }
-
-            for (var tractCode in tractSelect.selectedTracts) {
-                var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
-                _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+            var dataset = datasets[0];
+            var method = newQuery[dataset].method;
+                    
+            const tracts = tractSelect.availableTracts;        
+            for (let i=0; i<Object.keys(tracts).length; i++) {
+                const tractCode = Object.keys(tracts)[i];
+                // check if dataset and method are available for this tract
+                if (Object.keys(tracts[tractCode].datasets).indexOf(dataset) === -1 ||
+                        tracts[tractCode].datasets[dataset].indexOf(method) === -1) {
+                    // if the tract is selected remove from viewer and tabs
+                    if (Object.keys(tractSelect.selectedTracts).indexOf(tractCode) >= 0) {
+                        tractTabs.removeTab(tractCode);
+                        _parent.renderers.removeLabelmapFromVolume(tractCode);
+                        delete tractSelect.selectedTracts[tractCode];
+                    }
+                    // disable in tract select
+                    $(`#add-tract-select option[value=${tractCode}]`).prop('disabled', true);
+                } else if (Object.keys(tractSelect.selectedTracts).indexOf(tractCode) >= 0) {
+                    // fire event to disable the views while tracts are updated
+                    $(document).trigger('view:disable');
+                    // update tracts
+                    var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
+                    _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+                } else {
+                    // enable in tract select if not selected but available
+                    $(`#add-tract-select option[value=${tractCode}]`).prop('disabled', false);
+                }
             }
-            
             if (Object.keys(tractSelect.selectedTracts).length) {
                 _parent.renderers.resetSlicesForDirtyFiles();
+                // trigger update of metrics
+                $(document).trigger('pop-metrics:update', [newQuery]);
+                $(document).trigger('prob-metrics:update', [newQuery]);
             }
-            
-            $(document).trigger('pop-metrics:update', [newQuery]);
-            $(document).trigger('prob-metrics:update', [newQuery]);
-            
+                   
+//             if (Object.keys(tractSelect.selectedTracts).length) {
+//                 // fire event to disable the views while tracts are updated
+//                 $(document).trigger('view:disable');
+//                 // update tracts
+//                 for (var tractCode in tractSelect.selectedTracts) {
+//                     var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
+//                     _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+//                 }
+//                 _parent.renderers.resetSlicesForDirtyFiles();
+//                 // trigger update of metrics
+//                 $(document).trigger('pop-metrics:update', [newQuery]);
+//                 $(document).trigger('prob-metrics:update', [newQuery]);
+//             }
+
 //             for (var tractCode in tractSelect.selectedTracts) {
 //                 // check to see if we want to disable the tract
 //                 var disable = false;
