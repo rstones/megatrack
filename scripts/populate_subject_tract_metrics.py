@@ -41,15 +41,15 @@ def calculate_metrics(subject, tract):
     dataset_file_path = subject[1]
     tract_code = tract[0]
     tract_file_path = tract[1]
-    print('Calculating metrics for subject ' + subject_id + ' and tract ' + tract_code)
+    print(f'Calculating metrics for subject {subject_id} and tract {tract_code}')
     
     try:
-        MD = nib.load('data/'+dataset_file_path + '/full_brain_maps/native/'+subject_id+'_Native_MD.nii.gz').get_data()
-        FA = nib.load('data/'+dataset_file_path+'/full_brain_maps/native/'+subject_id+'_Native_FA.nii.gz').get_data()
+        MD = nib.load(f'data/{dataset_file_path}/full_brain_maps/native/{subject_id}_Native_MD.nii.gz').get_data()
+        FA = nib.load(f'data/{dataset_file_path}/full_brain_maps/native/{subject_id}_Native_FA.nii.gz').get_data()
     except FileNotFoundError:
-        print('Couldn\'t find maps for dataset ' + dataset_file_path + ' and subject file path ' + subject_file_path)
+        print(f'Couldn\'t find maps for dataset {dataset_file_path} and subject file path {subject_file_path}')
     
-    fp = 'data/'+dataset_file_path+'/'+tract_file_path+'/native/'+subject_id+'_Native_'+tract_code+'.nii.gz'
+    fp = f'data/{dataset_file_path}/{tract_file_path}/native/{subject_id}_Native_{tract_code}.nii.gz'
     tract_data = nib.load(fp).get_data()
     if np.any(tract_data.nonzero()):
         
@@ -74,10 +74,10 @@ def run():
 
     if full_refresh:
         num_rows_deleted = SubjectTractMetrics.query.delete()
-        response = input(str(num_rows_deleted) + ' rows will be deleted from subject_tract_metrics for a full refresh. Continue? [Y/n] ')
+        response = input(f'{num_rows_deleted} rows will be deleted from subject_tract_metrics for a full refresh. Continue? [Y/n] ')
         if response in ['Y', 'y']:
             db.session.commit()
-            print(str(num_rows_deleted) + ' rows deleted')
+            print(f'{num_rows_deleted} rows deleted')
         else:
             sys.exit('Exiting script as full refresh was cancelled')
     
