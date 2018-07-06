@@ -33,15 +33,15 @@ full_refresh = True
 def get_data():
     subjects = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path, Dataset.code).all()
     tracts = Tract.query.with_entities(Tract.code, Tract.file_path).all()
-    sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.tract_code).all())
+    sbjct_trct_mtrcs = np.array(SubjectTractMetrics.query.with_entities(SubjectTractMetrics.subject_id, SubjectTractMetrics.method_code, SubjectTractMetrics.tract_code).all())
     return subjects, tracts, sbjct_trct_mtrcs
 
-def calculate_metrics(subject, tract):
+def calculate_metrics(subject, method_code, tract):
     subject_id = subject[0]
     dataset_file_path = subject[1]
     tract_code = tract[0]
     tract_file_path = tract[1]
-    print(f'Calculating metrics for subject {subject_id} and tract {tract_code}')
+    print(f'Calculating metrics for subject {subject_id}, method {method_code} and tract {tract_code}')
     
     try:
         MD = nib.load(f'data/{dataset_file_path}/full_brain_maps/native/{subject_id}_Native_MD.nii.gz').get_data()
@@ -49,7 +49,7 @@ def calculate_metrics(subject, tract):
     except FileNotFoundError:
         print(f'Couldn\'t find maps for dataset {dataset_file_path} and subject file path {subject_file_path}')
     
-    fp = f'data/{dataset_file_path}/{tract_file_path}/native/{subject_id}_Native_{tract_code}.nii.gz'
+    fp = f'data/{dataset_file_path}/{tract_file_path}/{method_code.lower()}/native/{subject_id}_Native_{tract_code}.nii.gz'
     tract_data = nib.load(fp).get_data()
     if np.any(tract_data.nonzero()):
         
@@ -68,7 +68,7 @@ def calculate_metrics(subject, tract):
         volume = np.count_nonzero(tract_data) * 8.e-3
     else:
         av_MD = std_MD = av_FA = std_FA = volume = 0
-    return SubjectTractMetrics(subject_id, tract_code, float(av_MD), float(std_MD), float(av_FA), float(std_FA), float(volume))
+    return SubjectTractMetrics(subject_id, method_code, tract_code, float(av_MD), float(std_MD), float(av_FA), float(std_FA), float(volume))
 
 def run():
 
@@ -82,16 +82,25 @@ def run():
             sys.exit('Exiting script as full refresh was cancelled')
     
     print('Calculating new subject tract metrics...')
-    subjects, tracts, sbjct_trct_mtrcs = get_data()
+    #subjects, tracts, sbjct_trct_mtrcs = get_data()
     
-    for subject in subjects:
-        for tract in tracts:
-            dataset_tracts = DatasetTracts.query.filter(DatasetTracts.dataset_code==subject[2], DatasetTracts.tract_code==tract[0]).all()
-            if (not full_refresh and (subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,1])) \
-                    or not dataset_tracts:
-                continue
-            subject_tract_metrics = calculate_metrics(subject, tract)
-            db.session.add(subject_tract_metrics)
+    dataset_tracts = DatasetTracts.query.with_entities(DatasetTracts.dataset_code, DatasetTracts.method_code, DatasetTracts.tract_code).all()
+    
+    for dt in dataset_tracts:
+        subjects = Subject.query.with_entities(Subject.subject_id, Dataset.file_path).filter(Subject.dataset_code == dt[0]).all()
+        tract = Tract.query.with_entities(Tract.code, Tract.file_path).filter(Tract.code == dt[2]).all()[0]
+        for subject in subjects:
+            metrics = calculate_metrics(subject, dt[1], tract)
+            db.session.add(metrics)
+    
+#     for subject in subjects:
+#         for tract in tracts:
+#             dataset_tracts = DatasetTracts.query.filter(DatasetTracts.dataset_code==subject[2], DatasetTracts.tract_code==tract[0]).all()
+#             if (not full_refresh and (subject[0] in sbjct_trct_mtrcs[:,0] and tract[0] in sbjct_trct_mtrcs[:,2])) \
+#                     or not dataset_tracts:
+#                 continue
+#             subject_tract_metrics = calculate_metrics(subject, tract)
+#             db.session.add(subject_tract_metrics)
     db.session.commit()
 
 
