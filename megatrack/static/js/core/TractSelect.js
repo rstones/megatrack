@@ -124,33 +124,61 @@ mgtrk.TractSelect = (function() {
                 $('#tract-disabled-msg-text').hide();
             }
             
-            var datasets = Object.keys(newQuery.constraints);
-            var method = newQuery.method;
+            // we are restricting the user to selecting only a single
+            // dataset currently so the logic below will change once
+            // multiple datasets can be selected at the same time
+            var datasets = Object.keys(newQuery);
+            if (datasets.length > 1) {
+                console.warn('Multiple datasets selected! This shouldnt be possible.')
+            }
+            var dataset = datasets[0];
+            var method = newQuery[dataset].method;
                     
-            // for all availableTracts
-                // if not available for this dataset+method
-                    // disable in tract select menu
-                    // if currently in selected tracts
-                        // remove from TractTabs
-                        // remove from viewer
-                        // remove from selectedTracts
-                // else if in selectedTracts
-                    // update in viewer
-                    // trigger metrics update
-                        
-            if (Object.keys(tractSelect.selectedTracts).length) {
-                // fire event to disable the views while tracts are updated
-                $(document).trigger('view:disable');
-                // update tracts
-                for (var tractCode in tractSelect.selectedTracts) {
+            const tracts = tractSelect.availableTracts;        
+            for (let i=0; i<Object.keys(tracts).length; i++) {
+                const tractCode = Object.keys(tracts)[i];
+                // check if dataset and method are available for this tract
+                if (Object.keys(tracts[tractCode].datasets).indexOf(dataset) === -1 ||
+                        tracts[tractCode].datasets[dataset].indexOf(method) === -1) {
+                    // if the tract is selected remove from viewer and tabs
+                    if (Object.keys(tractSelect.selectedTracts).indexOf(tractCode) >= 0) {
+                        tractTabs.removeTab(tractCode);
+                        _parent.renderers.removeLabelmapFromVolume(tractCode);
+                        delete tractSelect.selectedTracts[tractCode];
+                    }
+                    // disable in tract select
+                    $(`#add-tract-select option[value=${tractCode}]`).prop('disabled', true);
+                } else if (Object.keys(tractSelect.selectedTracts).indexOf(tractCode) >= 0) {
+                    // fire event to disable the views while tracts are updated
+                    $(document).trigger('view:disable');
+                    // update tracts
                     var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
                     _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+                } else {
+                    // enable in tract select if not selected but available
+                    $(`#add-tract-select option[value=${tractCode}]`).prop('disabled', false);
                 }
+            }
+            if (Object.keys(tractSelect.selectedTracts).length) {
                 _parent.renderers.resetSlicesForDirtyFiles();
                 // trigger update of metrics
                 $(document).trigger('pop-metrics:update', [newQuery]);
                 $(document).trigger('prob-metrics:update', [newQuery]);
             }
+                   
+//             if (Object.keys(tractSelect.selectedTracts).length) {
+//                 // fire event to disable the views while tracts are updated
+//                 $(document).trigger('view:disable');
+//                 // update tracts
+//                 for (var tractCode in tractSelect.selectedTracts) {
+//                     var idx = _parent.renderers.findVolumeLabelmapIndex(tractCode);
+//                     _parent.renderers.updateLabelmapFileNew('tract', tractCode, idx, newQuery);
+//                 }
+//                 _parent.renderers.resetSlicesForDirtyFiles();
+//                 // trigger update of metrics
+//                 $(document).trigger('pop-metrics:update', [newQuery]);
+//                 $(document).trigger('prob-metrics:update', [newQuery]);
+//             }
 
 //             for (var tractCode in tractSelect.selectedTracts) {
 //                 // check to see if we want to disable the tract
