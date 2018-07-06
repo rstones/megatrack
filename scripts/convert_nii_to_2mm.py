@@ -13,6 +13,6 @@ for filename in os.listdir(directory):
         s = filename.rsplit('.')
         newfilename = s[0]+'_2mm.'+s[1]+'.'+s[2]
 	cmd = 'flirt -interp trilinear -in '+directory+'/'+filename+' -ref '+directory+'/'+filename+' -out '+directory+'/'+newfilename+' -applyisoxfm 2'
-	print cmd
-        os.system(cmd)
+	print(cmd)
+    os.system(cmd)
 	
