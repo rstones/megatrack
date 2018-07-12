@@ -558,18 +558,18 @@ def lesion_analysis(lesion_code, threshold):
     if np.any(rh_overlap):
         current_app.logger.info('Checking lesion overlap with right hemisphere tracts.')
         # loop through right hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%_R%')).all()
+        tracts = Tract.query.filter(Tract.code.like('%[_]R%')).all() # escape wildcard _ using square brackets
         check_lesion_tract_overlaps(tracts)
     
     if np.any(lh_overlap):
         current_app.logger.info('Checking lesion overlap with left hemisphere tracts.')
         # loop through left hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%_L%')).all()
+        tracts = Tract.query.filter(Tract.code.like('%[_]L%')).all()
         check_lesion_tract_overlaps(tracts)
     
     # loop through tracts connecting hemispheres
     current_app.logger.info('Checking lesion overlap with tracts connecting hemispheres.')
-    tracts = Tract.query.filter(~Tract.code.like('%_R%') & ~Tract.code.like('%_L%')).all() # ~ negates the like
+    tracts = Tract.query.filter(~Tract.code.like('%[_]R%') & ~Tract.code.like('%[_]L%')).all() # ~ negates the like
     check_lesion_tract_overlaps(tracts)
     
     # sort tracts by overlap score (highest to lowest)
