@@ -480,7 +480,6 @@ def lesion_analysis(lesion_code, threshold):
     
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
     
-    
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
     #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
@@ -542,9 +541,9 @@ def lesion_analysis(lesion_code, threshold):
             masked_tract_data = ma.masked_where(tract_data < threshold, tract_data)
             overlap = lesion_data * masked_tract_data
             over_threshold_count = masked_tract_data.count()
-            print(tract.code, over_threshold_count)
+            #print(tract.code, over_threshold_count)
             over_threshold_overlap_count = len(overlap.nonzero()[0]) # np.count_nonzero(overlap)
-            print(tract.code, over_threshold_overlap_count)
+            #print(tract.code, over_threshold_overlap_count)
             if over_threshold_overlap_count:
                 overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
                 # add dict to intersecting_tracts list
@@ -554,22 +553,34 @@ def lesion_analysis(lesion_code, threshold):
                                             "description": tract.description})
     
     '''Can speed up the loop through tracts by using multiprocessing pool'''
-    
+                
+    # get unique tract codes for the datasets / methods selected
+    tract_codes = set()
+    for key in request_query.keys():
+        dc = key
+        mc = request_query[key]['method']
+        tcs = DatasetTracts.query.with_entities(DatasetTracts.tract_code).filter((DatasetTracts.dataset_code==dc) & (DatasetTracts.method_code==mc)).all()
+        tcs = set(tcs)
+        tract_codes = tract_codes or tcs
+        tract_codes = tract_codes.intersection(tcs)      
+    # explode the inner tuples
+    tract_codes = [tc[0] for tc in tract_codes]
+
     if np.any(rh_overlap):
         current_app.logger.info('Checking lesion overlap with right hemisphere tracts.')
         # loop through right hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%[_]R%')).all() # escape wildcard _ using square brackets
+        tracts = Tract.query.filter(Tract.code.in_(tract_codes) & Tract.code.like('%\_R')).all() # escape sql wildcard _
         check_lesion_tract_overlaps(tracts)
     
     if np.any(lh_overlap):
         current_app.logger.info('Checking lesion overlap with left hemisphere tracts.')
         # loop through left hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%[_]L%')).all()
+        tracts = Tract.query.filter(Tract.code.in_(tract_codes) & Tract.code.like('%\_L')).all()
         check_lesion_tract_overlaps(tracts)
     
     # loop through tracts connecting hemispheres
     current_app.logger.info('Checking lesion overlap with tracts connecting hemispheres.')
-    tracts = Tract.query.filter(~Tract.code.like('%[_]R%') & ~Tract.code.like('%[_]L%')).all() # ~ negates the like
+    tracts = Tract.query.filter(Tract.code.in_(tract_codes) & ~Tract.code.like('%\_R') & ~Tract.code.like('%\_L')).all() # ~ negates the like
     check_lesion_tract_overlaps(tracts)
     
     # sort tracts by overlap score (highest to lowest)
