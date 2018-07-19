@@ -106,12 +106,15 @@ mgtrk.TractSelect = (function() {
             
             $('#add-tract-select option[value!=default]').each(function(idx) {
                 var tractCode = $(this).val();
-                var disable = false;
                 $(this).prop('disabled', Object.keys(tractSelect.availableTracts[tractCode].datasets).indexOf(datasetCode) < 0);
             });
             
             $('#add-tract-select').prop('disabled', true);
             $('#tract-disabled-msg-text').show();
+        });
+        
+        $(document).on('dataset:remove', function(event, datasetCode, noDatasetSelected) {
+            
         });
         
         $(document).on('query:update', function(event, newQuery) {

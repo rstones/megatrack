@@ -199,6 +199,9 @@ mgtrk.QueryBuilder = (function() {
                 $(`#add-dataset-select option[value=default`).html('Add dataset...');
                 removeDatasetQuery(datasetQuery.dataset.code);
                 $('#update-query-button').trigger('constraint:change');
+                // for now trigger dataset:change which will clear the renderers and TractTabs
+                // since only one dataset can be selected at a time
+                $(document).trigger('dataset:change', [datasetCode]);
             });
             
             return datasetQuery;
