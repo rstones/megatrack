@@ -240,7 +240,7 @@ mgtrk.LesionMapping = (function() {
                         // clear tract table and current tract labelmaps
                         //tractTable.clear();
                         tractTabs.removeAll();
-                        _parent.clearTracts();
+                        //_parent.clearTracts();
                          
                         const dataLen = data.length;
                         for (let i=0; i<dataLen; i++) {
@@ -284,6 +284,18 @@ mgtrk.LesionMapping = (function() {
             if (runAnalysisButton.hasClass('button')) {
                 runAnalysisPopup.open();
             }
+        });
+        
+        $(document).on('dataset:change', function(event, datasetCode) {
+            tractTabs.removeAll(); // Tabs.removeTab will fire a tabs:remove event which we use to clear renderer
+        });
+        
+        $(document).on('query:update', function(event, newQuery) {
+            tractTabs.removeAll();
+        });
+        
+        $(document).on('tabs:remove', function(event, tractCode) {
+             _parent.renderers.removeLabelmapFromVolumeNew(_parent.renderers.findVolumeLabelmapIndex(tractCode));
         });
        
         return {lesionMapping: lesionMapping};

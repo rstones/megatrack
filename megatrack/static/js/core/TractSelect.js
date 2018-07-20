@@ -113,9 +113,9 @@ mgtrk.TractSelect = (function() {
             $('#tract-disabled-msg-text').show();
         });
         
-        $(document).on('dataset:remove', function(event, datasetCode, noDatasetSelected) {
-            
-        });
+//         $(document).on('dataset:remove', function(event, datasetCode, noDatasetSelected) {
+//             
+//         });
         
         $(document).on('query:update', function(event, newQuery) {
         
