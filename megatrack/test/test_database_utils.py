@@ -202,14 +202,17 @@ class DatabaseUtilsTestCase(TestCase):
         # insert records linking 2 of the tracts to the datasets into dataset_tracts
         
         datrac1 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset1_code,
-                               tract_code=DatabaseUtilsTestCase.tract1_code)
+                               tract_code=DatabaseUtilsTestCase.tract1_code,
+                               method_code=DatabaseUtilsTestCase.method1_code)
         db.session.add(datrac1)
         datrac2 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset1_code,
-                               tract_code=DatabaseUtilsTestCase.tract2_code)
+                               tract_code=DatabaseUtilsTestCase.tract2_code,
+                               method_code=DatabaseUtilsTestCase.method1_code)
         db.session.add(datrac2)
         
         datrac3 = DatasetTracts(dataset_code=DatabaseUtilsTestCase.dataset2_code,
-                               tract_code=DatabaseUtilsTestCase.tract1_code)
+                               tract_code=DatabaseUtilsTestCase.tract1_code,
+                               method_code=DatabaseUtilsTestCase.method1_code)
         db.session.add(datrac3)
         
         db.session.commit()
@@ -350,10 +353,17 @@ class DatabaseUtilsTestCase(TestCase):
         
         test_query = {
                         "TESTDATASET1": {
-                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                    "method": "DTI",
+                                    "constraints": {
+                                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                                    }
                                     },
                         "TESTDATASET2": {
-                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                    "method": "DTI",
+                                    "constraints": {
+                                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                                    }
+                                    
                                     }
                       }
         
@@ -418,10 +428,17 @@ class DatabaseUtilsTestCase(TestCase):
         
         test_query = {
                         "TESTDATASET1": {
-                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                    "method": "DTI",
+                                    "constraints": {
+                                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                                    }
                                     },
                         "TESTDATASET2": {
-                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                    "method": "DTI",
+                                    "constraints": {
+                                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                                    }
+                                    
                                     }
                       }
         
@@ -481,6 +498,7 @@ class DatabaseUtilsTestCase(TestCase):
         # insert subject metrics
         sbjct1_mets = SubjectTractMetrics(subject_id=DatabaseUtilsTestCase.sbjct1_subject_id,
                                      tract_code=DatabaseUtilsTestCase.tract1_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
                                      mean_MD=0.5,
                                      std_MD=0.01,
                                      mean_FA=0.5,
@@ -489,6 +507,7 @@ class DatabaseUtilsTestCase(TestCase):
         db.session.add(sbjct1_mets)
         sbjct2_mets = SubjectTractMetrics(subject_id=DatabaseUtilsTestCase.sbjct2_subject_id,
                                      tract_code=DatabaseUtilsTestCase.tract1_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
                                      mean_MD=0.5,
                                      std_MD=0.01,
                                      mean_FA=0.5,
@@ -497,6 +516,7 @@ class DatabaseUtilsTestCase(TestCase):
         db.session.add(sbjct2_mets)
         sbjct3_mets = SubjectTractMetrics(subject_id=DatabaseUtilsTestCase.sbjct3_subject_id,
                                      tract_code=DatabaseUtilsTestCase.tract1_code,
+                                     method_code=DatabaseUtilsTestCase.method1_code,
                                      mean_MD=0.5,
                                      std_MD=0.01,
                                      mean_FA=0.5,
@@ -508,7 +528,10 @@ class DatabaseUtilsTestCase(TestCase):
         
         test_query = {
                         "TESTDATASET1": {
-                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                    "method": "DTI",
+                                    "constraints": {
+                                                    "handedness": {"type": "checkbox", "values": ["R","L"]}
+                                                    }
                                     }
                       }
         
