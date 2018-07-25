@@ -15,11 +15,12 @@ import megatrack.views as views
 from .cache_mock import CacheMock
 import numpy as np
 from nibabel import Nifti1Image, Nifti1Header
-from werkzeug.datastructures import FileStorage
+from werkzeug.datastructures import FileStorage, Headers
 import contextlib
 from io import BytesIO
 import pickle
 from flask_assets import Environment, Bundle
+from werkzeug.wrappers import Response
 
 @contextlib.contextmanager
 def monkey_patch(module, fn_name, patch):
@@ -216,10 +217,24 @@ class MegatrackTestCase(TestCase):
         assert b'Login' in resp.get_data()
     
     def test_get_template(self):
-        resp = self.client.get('/get_template')
+        
+        def send_template(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to create a response object without needing
+            to load a file from file system''' 
+            headers = Headers()
+            headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
+            headers['Content-Length'] = 1431363
+            return Response(mimetype='application/octet-stream', headers=headers)
+        
+        with monkey_patch(views, 'send_file', send_template):
+            resp = self.client.get('/get_template')
+            
         assert resp.mimetype == 'application/octet-stream'
         assert resp.headers.get('Content-Disposition') == 'attachment; filename=Template_T1_2mm_new_RAS.nii.gz'
         assert resp.headers.get('Content-Length') == '1431363'
+        
+    def test_get_template_file_not_found(self):
+        assert False
         
     def test_populate_tract_select(self):
         # insert test tract
