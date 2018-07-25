@@ -19,6 +19,7 @@ from werkzeug.datastructures import FileStorage
 import contextlib
 from io import BytesIO
 import pickle
+from flask_assets import Environment, Bundle
 
 @contextlib.contextmanager
 def monkey_patch(module, fn_name, patch):
@@ -117,6 +118,12 @@ class MegatrackTestCase(TestCase):
         app.config.from_object('config.TestConfig')
         app.json_encoder = AlchemyEncoder
         app.cache = CacheMock()
+        
+        # configure assets to get templating to work
+        assets = Environment(app)
+        assets.register('core-js', Bundle())
+        assets.register('core-css', Bundle())
+        
         db.init_app(app)
         app.register_blueprint(megatrack)
         return app
@@ -190,11 +197,23 @@ class MegatrackTestCase(TestCase):
     
     def test_index(self):
         resp = self.client.get('/')
-        assert b'Megatrack' in resp.get_data()
+        assert b'MegaTrack Atlas' in resp.get_data()
+        
+    def test_lesions(self):
+        resp = self.client.get('/lesions')
+        assert b'Lesion' in resp.get_data()
     
     def test_about(self):
         resp = self.client.get('/about')
-        assert b'About page' in resp.get_data()
+        assert b'About' in resp.get_data()
+        
+    def test_contact(self):
+        resp = self.client.get('/contact')
+        assert b'Contact' in resp.get_data()
+        
+    def test_admin(self):
+        resp = self.client.get('/admin')
+        assert b'Login' in resp.get_data()
     
     def test_get_template(self):
         resp = self.client.get('/get_template')
