@@ -8,7 +8,7 @@ import flask
 import unittest
 import mock
 from flask_testing import TestCase
-from megatrack.models import db, Tract, Dataset, Subject, LesionUpload
+from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject, LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
 import megatrack.views as views
@@ -250,19 +250,28 @@ class MegatrackTestCase(TestCase):
         
     def test_populate_tract_select(self):
         # insert test tract
-        tract = Tract(code=MegatrackTestCase.tract_code,
-                      name=MegatrackTestCase.tract_name,
-                      file_path=MegatrackTestCase.tract_file_path,
-                      description=MegatrackTestCase.tract_description)
+        tract = Tract(code=self.tract_code,
+                      name=self.tract_name,
+                      file_path=self.tract_file_path,
+                      description=self.tract_description)
         db.session.add(tract)
+        
+        # insert dataset tracts
+        dataset_tract = DatasetTracts(self.dataset1_code, 'DTI', self.tract_code)
+        db.session.add(dataset_tract)
+        
         db.session.commit()
+        
         # get response
         resp = self.client.get('/tract_select')
         # test response
         assert resp.mimetype == 'application/json'
-        assert bytes('"code": "'+MegatrackTestCase.tract_code+'"', 'utf-8') in resp.get_data()
-        assert bytes('"name": "'+MegatrackTestCase.tract_name+'"', 'utf-8') in resp.get_data()
-        assert bytes('"file_path": "'+MegatrackTestCase.tract_file_path+'"', 'utf-8') not in resp.get_data() # we don't want to expose file paths
+        data = json.loads(resp.get_data())
+        assert data[self.tract_code]
+        assert data[self.tract_code]['name'] == self.tract_name
+        assert isinstance(data[self.tract_code]['datasets'], dict)
+        assert data[self.tract_code]['datasets'][self.dataset1_code][0] == 'DTI' 
+        assert bytes(self.tract_file_path, 'utf-8') not in resp.get_data() # we don't want to expose file paths
         
     def test_populate_dataset_select(self):
         self.setup_query_data()
