@@ -140,59 +140,59 @@ class MegatrackTestCase(TestCase):
         
     def setup_query_data(self):
         # insert a tract
-        tract = Tract(code=MegatrackTestCase.tract_code, name=MegatrackTestCase.tract_name, file_path=MegatrackTestCase.tract_file_path, description=MegatrackTestCase.tract_description)
+        tract = Tract(code=self.tract_code, name=self.tract_name, file_path=self.tract_file_path, description=self.tract_description)
         db.session.add(tract)
         # insert datasets
-        dataset1 = Dataset(code=MegatrackTestCase.dataset1_code,
-                          name=MegatrackTestCase.dataset1_name,
-                          file_path=MegatrackTestCase.dataset1_file_path,
-                          query_params=MegatrackTestCase.dataset1_query_params)
+        dataset1 = Dataset(code=self.dataset1_code,
+                          name=self.dataset1_name,
+                          file_path=self.dataset1_file_path,
+                          query_params=self.dataset1_query_params)
         db.session.add(dataset1)
-        dataset2 = Dataset(code=MegatrackTestCase.dataset2_code,
-                          name=MegatrackTestCase.dataset2_name,
-                          file_path=MegatrackTestCase.dataset2_file_path,
-                          query_params=MegatrackTestCase.dataset2_query_params)
+        dataset2 = Dataset(code=self.dataset2_code,
+                          name=self.dataset2_name,
+                          file_path=self.dataset2_file_path,
+                          query_params=self.dataset2_query_params)
         db.session.add(dataset2)
         # insert subjects
-        sbjct1 = Subject(subject_id=MegatrackTestCase.sbjct1_subject_id,
-                         gender=MegatrackTestCase.sbjct1_gender,
-                         age=MegatrackTestCase.sbjct1_age,
-                         handedness=MegatrackTestCase.sbjct1_handedness,
-                         edinburgh_handedness_raw=MegatrackTestCase.sbjct1_edinburgh_handedness_raw,
-                         ravens_iq_raw=MegatrackTestCase.sbjct1_ravens_iq_raw,
-                         dataset_code=MegatrackTestCase.sbjct1_dataset_code,
-                         file_path=MegatrackTestCase.sbjct1_file_path,
-                         mmse=MegatrackTestCase.sbjct1_mmse)
+        sbjct1 = Subject(subject_id=self.sbjct1_subject_id,
+                         gender=self.sbjct1_gender,
+                         age=self.sbjct1_age,
+                         handedness=self.sbjct1_handedness,
+                         edinburgh_handedness_raw=self.sbjct1_edinburgh_handedness_raw,
+                         ravens_iq_raw=self.sbjct1_ravens_iq_raw,
+                         dataset_code=self.sbjct1_dataset_code,
+                         file_path=self.sbjct1_file_path,
+                         mmse=self.sbjct1_mmse)
         db.session.add(sbjct1)
-        sbjct2 = Subject(subject_id=MegatrackTestCase.sbjct2_subject_id,
-                         gender=MegatrackTestCase.sbjct2_gender,
-                         age=MegatrackTestCase.sbjct2_age,
-                         handedness=MegatrackTestCase.sbjct2_handedness,
-                         edinburgh_handedness_raw=MegatrackTestCase.sbjct2_edinburgh_handedness_raw,
-                         ravens_iq_raw=MegatrackTestCase.sbjct2_ravens_iq_raw,
-                         dataset_code=MegatrackTestCase.sbjct2_dataset_code,
-                         file_path=MegatrackTestCase.sbjct2_file_path,
-                         mmse=MegatrackTestCase.sbjct2_mmse)
+        sbjct2 = Subject(subject_id=self.sbjct2_subject_id,
+                         gender=self.sbjct2_gender,
+                         age=self.sbjct2_age,
+                         handedness=self.sbjct2_handedness,
+                         edinburgh_handedness_raw=self.sbjct2_edinburgh_handedness_raw,
+                         ravens_iq_raw=self.sbjct2_ravens_iq_raw,
+                         dataset_code=self.sbjct2_dataset_code,
+                         file_path=self.sbjct2_file_path,
+                         mmse=self.sbjct2_mmse)
         db.session.add(sbjct2)
-        sbjct3 = Subject(subject_id=MegatrackTestCase.sbjct3_subject_id,
-                         gender=MegatrackTestCase.sbjct3_gender,
-                         age=MegatrackTestCase.sbjct3_age,
-                         handedness=MegatrackTestCase.sbjct3_handedness,
-                         edinburgh_handedness_raw=MegatrackTestCase.sbjct3_edinburgh_handedness_raw,
-                         ravens_iq_raw=MegatrackTestCase.sbjct3_ravens_iq_raw,
-                         dataset_code=MegatrackTestCase.sbjct3_dataset_code,
-                         file_path=MegatrackTestCase.sbjct3_file_path,
-                         mmse=MegatrackTestCase.sbjct3_mmse)
+        sbjct3 = Subject(subject_id=self.sbjct3_subject_id,
+                         gender=self.sbjct3_gender,
+                         age=self.sbjct3_age,
+                         handedness=self.sbjct3_handedness,
+                         edinburgh_handedness_raw=self.sbjct3_edinburgh_handedness_raw,
+                         ravens_iq_raw=self.sbjct3_ravens_iq_raw,
+                         dataset_code=self.sbjct3_dataset_code,
+                         file_path=self.sbjct3_file_path,
+                         mmse=self.sbjct3_mmse)
         db.session.add(sbjct3)
-        sbjct4 = Subject(subject_id=MegatrackTestCase.sbjct4_subject_id,
-                         gender=MegatrackTestCase.sbjct4_gender,
-                         age=MegatrackTestCase.sbjct4_age,
-                         handedness=MegatrackTestCase.sbjct4_handedness,
-                         edinburgh_handedness_raw=MegatrackTestCase.sbjct4_edinburgh_handedness_raw,
-                         ravens_iq_raw=MegatrackTestCase.sbjct4_ravens_iq_raw,
-                         dataset_code=MegatrackTestCase.sbjct4_dataset_code,
-                         file_path=MegatrackTestCase.sbjct4_file_path,
-                         mmse=MegatrackTestCase.sbjct4_mmse)
+        sbjct4 = Subject(subject_id=self.sbjct4_subject_id,
+                         gender=self.sbjct4_gender,
+                         age=self.sbjct4_age,
+                         handedness=self.sbjct4_handedness,
+                         edinburgh_handedness_raw=self.sbjct4_edinburgh_handedness_raw,
+                         ravens_iq_raw=self.sbjct4_ravens_iq_raw,
+                         dataset_code=self.sbjct4_dataset_code,
+                         file_path=self.sbjct4_file_path,
+                         mmse=self.sbjct4_mmse)
         db.session.add(sbjct4)
         
         db.session.commit()
@@ -279,12 +279,12 @@ class MegatrackTestCase(TestCase):
         resp = self.client.get('/dataset_select')
         # test response
         assert resp.mimetype == 'application/json'
-        assert bytes('"code": "'+MegatrackTestCase.dataset1_code+'"', 'utf-8') in resp.get_data()
-        assert bytes('"name": "'+MegatrackTestCase.dataset1_name+'"', 'utf-8') in resp.get_data()
-        assert bytes('"file_path": "'+MegatrackTestCase.dataset1_file_path+'"', 'utf-8') not in resp.get_data() # we don't want to expose file paths
-        assert bytes('"code": "'+MegatrackTestCase.dataset2_code+'"', 'utf-8') in resp.get_data()
-        assert bytes('"name": "'+MegatrackTestCase.dataset2_name+'"', 'utf-8') in resp.get_data()
-        assert bytes('"file_path": "'+MegatrackTestCase.dataset2_file_path+'"', 'utf-8') not in resp.get_data()
+        assert bytes('"code": "'+self.dataset1_code+'"', 'utf-8') in resp.get_data()
+        assert bytes('"name": "'+self.dataset1_name+'"', 'utf-8') in resp.get_data()
+        assert bytes('"file_path": "'+self.dataset1_file_path+'"', 'utf-8') not in resp.get_data() # we don't want to expose file paths
+        assert bytes('"code": "'+self.dataset2_code+'"', 'utf-8') in resp.get_data()
+        assert bytes('"name": "'+self.dataset2_name+'"', 'utf-8') in resp.get_data()
+        assert bytes('"file_path": "'+self.dataset2_file_path+'"', 'utf-8') not in resp.get_data()
         
     def test_query_report(self):
         assert False
@@ -293,7 +293,7 @@ class MegatrackTestCase(TestCase):
     def test_get_tract(self, mock_put_object):
         valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?'+valid_jquery_param_string)
+        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
         mock_put_object.assert_called_with('asdfadfsd')
 #         assert resp.mimetype == 'application/octet-stream'
 #         assert 'attachment;' in resp.headers.get('Content-Disposition')
@@ -308,21 +308,21 @@ class MegatrackTestCase(TestCase):
     def test_get_tract_nonexistent_dataset(self):
         valid_jquery_param_string = 'NONEXISTENT_DATASET%5Bgender%5D%5Btype%5D=radio&NONEXISTENT_DATASET%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?'+valid_jquery_param_string)
+        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
         assert resp.mimetype != 'application/octet-stream' # don't return a nii.gz file
         assert resp.status_code == 404
         
     def test_get_tract_no_tracts_returned(self):
         valid_jquery_param_string = 'BRC_ATLAS%5Bage%5D%5Btype%5D=range&BRC_ATLAS%5Bage%5D%5Bmin%5D=90&BRC_ATLAS%5Bage%5D%5Bmax%5D=99'
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?'+valid_jquery_param_string)
+        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
         assert resp.mimetype != 'application/octet-stream' # don't return a nii.gz file
         assert resp.status_code == 404
         
     def test_get_tract_invalid_param_string(self):
         invalid_jquery_param_string = 'BRC_ATLA5Bgender%5D%5derD%5Bvalue%5DM&file_type=.nii.gz'
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?'+invalid_jquery_param_string)
+        resp = self.client.get('/tract/'+self.tract_code+'?'+invalid_jquery_param_string)
         assert resp.mimetype != 'application/octet-stream'
         assert resp.status != 404
         
@@ -331,13 +331,13 @@ class MegatrackTestCase(TestCase):
                                     +'TEST_DATASET%5Bgender%5D%5Btype%5D=radio&TEST_DATASET%5Bgender%5D%5Bvalue%5D=F' \
                                     +'&file_type=.nii.gz'
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?'+valid_jquery_param_string)
+        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
         assert resp.mimetype == 'application/octet-stream'
         assert 'attachment;' in resp.headers.get('Content-Disposition')
         
     def test_get_tract_no_query(self):
         self.setup_query_data()
-        resp = self.client.get('/tract/'+MegatrackTestCase.tract_code+'?')
+        resp = self.client.get('/tract/'+self.tract_code+'?')
         assert resp.mimetype == 'application/octet-stream'
         assert 'attachment;' in resp.headers.get('Content-Disposition')
         
@@ -364,26 +364,26 @@ class MegatrackTestCase(TestCase):
         
         def nib_load(path):
             '''Function to monkey patch nibabel.load using relevant files created in memory'''
-            template = MegatrackTestCase.template_filepath
-            lesion = MegatrackTestCase.lesion_filepath
-            wrong_dim = MegatrackTestCase.lesion_wrong_dim_filepath
-            wrong_pixdim = MegatrackTestCase.lesion_wrong_pixdim_filepath
-            not_RAS = MegatrackTestCase.lesion_not_RAS_filepath
+            template = self.template_filepath
+            lesion = self.lesion_filepath
+            wrong_dim = self.lesion_wrong_dim_filepath
+            wrong_pixdim = self.lesion_wrong_pixdim_filepath
+            not_RAS = self.lesion_not_RAS_filepath
             if template[:len(template)-7] in path:
-                return MegatrackTestCase.template
+                return self.template
             elif wrong_dim[:len(wrong_dim)-7] in path:
-                return MegatrackTestCase.lesion_wrong_dim
+                return self.lesion_wrong_dim
             elif wrong_pixdim[:len(wrong_pixdim)-7] in path:
-                return MegatrackTestCase.lesion_wrong_pixdim
+                return self.lesion_wrong_pixdim
             elif not_RAS[:len(not_RAS)-7] in path:
-                return MegatrackTestCase.lesion_not_RAS
+                return self.lesion_not_RAS
             elif lesion[:len(lesion)-7] in path:
-                return MegatrackTestCase.lesion
+                return self.lesion
         
         def file_storage_save(_self, path):
             '''Function to monkey patch FileStorage.save(self, dst, buffer_size=16384)'''
             self.saved_file_path = path
-            self.saved_file = MegatrackTestCase.lesion
+            self.saved_file = self.lesion
         
         with monkey_patch(views.nib, 'load', nib_load):
             
@@ -395,7 +395,7 @@ class MegatrackTestCase(TestCase):
                 assert b'Request did not contain a file part' in resp.get_data()
 #                 
 #                 # no file with key 'lesionmap' in request.files
-                uploaded_file = FileStorage(stream=BytesIO(), filename=MegatrackTestCase.lesion_filepath, name='wrongfile')
+                uploaded_file = FileStorage(stream=BytesIO(), filename=self.lesion_filepath, name='wrongfile')
                 resp = self.client.post('/lesion_upload', data={'wrongfile': uploaded_file})
                 assert resp.status_code == 400
                 assert b'Request did not contain a file part' in resp.get_data()
@@ -414,38 +414,38 @@ class MegatrackTestCase(TestCase):
                 assert uploaded_file.filename.split('.', 1)[1].encode() in resp.get_data()
                 
                 # success: check response and db
-                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion)),
-                                            filename=MegatrackTestCase.lesion_filepath,
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(self.lesion)),
+                                            filename=self.lesion_filepath,
                                             name='lesionmap',
                                             content_type='application/octet-stream')
                 resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
                 assert resp.status_code == 200
-                test_str = 'data/lesion_upload/temp/' + MegatrackTestCase.lesion_filepath.split('.', 1)[0]
+                test_str = 'data/lesion_upload/temp/' + self.lesion_filepath.split('.', 1)[0]
                 assert self.saved_file_path[:len(test_str)] == test_str
                 lesion_upload_record = LesionUpload.query.all()[0]
                 resp_data = json.loads(resp.get_data())
                 assert lesion_upload_record.lesion_id == resp_data['lesionCode']
                 assert lesion_upload_record.upload_file_name == uploaded_file.filename.split('.', 1)[0]
-                assert resp_data['volume'] == np.sum(np.ones(MegatrackTestCase.nifti_dim)) * 8.e-3
+                assert resp_data['volume'] == np.sum(np.ones(self.nifti_dim)) * 8.e-3
                 
                 # not a secure filename
-                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion)),
-                                            filename='../../../'+MegatrackTestCase.lesion_filepath,
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(self.lesion)),
+                                            filename='../../../'+self.lesion_filepath,
                                             name='lesionmap',
                                             content_type='application/octet-stream')
                 resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
                 # assert that everything succeeded and the path arg passed to monkey patched file_storage_save function has
                 # the leading '../../../' stripped
                 assert resp.status_code == 200
-                test_str = 'data/lesion_upload/temp/' + MegatrackTestCase.lesion_filepath.split('.', 1)[0]
+                test_str = 'data/lesion_upload/temp/' + self.lesion_filepath.split('.', 1)[0]
                 assert self.saved_file_path[:len(test_str)] == test_str
                 
                 # check not matching dim, pixdim or RAS
                 # check response and check flags in db
                 
                 # not matching dim
-                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_wrong_dim)),
-                                            filename=MegatrackTestCase.lesion_wrong_dim_filepath,
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(self.lesion_wrong_dim)),
+                                            filename=self.lesion_wrong_dim_filepath,
                                             name='lesionmap',
                                             content_type='application/octet-stream')
                 resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
@@ -455,8 +455,8 @@ class MegatrackTestCase(TestCase):
                 assert lesion_upload_record.dim_match == 'N'
                 
                 # not matching pixdim
-                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_wrong_pixdim)),
-                                            filename=MegatrackTestCase.lesion_wrong_pixdim_filepath,
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(self.lesion_wrong_pixdim)),
+                                            filename=self.lesion_wrong_pixdim_filepath,
                                             name='lesionmap',
                                             content_type='application/octet-stream')
                 resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
@@ -467,8 +467,8 @@ class MegatrackTestCase(TestCase):
                 assert lesion_upload_record.pixdim_match == 'N'
                 
                 # not RAS
-                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(MegatrackTestCase.lesion_not_RAS)),
-                                            filename=MegatrackTestCase.lesion_not_RAS_filepath,
+                uploaded_file = FileStorage(stream=BytesIO(pickle.dumps(self.lesion_not_RAS)),
+                                            filename=self.lesion_not_RAS_filepath,
                                             name='lesionmap',
                                             content_type='application/octet-stream')
                 resp = self.client.post('/lesion_upload', data={'lesionmap': uploaded_file})
@@ -487,29 +487,29 @@ class MegatrackTestCase(TestCase):
     def test_lesion_analysis(self):
         
         # create a lesion nifti
-        lesion_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        lesion_data = np.zeros(self.nifti_dim, dtype=np.int16)
         lesion_data[50:60,60:70,50:60] = 1
         lesion = Nifti1Image(lesion_data, np.eye(4))
         
         # create 3 tract niftis (1 left, 1 right and 1 connecting hemispheres)
-        right_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        right_tract_data = np.zeros(self.nifti_dim, dtype=np.int16)
         right_tract_data[:,:,:] = 1
         right_tract = Nifti1Image(right_tract_data, np.eye(4))
         
-        left_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        left_tract_data = np.zeros(self.nifti_dim, dtype=np.int16)
         left_tract_data[:,:,:] = 1
         left_tract = Nifti1Image(left_tract_data, np.eye(4))
         
-        both_tract_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        both_tract_data = np.zeros(self.nifti_dim, dtype=np.int16)
         both_tract_data[:,:,:] = 1
         both_tract = Nifti1Image(both_tract_data, np.eye(4))
         
         # create left and right hemisphere mask niftis
-        right_mask_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        right_mask_data = np.zeros(self.nifti_dim, dtype=np.int16)
         right_mask_data[46:,:,:] = 1
         right_mask = Nifti1Image(right_mask_data, np.eye(4))
         
-        left_mask_data = np.zeros(MegatrackTestCase.nifti_dim, dtype=np.int16)
+        left_mask_data = np.zeros(self.nifti_dim, dtype=np.int16)
         left_mask_data[:46,:,:] = 1
         left_mask = Nifti1Image(left_mask_data, np.eye(4))
         
