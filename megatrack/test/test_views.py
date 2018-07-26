@@ -372,20 +372,201 @@ class MegatrackTestCase(TestCase):
         data = json.loads(resp.get_data())
         assert not data
         
-    def test_query_report_not_cached(self):
-        assert False
+    def test_query_report(self):
         
-    def test_query_report_cached(self):
-        assert False
+        s1 = Subject(subject_id=s1_subject_id,
+                     gender=s1_gender,
+                     age=s1_age,
+                     handedness=s1_handedness,
+                     edinburgh_handedness_raw=s1_edinburgh_handedness_raw,
+                     ravens_iq_raw=s1_ravens_iq_raw,
+                     dataset_code=s1_dataset_code,
+                     file_path=s1_file_path,
+                     mmse=s1_mmse)
+        db.session.add(s1)
+        
+        s2 = Subject(subject_id=s2_subject_id,
+                     gender=s2_gender,
+                     age=s2_age,
+                     handedness=s2_handedness,
+                     edinburgh_handedness_raw=s2_edinburgh_handedness_raw,
+                     ravens_iq_raw=s2_ravens_iq_raw,
+                     dataset_code=s2_dataset_code,
+                     file_path=s2_file_path,
+                     mmse=s2_mmse)
+        db.session.add(s2)
+        
+        s3 = Subject(subject_id=s3_subject_id,
+                     gender=s3_gender,
+                     age=s3_age,
+                     handedness=s3_handedness,
+                     edinburgh_handedness_raw=s3_edinburgh_handedness_raw,
+                     ravens_iq_raw=s3_ravens_iq_raw,
+                     dataset_code=s3_dataset_code,
+                     file_path=s3_file_path,
+                     mmse=s3_mmse)
+        db.session.add(s3)
+        
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        db.session.commit()
+        
+        assert not current_app.cache.get(valid_param_string) # cache should be empty before request
+        
+        # initial request
+        resp = self.client.get(f'/query_report?{valid_param_string}')
+        data = json.loads(resp.get_data())
+        
+        assert isinstance(data, dict)
+        assert isinstance(data['dataset'], dict)
+        assert len(data['dataset'].keys()) == 1
+        assert list(data['dataset'].keys())[0] == d1_code
+        assert int(data['dataset'][d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
+        
+        assert current_app.cache.get(valid_param_string) # data now cached after request
+        
+        # make another request, should get same result but getting data from the cache
+        resp = self.client.get(f'/query_report?{valid_param_string}')
+        data = json.loads(resp.get_data())
+        
+        assert isinstance(data, dict)
+        assert isinstance(data['dataset'], dict)
+        assert len(data['dataset'].keys()) == 1
+        assert list(data['dataset'].keys())[0] == d1_code
+        assert int(data['dataset'][d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
+        assert current_app.cache.get(valid_param_string) # data now cached after request
         
     def test_query_report_no_subjects(self):
-        assert False
+        # add only male subjects to database
+        s1 = Subject(subject_id=s1_subject_id,
+                     gender=s1_gender,
+                     age=s1_age,
+                     handedness=s1_handedness,
+                     edinburgh_handedness_raw=s1_edinburgh_handedness_raw,
+                     ravens_iq_raw=s1_ravens_iq_raw,
+                     dataset_code=s1_dataset_code,
+                     file_path=s1_file_path,
+                     mmse=s1_mmse)
+        db.session.add(s1)
+        
+        s3 = Subject(subject_id=s3_subject_id,
+                     gender=s3_gender,
+                     age=s3_age,
+                     handedness=s3_handedness,
+                     edinburgh_handedness_raw=s3_edinburgh_handedness_raw,
+                     ravens_iq_raw=s3_ravens_iq_raw,
+                     dataset_code=s3_dataset_code,
+                     file_path=s3_file_path,
+                     mmse=s3_mmse)
+        db.session.add(s3)
+        
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        db.session.commit()
+        
+        # query for female subjects in BRC_ATLAS dataset
+        resp = self.client.get(f'/query_report?{valid_param_string}')
+        data = json.loads(resp.get_data())
+        
+        assert isinstance(data, dict)
+        assert isinstance(data['dataset'], dict)
+        assert len(data['dataset'].keys()) == 1
+        assert list(data['dataset'].keys())[0] == d1_code
+        assert int(data['dataset'][d1_code]) == 0
         
     def test_query_report_invalid_query(self):
-        assert False
+        s1 = Subject(subject_id=s1_subject_id,
+                     gender=s1_gender,
+                     age=s1_age,
+                     handedness=s1_handedness,
+                     edinburgh_handedness_raw=s1_edinburgh_handedness_raw,
+                     ravens_iq_raw=s1_ravens_iq_raw,
+                     dataset_code=s1_dataset_code,
+                     file_path=s1_file_path,
+                     mmse=s1_mmse)
+        db.session.add(s1)
+        
+        s2 = Subject(subject_id=s2_subject_id,
+                     gender=s2_gender,
+                     age=s2_age,
+                     handedness=s2_handedness,
+                     edinburgh_handedness_raw=s2_edinburgh_handedness_raw,
+                     ravens_iq_raw=s2_ravens_iq_raw,
+                     dataset_code=s2_dataset_code,
+                     file_path=s2_file_path,
+                     mmse=s2_mmse)
+        db.session.add(s2)
+        
+        s3 = Subject(subject_id=s3_subject_id,
+                     gender=s3_gender,
+                     age=s3_age,
+                     handedness=s3_handedness,
+                     edinburgh_handedness_raw=s3_edinburgh_handedness_raw,
+                     ravens_iq_raw=s3_ravens_iq_raw,
+                     dataset_code=s3_dataset_code,
+                     file_path=s3_file_path,
+                     mmse=s3_mmse)
+        db.session.add(s3)
+        
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        db.session.commit()
+        
+        resp = self.client.get(f'/query_report?{invalid_param_string}')
+        self.assert400(resp)
+        
         
     def test_query_report_nonexistent_dataset(self):
-        assert False
+        # only add subject from TESTDATASET
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        db.session.commit()
+        
+        # query for subjects in BRC_ATLAS
+        resp = self.client.get(f'/query_report?{valid_param_string}')
+        data = json.loads(resp.get_data())
+        
+        assert isinstance(data, dict)
+        assert isinstance(data['dataset'], dict)
+        assert len(data['dataset'].keys()) == 1
+        assert list(data['dataset'].keys())[0] == d1_code
+        assert int(data['dataset'][d1_code]) == 0
     
     @mock.patch.object(flask, 'send_file', autospec=True)  
     def test_get_tract(self, mock_put_object):
