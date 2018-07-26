@@ -22,6 +22,7 @@ from io import BytesIO
 import pickle
 from flask_assets import Environment, Bundle
 from werkzeug.wrappers import Response
+from .mock_data import *
 
 @contextlib.contextmanager
 def monkey_patch(module, fn_name, patch):
@@ -39,6 +40,11 @@ class MegatrackTestCase(TestCase):
     tract_name = 'Left Anterior AF'
     tract_file_path ='Left_AF_anterior'
     tract_description = 'This is a tract etc etc...'
+    
+    t2_code = 'AFL_POST'
+    t2_name = 'Left Posterior AF'
+    t2_file_path = 'Left_Posterior_AF'
+    t2_description = 'This is a tract etc...'
     
     # test dataset data
     dataset1_code = 'BRC_ATLAS'
@@ -250,14 +256,14 @@ class MegatrackTestCase(TestCase):
         
     def test_populate_tract_select(self):
         # insert test tract
-        tract = Tract(code=self.tract_code,
-                      name=self.tract_name,
-                      file_path=self.tract_file_path,
-                      description=self.tract_description)
+        tract = Tract(code=t1_code,
+                      name=t1_name,
+                      file_path=t1_file_path,
+                      description=t1_description)
         db.session.add(tract)
         
         # insert dataset tracts
-        dataset_tract = DatasetTracts(self.dataset1_code, 'DTI', self.tract_code)
+        dataset_tract = DatasetTracts(d1_code, m1_code, t1_code)
         db.session.add(dataset_tract)
         
         db.session.commit()
@@ -267,11 +273,12 @@ class MegatrackTestCase(TestCase):
         # test response
         assert resp.mimetype == 'application/json'
         data = json.loads(resp.get_data())
-        assert data[self.tract_code]
-        assert data[self.tract_code]['name'] == self.tract_name
-        assert isinstance(data[self.tract_code]['datasets'], dict)
-        assert data[self.tract_code]['datasets'][self.dataset1_code][0] == 'DTI' 
-        assert bytes(self.tract_file_path, 'utf-8') not in resp.get_data() # we don't want to expose file paths
+        assert data[t1_code]
+        assert data[t1_code]['name'] == t1_name
+        assert isinstance(data[t1_code]['datasets'], dict)
+        assert len(data[t1_code]['datasets'][d1_code]) == 1
+        assert data[t1_code]['datasets'][d1_code][0] == m1_code
+        assert bytes(t1_file_path, 'utf-8') not in resp.get_data() # we don't want to expose file paths
         
     def test_populate_dataset_select(self):
         self.setup_query_data()
