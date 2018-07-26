@@ -238,7 +238,15 @@ class MegatrackTestCase(TestCase):
         assert resp.headers.get('Content-Length') == '1431363'
         
     def test_get_template_file_not_found(self):
-        assert False
+        
+        def send_template(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to generate FileNotFoundError'''
+            file = open('fail.nii.gz', 'rb')
+        
+        with monkey_patch(views, 'send_file', send_template):
+            resp = self.client.get('/get_template')
+            
+        self.assert500(resp)
         
     def test_populate_tract_select(self):
         # insert test tract

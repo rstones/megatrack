@@ -167,9 +167,12 @@ def get_template():
     current_app.logger.info('Loading template...')
     data_dir = current_app.config['DATA_FILE_PATH']
     file_path = file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME)
-    r = send_file(file_path, as_attachment=True, attachment_filename=du.TEMPLATE_FILE_NAME, conditional=True, add_etags=True)
-    r.make_conditional(request)
-    return r
+    try:
+        r = send_file(file_path, as_attachment=True, attachment_filename=du.TEMPLATE_FILE_NAME, conditional=True, add_etags=True)
+        r.make_conditional(request)
+        return r
+    except FileNotFoundError:
+        return "Could not find MRI template.", 500
 
 @jsonapi
 @megatrack.route('/tract_select')
