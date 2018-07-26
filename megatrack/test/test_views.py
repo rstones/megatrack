@@ -324,6 +324,12 @@ class MegatrackTestCase(TestCase):
         assert len(data[t2_code]['datasets'][d2_code]) == 1
         assert data[t2_code]['datasets'][d2_code][0] == m1_code
         
+    def test_populate_tract_select_no_data(self):
+        resp = self.client.get('/tract_select')
+        assert resp.mimetype == 'application/json'
+        data = json.loads(resp.get_data())
+        assert not data
+        
     def test_populate_dataset_select(self):
         self.setup_query_data()
         # get response
