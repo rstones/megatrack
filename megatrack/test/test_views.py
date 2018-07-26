@@ -254,7 +254,7 @@ class MegatrackTestCase(TestCase):
             
         self.assert500(resp)
         
-    def test_populate_tract_select(self):
+    def test_populate_tract_select_single_tract(self):
         # insert test tract
         tract = Tract(code=t1_code,
                       name=t1_name,
@@ -279,6 +279,50 @@ class MegatrackTestCase(TestCase):
         assert len(data[t1_code]['datasets'][d1_code]) == 1
         assert data[t1_code]['datasets'][d1_code][0] == m1_code
         assert bytes(t1_file_path, 'utf-8') not in resp.get_data() # we don't want to expose file paths
+        
+    def test_populate_tract_select_multiple_tracts(self):
+        # insert test tracts
+        t1 = Tract(code=t1_code, name=t1_name, file_path=t1_file_path, description=t1_description)
+        db.session.add(t1)
+        
+        t2 = Tract(code=t2_code, name=t2_name, file_path=t2_file_path, description=t2_description)
+        db.session.add(t2)
+        
+        # insert dataset tracts
+        dt1 = DatasetTracts(d1_code, m1_code, t1_code)
+        db.session.add(dt1)
+        
+        dt2 = DatasetTracts(d1_code, m2_code, t1_code)
+        db.session.add(dt2)
+        
+        dt3 = DatasetTracts(d2_code, m1_code, t1_code)
+        db.session.add(dt3)
+        
+        dt4 = DatasetTracts(d2_code, m1_code, t2_code)
+        db.session.add(dt4)
+        
+        db.session.commit()
+        
+        resp = self.client.get('/tract_select')
+        # test response
+        assert resp.mimetype == 'application/json'
+        data = json.loads(resp.get_data())
+        assert data[t1_code]
+        assert data[t1_code]['name'] == t1_name
+        assert isinstance(data[t1_code]['datasets'], dict)
+        assert data[t1_code]['datasets'][d1_code]
+        assert len(data[t1_code]['datasets'][d1_code]) == 2
+        assert m1_code in data[t1_code]['datasets'][d1_code]
+        assert m2_code in data[t1_code]['datasets'][d1_code]
+        assert data[t1_code]['datasets'][d2_code]
+        assert len(data[t1_code]['datasets'][d2_code]) == 1
+        assert data[t1_code]['datasets'][d2_code][0] == m1_code
+        assert data[t2_code]
+        assert data[t2_code]['name'] == t2_name
+        assert isinstance(data[t2_code]['datasets'], dict)
+        assert data[t2_code]['datasets'][d2_code]
+        assert len(data[t2_code]['datasets'][d2_code]) == 1
+        assert data[t2_code]['datasets'][d2_code][0] == m1_code
         
     def test_populate_dataset_select(self):
         self.setup_query_data()
