@@ -3,7 +3,7 @@ Created on 7 Sep 2017
 
 @author: richard
 '''
-from flask import Flask, json
+from flask import Flask, json, current_app
 import flask
 import unittest
 import mock
@@ -12,6 +12,7 @@ from megatrack.models import db, Tract, Dataset, Subject, LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
 import megatrack.views as views
+import megatrack.data_utils as du
 from .cache_mock import CacheMock
 import numpy as np
 from nibabel import Nifti1Image, Nifti1Header
@@ -220,7 +221,9 @@ class MegatrackTestCase(TestCase):
         
         def send_template(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
             '''Monkey patch flask.send_file with this function to create a response object without needing
-            to load a file from file system''' 
+            to load a file from file system'''
+            global file_path_to_test
+            file_path_to_test = file_path
             headers = Headers()
             headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
             headers['Content-Length'] = 1431363
@@ -228,9 +231,10 @@ class MegatrackTestCase(TestCase):
         
         with monkey_patch(views, 'send_file', send_template):
             resp = self.client.get('/get_template')
-            
+        
+        assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}/{du.TEMPLATE_FILE_NAME}'
         assert resp.mimetype == 'application/octet-stream'
-        assert resp.headers.get('Content-Disposition') == 'attachment; filename=Template_T1_2mm_new_RAS.nii.gz'
+        assert resp.headers.get('Content-Disposition') == f'attachment; filename={du.TEMPLATE_FILE_NAME}'
         assert resp.headers.get('Content-Length') == '1431363'
         
     def test_get_template_file_not_found(self):
