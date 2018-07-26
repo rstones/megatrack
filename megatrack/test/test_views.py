@@ -331,19 +331,60 @@ class MegatrackTestCase(TestCase):
         assert not data
         
     def test_populate_dataset_select(self):
-        self.setup_query_data()
+        
+        d1 = Dataset(code=d1_code, name=d1_name, file_path=d1_file_path, query_params=d1_query_params)
+        db.session.add(d1)
+        
+        d2 = Dataset(code=d2_code, name=d2_name, file_path=d2_file_path, query_params=d2_query_params)
+        db.session.add(d2)
+        
+        dt1 = DatasetTracts(dataset_code=d1_code, method_code=m1_code, tract_code=t1_code)
+        db.session.add(dt1)
+        
+        dt2 = DatasetTracts(dataset_code=d1_code, method_code=m2_code, tract_code=t1_code)
+        db.session.add(dt2)
+        
+        dt3 = DatasetTracts(dataset_code=d2_code, method_code=m1_code, tract_code=t1_code)
+        db.session.add(dt3)
+        
+        db.session.commit()
+
         # get response
         resp = self.client.get('/dataset_select')
         # test response
         assert resp.mimetype == 'application/json'
-        assert bytes('"code": "'+self.dataset1_code+'"', 'utf-8') in resp.get_data()
-        assert bytes('"name": "'+self.dataset1_name+'"', 'utf-8') in resp.get_data()
-        assert bytes('"file_path": "'+self.dataset1_file_path+'"', 'utf-8') not in resp.get_data() # we don't want to expose file paths
-        assert bytes('"code": "'+self.dataset2_code+'"', 'utf-8') in resp.get_data()
-        assert bytes('"name": "'+self.dataset2_name+'"', 'utf-8') in resp.get_data()
-        assert bytes('"file_path": "'+self.dataset2_file_path+'"', 'utf-8') not in resp.get_data()
+        data = json.loads(resp.get_data())
+        assert isinstance(data, list)
+        assert len(data) == 2
+        assert isinstance(data[0], dict)
+        assert data[0]['code'] == d1_code or data[1]['code'] == d1_code
+        assert data[0]['code'] == d2_code or data[1]['code'] == d2_code
+        assert len(data[0]['methods']) == 2 if data[0]['code'] == d1_code else len(data[0]['methods']) == 1
+        assert len(data[1]['methods']) == 2 if data[0]['code'] != d1_code else len(data[1]['methods']) == 1
+        assert bytes(d1_file_path, 'utf-8') not in resp.get_data()
+        assert bytes(d2_file_path, 'utf-8') not in resp.get_data()
         
-    def test_query_report(self):
+    def test_populate_dataset_select_no_data(self):
+        # get response
+        resp = self.client.get('/dataset_select')
+        # test response
+        assert resp.mimetype == 'application/json'
+        data = json.loads(resp.get_data())
+        assert not data
+        
+    def test_query_report_not_cached(self):
+        assert False
+        
+    def test_query_report_cached(self):
+        assert False
+        
+    def test_query_report_no_subjects(self):
+        assert False
+        
+    def test_query_report_invalid_query(self):
+        assert False
+        
+    def test_query_report_nonexistent_dataset(self):
         assert False
     
     @mock.patch.object(flask, 'send_file', autospec=True)  
