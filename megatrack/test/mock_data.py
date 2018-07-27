@@ -3,9 +3,13 @@ Created on 26 Jul 2018
 
 @author: richard
 '''
+import numpy as np
+from nibabel.nifti1 import Nifti1Image
 
 #### QUERY PARAM STRINGS ####
-valid_param_string = 'BRC_ATLAS%5Bmethod%5D=DTI&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Btype%5D=checkbox&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Bvalues%5D%5B%5D=F'
+
+brc_atlas_females_query = 'BRC_ATLAS%5Bmethod%5D=DTI&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Btype%5D=checkbox&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Bvalues%5D%5B%5D=F'
+brc_atlas_males_query = 'BRC_ATLAS%5Bmethod%5D=DTI&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Btype%5D=checkbox&BRC_ATLAS%5Bconstraints%5D%5Bgender%5D%5Bvalues%5D%5B%5D=M'
 invalid_param_string = 'BRC_ATLA5Bgender%5D%5derD%5Bvalue%5DM'
 
 ##### Tracts ####
@@ -85,3 +89,24 @@ s4_dataset_code = d2_code
 s4_ravens_iq_raw = 55
 s4_file_path = 'TESTDATASETB004_MNI_'
 s4_mmse = None
+
+#### Neuroimaging data ####
+
+affine = np.eye(4)
+nifti_dim = (91,109,91)
+
+template_filepath = 'Template_T1_2mm_new_RAS.nii.gz'
+template_nifti = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
+
+s1_MD = Nifti1Image(0.5*np.ones(nifti_dim, dtype=np.int16), affine)
+s1_FA = Nifti1Image(0.5*np.ones(nifti_dim, dtype=np.int16), affine)
+
+s3_MD = Nifti1Image(1.5*np.ones(nifti_dim, dtype=np.int16), affine)
+s3_FA = Nifti1Image(1.5*np.ones(nifti_dim, dtype=np.int16), affine)
+
+lesion_filepath = 'lesion.nii.gz'
+lesion = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
+
+
+
+

@@ -21,6 +21,15 @@ def file_path_relative_to_root_path(file_path):
     above the megatrack package). Config is defined relative to cwd so this fixes that issue.'''
     return '../' + file_path 
 
+def check_request_query(query):
+    if not isinstance(query, dict):
+        return False
+    else:
+        for key in query:
+            if not isinstance(query[key], dict):
+                return False
+    return True
+
 @megatrack.route('/')
 def index():
     return render_template('index.html')
@@ -203,16 +212,10 @@ def query_report():
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
         current_app.logger.info('Calculating cache stuff...')
         request_query = jquery_unparam(query_string_decoded)
-        
-        # check parsing of query param string
-        if not isinstance(request_query, dict):
-            current_app.logger.info(f'Received query param string to /query_report which could not be parsed. The query param string was {query_string_decoded}')
+                
+        if not check_request_query(request_query):
+            current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
             return 'Could not parse query param string.', 400
-        else:
-            for key in request_query:
-                if not isinstance(request_query[key], dict):
-                    current_app.logger.info(f'Received query param string to /query_report which could not be parsed. The query param string was {query_string_decoded}')
-                    return 'Could not parse query param string.', 400
         
         query_report = dbu.subjects_per_dataset(request_query)
         
@@ -228,6 +231,11 @@ def generate_mean_maps():
     cached_data = current_app.cache.get(cache_key)
     data_dir = current_app.config['DATA_FILE_PATH']
     request_query = jquery_unparam(query_string_decoded)
+    
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        return 'Could not parse query param string.', 400
+    
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report'):
         # construct query report and subject file paths again
         current_app.logger.info('Regenerating full subject file paths...')
@@ -245,7 +253,7 @@ def generate_mean_maps():
         current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
         current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
     
-    return 'Success!', 202
+    return 'Mean maps successfully created.', 204
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):

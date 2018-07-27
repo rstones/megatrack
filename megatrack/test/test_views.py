@@ -225,7 +225,7 @@ class MegatrackTestCase(TestCase):
     
     def test_get_template(self):
         
-        def send_template(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
             '''Monkey patch flask.send_file with this function to create a response object without needing
             to load a file from file system'''
             global file_path_to_test
@@ -235,7 +235,7 @@ class MegatrackTestCase(TestCase):
             headers['Content-Length'] = 1431363
             return Response(mimetype='application/octet-stream', headers=headers)
         
-        with monkey_patch(views, 'send_file', send_template):
+        with monkey_patch(views, 'send_file', send_file_patch):
             resp = self.client.get('/get_template')
         
         assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}/{du.TEMPLATE_FILE_NAME}'
@@ -245,11 +245,11 @@ class MegatrackTestCase(TestCase):
         
     def test_get_template_file_not_found(self):
         
-        def send_template(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
             '''Monkey patch flask.send_file with this function to generate FileNotFoundError'''
             file = open('fail.nii.gz', 'rb')
         
-        with monkey_patch(views, 'send_file', send_template):
+        with monkey_patch(views, 'send_file', send_file_patch):
             resp = self.client.get('/get_template')
             
         self.assert500(resp)
@@ -420,10 +420,10 @@ class MegatrackTestCase(TestCase):
         
         db.session.commit()
         
-        assert not current_app.cache.get(valid_param_string) # cache should be empty before request
+        assert not current_app.cache.get(brc_atlas_females_query) # cache should be empty before request
         
         # initial request
-        resp = self.client.get(f'/query_report?{valid_param_string}')
+        resp = self.client.get(f'/query_report?{brc_atlas_females_query}')
         data = json.loads(resp.get_data())
         
         assert isinstance(data, dict)
@@ -432,10 +432,10 @@ class MegatrackTestCase(TestCase):
         assert list(data['dataset'].keys())[0] == d1_code
         assert int(data['dataset'][d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
         
-        assert current_app.cache.get(valid_param_string) # data now cached after request
+        assert current_app.cache.get(brc_atlas_females_query) # data now cached after request
         
         # make another request, should get same result but getting data from the cache
-        resp = self.client.get(f'/query_report?{valid_param_string}')
+        resp = self.client.get(f'/query_report?{brc_atlas_females_query}')
         data = json.loads(resp.get_data())
         
         assert isinstance(data, dict)
@@ -443,7 +443,7 @@ class MegatrackTestCase(TestCase):
         assert len(data['dataset'].keys()) == 1
         assert list(data['dataset'].keys())[0] == d1_code
         assert int(data['dataset'][d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
-        assert current_app.cache.get(valid_param_string) # data now cached after request
+        assert current_app.cache.get(brc_atlas_females_query) # data now cached after request
         
     def test_query_report_no_subjects(self):
         # add only male subjects to database
@@ -483,7 +483,7 @@ class MegatrackTestCase(TestCase):
         db.session.commit()
         
         # query for female subjects in BRC_ATLAS dataset
-        resp = self.client.get(f'/query_report?{valid_param_string}')
+        resp = self.client.get(f'/query_report?{brc_atlas_females_query}')
         data = json.loads(resp.get_data())
         
         assert isinstance(data, dict)
@@ -492,7 +492,36 @@ class MegatrackTestCase(TestCase):
         assert list(data['dataset'].keys())[0] == d1_code
         assert int(data['dataset'][d1_code]) == 0
         
-    def test_query_report_invalid_query(self):
+    def test_query_report_invalid_query(self):        
+        resp = self.client.get(f'/query_report?{invalid_param_string}')
+        self.assert400(resp)
+        
+    def test_query_report_nonexistent_dataset(self):
+        # only add subject from TESTDATASET
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        db.session.commit()
+        
+        # query for females in BRC_ATLAS
+        resp = self.client.get(f'/query_report?{brc_atlas_females_query}')
+        data = json.loads(resp.get_data())
+        
+        assert isinstance(data, dict)
+        assert isinstance(data['dataset'], dict)
+        assert len(data['dataset'].keys()) == 1
+        assert list(data['dataset'].keys())[0] == d1_code
+        assert int(data['dataset'][d1_code]) == 0
+        
+    def test_generate_mean_maps(self):
         s1 = Subject(subject_id=s1_subject_id,
                      gender=s1_gender,
                      age=s1_age,
@@ -537,38 +566,51 @@ class MegatrackTestCase(TestCase):
                      mmse=s4_mmse)
         db.session.add(s4)
         
-        db.session.commit()
+        d1 = Dataset(code=d1_code, name=d1_name, file_path=d1_file_path, query_params=d1_query_params)
+        db.session.add(d1)
         
-        resp = self.client.get(f'/query_report?{invalid_param_string}')
-        self.assert400(resp)
-        
-        
-    def test_query_report_nonexistent_dataset(self):
-        # only add subject from TESTDATASET
-        s4 = Subject(subject_id=s4_subject_id,
-                     gender=s4_gender,
-                     age=s4_age,
-                     handedness=s4_handedness,
-                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
-                     ravens_iq_raw=s4_ravens_iq_raw,
-                     dataset_code=s4_dataset_code,
-                     file_path=s4_file_path,
-                     mmse=s4_mmse)
-        db.session.add(s4)
+        d2 = Dataset(code=d2_code, name=d2_name, file_path=d2_file_path, query_params=d1_query_params)
+        db.session.add(d2)
         
         db.session.commit()
         
-        # query for subjects in BRC_ATLAS
-        resp = self.client.get(f'/query_report?{valid_param_string}')
-        data = json.loads(resp.get_data())
+        self.saved_file_path = ''
+        self.saved_img = None
         
-        assert isinstance(data, dict)
-        assert isinstance(data['dataset'], dict)
-        assert len(data['dataset'].keys()) == 1
-        assert list(data['dataset'].keys())[0] == d1_code
-        assert int(data['dataset'][d1_code]) == 0
+        def nib_save_patch(img, file_path):
+            self.saved_file_path = file_path
+            self.saved_img = img
+            data = img.get_data()
+            assert np.all(data == 1.)
+        
+        def nib_load_patch(file_path):
+            if du.TEMPLATE_FILE_NAME in file_path:
+                return template_nifti
+            elif s1_subject_id in file_path:
+                return s1_MD if 'MD' in file_path else s1_FA
+            elif s3_subject_id in file_path:
+                return s3_MD if 'MD' in file_path else s3_FA
+            else:
+                print('Unexpected file path passed to nib_load_path in test_views.test_generate_maps')
+                print(file_path)
+                return
+            
+        # assert the cache is empty for query string before response
+        assert not current_app.cache.get(brc_atlas_males_query)
+        
+        # first request
+        with monkey_patch(du.nib, 'save', nib_save_patch):
+            with monkey_patch(du.nib, 'load', nib_load_patch):
+                resp = self.client.get(f'/generate_mean_maps?{brc_atlas_males_query}')
+        
+        self.assertStatus(resp, 204)
+        assert current_app.cache.get(brc_atlas_males_query) # check data has been cached
     
-    @mock.patch.object(flask, 'send_file', autospec=True)  
+    def test_generate_mean_maps_invalid_query(self):
+        resp = self.client.get(f'/generate_mean_maps?{invalid_param_string}')
+        self.assert400(resp)
+    
+    @mock.patch.object(flask, 'send_file', autospec=True)
     def test_get_tract(self, mock_put_object):
         valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
         self.setup_query_data()
