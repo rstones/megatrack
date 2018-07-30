@@ -104,6 +104,11 @@ s1_FA = Nifti1Image(0.5*np.ones(nifti_dim, dtype=np.int16), affine)
 s3_MD = Nifti1Image(1.5*np.ones(nifti_dim, dtype=np.int16), affine)
 s3_FA = Nifti1Image(1.5*np.ones(nifti_dim, dtype=np.int16), affine)
 
+s1_t1 = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
+s3_t1 = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
+
+empty_nifti = Nifti1Image(np.zeros(nifti_dim, dtype=np.int16), affine)
+
 lesion_filepath = 'lesion.nii.gz'
 lesion = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
 

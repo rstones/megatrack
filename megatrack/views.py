@@ -259,21 +259,27 @@ def generate_mean_maps():
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     
-    tract = dbu.get_tract(tract_code)
-    cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+    # process query string
+    query_string_decoded = request.query_string.decode('utf-8')
+    cache_key = cu.construct_cache_key(query_string_decoded)
+    request_query = jquery_unparam(query_string_decoded)
+    request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        return 'Could not parse query param string.', 400
+    
+    # validate tract code
+    tract = dbu.get_tract(tract_code) 
+    if not tract:
+        return 'The requested tract ' + tract_code + ' does not exist', 400
+    
     cached_data = current_app.cache.get(cache_key)
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code): # either request not cached or associated density map doesn't exist
         current_app.logger.info('No density map in cache so calculating average from scratch')
-        if not tract:
-            return 'The requested tract ' + tract_code + ' does not exist', 404
-        
-        data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
-        request_query = jquery_unparam(request.query_string.decode('utf-8'))
-        request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
-        #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
-        file_path_data = dbu.density_map_file_path_data(request_query)
-        
+    
+        file_path_data = dbu.density_map_file_path_data(request_query)    
         if len(file_path_data) > 0:
+            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
             temp_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})

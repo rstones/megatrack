@@ -610,68 +610,203 @@ class MegatrackTestCase(TestCase):
         resp = self.client.get(f'/generate_mean_maps?{invalid_param_string}')
         self.assert400(resp)
     
-    @mock.patch.object(flask, 'send_file', autospec=True)
-    def test_get_tract(self, mock_put_object):
-        valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
-        mock_put_object.assert_called_with('asdfadfsd')
-#         assert resp.mimetype == 'application/octet-stream'
-#         assert 'attachment;' in resp.headers.get('Content-Disposition')
+#     @mock.patch.object(flask, 'send_file', autospec=True)
+#     def test_get_tract(self, mock_put_object):
+#         valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
+#         self.setup_query_data()
+#         resp = self.client.get(f'/tract/{self.tract_code}?{brc_atlas_males_query}&file_type=.nii.gz')
+#         mock_put_object.assert_called_with('asdfadfsd')
+# #         assert resp.mimetype == 'application/octet-stream'
+# #         assert 'attachment;' in resp.headers.get('Content-Disposition')
+
+    def insert_tract_test_data(self):
+        s1 = Subject(subject_id=s1_subject_id,
+                     gender=s1_gender,
+                     age=s1_age,
+                     handedness=s1_handedness,
+                     edinburgh_handedness_raw=s1_edinburgh_handedness_raw,
+                     ravens_iq_raw=s1_ravens_iq_raw,
+                     dataset_code=s1_dataset_code,
+                     file_path=s1_file_path,
+                     mmse=s1_mmse)
+        db.session.add(s1)
         
-    def test_get_tract_nonexistent_tract(self):
-        valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
-        self.setup_query_data()
-        resp = self.client.get('/tract/NONEXISTENT_TRACT?'+valid_jquery_param_string)
-        assert resp.status_code == 404
-        assert b'NONEXISTENT_TRACT' in resp.get_data()
+        s2 = Subject(subject_id=s2_subject_id,
+                     gender=s2_gender,
+                     age=s2_age,
+                     handedness=s2_handedness,
+                     edinburgh_handedness_raw=s2_edinburgh_handedness_raw,
+                     ravens_iq_raw=s2_ravens_iq_raw,
+                     dataset_code=s2_dataset_code,
+                     file_path=s2_file_path,
+                     mmse=s2_mmse)
+        db.session.add(s2)
         
-    def test_get_tract_nonexistent_dataset(self):
-        valid_jquery_param_string = 'NONEXISTENT_DATASET%5Bgender%5D%5Btype%5D=radio&NONEXISTENT_DATASET%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
-        assert resp.mimetype != 'application/octet-stream' # don't return a nii.gz file
-        assert resp.status_code == 404
+        s3 = Subject(subject_id=s3_subject_id,
+                     gender=s3_gender,
+                     age=s3_age,
+                     handedness=s3_handedness,
+                     edinburgh_handedness_raw=s3_edinburgh_handedness_raw,
+                     ravens_iq_raw=s3_ravens_iq_raw,
+                     dataset_code=s3_dataset_code,
+                     file_path=s3_file_path,
+                     mmse=s3_mmse)
+        db.session.add(s3)
         
-    def test_get_tract_no_tracts_returned(self):
-        valid_jquery_param_string = 'BRC_ATLAS%5Bage%5D%5Btype%5D=range&BRC_ATLAS%5Bage%5D%5Bmin%5D=90&BRC_ATLAS%5Bage%5D%5Bmax%5D=99'
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
-        assert resp.mimetype != 'application/octet-stream' # don't return a nii.gz file
-        assert resp.status_code == 404
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
         
-    def test_get_tract_invalid_param_string(self):
-        invalid_jquery_param_string = 'BRC_ATLA5Bgender%5D%5derD%5Bvalue%5DM&file_type=.nii.gz'
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?'+invalid_jquery_param_string)
-        assert resp.mimetype != 'application/octet-stream'
-        assert resp.status != 404
+        d1 = Dataset(d1_code, d1_name, d1_file_path, d1_query_params)
+        db.session.add(d1)
         
-    def test_get_tract_multiple_datasets(self):
-        valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=F&' \
-                                    +'TEST_DATASET%5Bgender%5D%5Btype%5D=radio&TEST_DATASET%5Bgender%5D%5Bvalue%5D=F' \
-                                    +'&file_type=.nii.gz'
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?'+valid_jquery_param_string)
-        assert resp.mimetype == 'application/octet-stream'
-        assert 'attachment;' in resp.headers.get('Content-Disposition')
+        t1 = Tract(t1_code, t1_name, t1_file_path, t1_description)
+        db.session.add(t1)
         
-    def test_get_tract_no_query(self):
-        self.setup_query_data()
-        resp = self.client.get('/tract/'+self.tract_code+'?')
-        assert resp.mimetype == 'application/octet-stream'
-        assert 'attachment;' in resp.headers.get('Content-Disposition')
+        t2 = Tract(t2_code, t2_name, t2_file_path, t2_description)
+        db.session.add(t2)
         
-    def test_construct_subject_file_paths(self):
-        self.setup_query_data()
-        test_query = {
-                        "BRC_ATLAS": {
-                                    "gender": {"type": "radio", "value": "M"},
-                                    "age": {"type": "range", "min": "20", "max": "40"}
-                                    }
-                      }
-        file_paths, file_names = construct_subject_file_paths(test_query, 'TEST_DATA_DIR', 'TEST_TRACT_DIR', 'TEST_TRACT_FILE_NAME')
-        assert len(file_paths) == 1
+        db.session.commit()
+        
+    def tract_test_response(self, tract_code, query_string):
+        
+        def nib_load_patch(file_path):
+            if s1_subject_id in file_path:
+                return s1_t1
+            elif s3_subject_id in file_path:
+                return s3_t1
+            elif du.TEMPLATE_FILE_NAME in file_path:
+                return template_nifti
+            else:
+                raise ValueError('Invalid file path passed to nib_load_patch in test_views.')
+        
+        def nib_save_patch(img, file_path):
+            pass
+        
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to create a response object without needing
+            to load a file from file system'''
+            global file_path_to_test
+            file_path_to_test = file_path
+            headers = Headers()
+            headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
+            return Response(mimetype='application/octet-stream', headers=headers)
+        
+        with monkey_patch(views, 'send_file', send_file_patch):
+            with monkey_patch(du.nib, 'load', nib_load_patch):
+                with monkey_patch(du.nib, 'save', nib_save_patch):
+                    resp = self.client.get(f'tract/{tract_code}?{query_string}&file_type=.nii.gz')
+                    
+        return resp
+
+    def test_get_tract(self):
+        
+        self.insert_tract_test_data()
+        
+        assert not current_app.cache.get(brc_atlas_males_query) # assert cache empty before request
+        
+        resp = self.tract_test_response(t1_code, brc_atlas_males_query)
+        
+        self.assert200(resp)            
+        assert t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
+        assert current_app.cache.get(brc_atlas_males_query) # assert cache populated
+        
+        # test after caching some data
+        resp = self.tract_test_response(t1_code, brc_atlas_males_query)
+        self.assert200(resp)
+        
+    def test_get_tract_invalid_tract_code(self):
+        
+        self.insert_tract_test_data()
+        
+        resp = self.tract_test_response('invalid_tract_code', brc_atlas_males_query)
+        self.assert400(resp)
+            
+    def test_get_tract_invalid_query(self):
+        self.insert_tract_test_data()
+        resp = self.tract_test_response(t1_code, invalid_param_string)
+        self.assert400(resp)
+        
+    def test_get_tract_no_subjects(self):
+        ''' Test behaviour when there are no subjects returned by the selected query. '''
+        s2 = Subject(subject_id=s2_subject_id,
+                     gender=s2_gender,
+                     age=s2_age,
+                     handedness=s2_handedness,
+                     edinburgh_handedness_raw=s2_edinburgh_handedness_raw,
+                     ravens_iq_raw=s2_ravens_iq_raw,
+                     dataset_code=s2_dataset_code,
+                     file_path=s2_file_path,
+                     mmse=s2_mmse)
+        db.session.add(s2)
+        
+        s4 = Subject(subject_id=s4_subject_id,
+                     gender=s4_gender,
+                     age=s4_age,
+                     handedness=s4_handedness,
+                     edinburgh_handedness_raw=s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=s4_ravens_iq_raw,
+                     dataset_code=s4_dataset_code,
+                     file_path=s4_file_path,
+                     mmse=s4_mmse)
+        db.session.add(s4)
+        
+        d1 = Dataset(d1_code, d1_name, d1_file_path, d1_query_params)
+        db.session.add(d1)
+        
+        t1 = Tract(t1_code, t1_name, t1_file_path, t1_description)
+        db.session.add(t1)
+        
+        t2 = Tract(t2_code, t2_name, t2_file_path, t2_description)
+        db.session.add(t2)
+        
+        db.session.commit()
+        
+        resp = self.tract_test_response(t1_code, brc_atlas_males_query)
+        
+        self.assert404(resp)
+        
+    def test_get_tract_empty_density_map(self):
+        ''' Sometimes a subject might not have a certain tract show up with tractography. So need
+        to be able to handle an empty density map. '''
+        self.insert_tract_test_data()
+        
+        def nib_load_patch(file_path):
+            if s1_subject_id in file_path:
+                return s1_t1
+            elif s3_subject_id in file_path:
+                return empty_nifti
+            elif du.TEMPLATE_FILE_NAME in file_path:
+                return template_nifti
+            else:
+                raise ValueError('Invalid file path passed to nib_load_patch in test_views.')
+            
+        def nib_save_patch(img, file_path):
+            pass
+        
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to create a response object without needing
+            to load a file from file system'''
+            global file_path_to_test
+            file_path_to_test = file_path
+            headers = Headers()
+            headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
+            return Response(mimetype='application/octet-stream', headers=headers)
+        
+        with monkey_patch(views, 'send_file', send_file_patch):
+            with monkey_patch(du.nib, 'load', nib_load_patch):
+                with monkey_patch(du.nib, 'save', nib_save_patch):
+                    resp = self.client.get(f'tract/{t1_code}?{brc_atlas_males_query}&file_type=.nii.gz')
+                    
+        self.assert200(resp)
+        assert t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
         
     def test_lesion_upload(self):
         

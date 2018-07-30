@@ -110,6 +110,8 @@ def density_map_file_path_data(request_query):
         dataset_filter.append(Subject.dataset_code == key)
         sbjct_data = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).filter(*dataset_filter).all()
         sbjct_data = np.array(sbjct_data)
+        if len(sbjct_data) == 0: # in case there are no subjects returned for this dataset
+            continue
         method_column = np.empty((sbjct_data.shape[0], 1), dtype=object)
         method_column.fill(request_query[key]['method'])
         data += np.append(sbjct_data, method_column, axis=1).tolist()
