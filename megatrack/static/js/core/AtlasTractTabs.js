@@ -59,7 +59,7 @@ mgtrk.AtlasTractTabs = (function() {
                                     </div>
                                     <div id="misc-controls">
                                         <div id="${state.code}-download-button" class="download-button button clickable">Download</div>
-                                        <div id="${state.code}-info-button" class="info-button button clickable">View info</div>
+                                        <div id="${state.code}-info-button" class="info-button button clickable">Tract info</div>
                                     </div>
                                 </div>
                                 <div class="tab-content-tract-metrics">
