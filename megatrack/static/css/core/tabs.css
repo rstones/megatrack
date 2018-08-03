@@ -62,3 +62,21 @@
 #tabs-right-scroll {
     float: right;
 }
+
+.tabs-hint {
+    background-color: #ebebe0;
+    height: 100%;
+    border-top: 1px solid lightgrey;
+}
+
+#tabs-left-hint {
+    border-right: 1px solid lightgrey;
+    border-top-right-radius: 5px;
+    float: left;
+}
+
+#tabs-right-hint {
+    border-left: 1px solid lightgrey;
+    border-top-left-radius: 5px;
+    float: right;
+}

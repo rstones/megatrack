@@ -25,18 +25,51 @@ mgtrk.Tabs = (function() {
         tabs.leftMostTab = 0;
         tabs.leftScrollDisabled = true;
         tabs.rightScrollDisabled = true;
+        tabs.scrollingActive = false;
         
         tabs.selectedTabId = '';
         
         tabs.templates = templates;
         
         tabs.removeTab = (id) => {
-            // remove relevant elements from DOM
-            // remove contents from cache
             $(`#${id}-tab-contents`).remove();
             $(`#${id}-tab-header`).remove();
             delete tabs.cache[id];
             $(document).trigger('tabs:remove', [id]);
+            if (tabs.scrollingActive) {
+                if (Object.keys(tabs.cache).length * $('.tab-header').outerWidth() + 2*$('.tabs-scroll').width() < $('#tabs-header').width()) {
+                    // disable scrolling
+                    tabs.scrollingActive = false;
+                    // hide all scrolling paraphenalia
+                    $('#tabs-left-scroll').hide();
+                    $('#tabs-right-scroll').hide();
+                    $('#tabs-left-hint').hide();
+                    $('#tabs-right-hint').hide();
+                    // hide tabs and reshow them all
+                    $('#tabs-header > .tab-header').hide();
+                    $.each(Object.keys(tabs.cache), function(idx, value) {
+                        $(`#${Object.keys(tabs.cache)[idx]}-tab-header`).show();
+                    });
+                } else {
+                    $('#tabs-header > .tab-header').hide();
+                    if (tabs.leftMostTab === 0) {
+                        // tabs at far left
+                        tabs.updateTabsDisplay();
+                    } else if (tabs.leftMostTab === Object.keys(tabs.cache).length - tabs.maxNumTabsVisible + 1) {
+                        // tabs at far right
+                        tabs.leftMostTab--;
+                        tabs.updateTabsDisplay();
+                    } else {
+                        // tabs in middle
+                        tabs.updateTabsDisplay();
+                        // disable right scroll if tabs now at far right
+                        if (tabs.leftMostTab === Object.keys(tabs.cache).length - tabs.maxNumTabsVisible) {
+                            tabs.tabsAtFarRight();
+                        }
+                    }
+                }
+            }
+                    
         };
         
         tabs.removeAll = () => {
@@ -86,25 +119,25 @@ mgtrk.Tabs = (function() {
             
             tabs.cache[id] = state;
             
-            // need some logic to decide on when to start scrolling the tab header if there are lots of tabs open
-            // if sum of open tab-header widths is greater than tabs-header div width then enter scrolling mode
-            // add left and right arrow to side scroll through tab headers
-            
-            if (Object.keys(tabs.cache).length * $('.tab-header').width() > $('#tabs-header').width()) {
+            if (tabs.scrollingActive) {
+                tabs.disableScroll('left', false);
+                tabs.tabsAtFarRight();
+                tabs.leftMostTab = Object.keys(tabs.cache).length - tabs.maxNumTabsVisible;
+                tabs.updateTabsDisplay();
+            } else if (Object.keys(tabs.cache).length * $('.tab-header').outerWidth() + 2*$('.tabs-scroll').width() > $('#tabs-header').width()) {
+                tabs.scrollingActive = true;
                 // display scroll buttons
                 $('#tabs-left-scroll').show();
                 tabs.disableScroll('left', false);
                 $('#tabs-right-scroll').show();
                 tabs.disableScroll('right', true);
-                // hide all tabs
-                $('#tabs-header > .tab-header').hide();
-                // show the last number of tabs that can fit in the tabs object
-                tabs.maxNumTabsVisible = Math.floor($('#tabs-header').width() / $(`#${id}-tab-header`).width());
+                // calculate max number of tabs to show
+                tabs.maxNumTabsVisible = Math.floor(($('#tabs-header').width() - 2*$('.tabs-scroll').width()) / $(`#${id}-tab-header`).outerWidth());
+                // calculate space left over to display hint tab header sections
+                tabs.hintSpace = $('#tabs-header').width() - tabs.maxNumTabsVisible*$('.tab-header').outerWidth() - 2*$('.tabs-scroll').width();
+                tabs.tabsAtFarRight();
                 tabs.leftMostTab = Object.keys(tabs.cache).length - tabs.maxNumTabsVisible;
-                var tabsToDisplay = Object.keys(tabs.cache).slice(tabs.leftMostTab, Object.keys(tabs.cache).length);
-                $.each(tabsToDisplay, function(idx, value) {
-                    $(`#${tabsToDisplay[idx]}-tab-header`).show();
-                });
+                tabs.updateTabsDisplay();
             }
         };
         
@@ -119,46 +152,96 @@ mgtrk.Tabs = (function() {
             }
         };
         
+        /*
+         * Display scrolling paraphenalia for tabs scrolled to far right
+         */
+        tabs.tabsAtFarRight = () => {
+            tabs.disableScroll('right', true);
+            $('#tabs-right-hint').hide();
+            $('#tabs-left-hint').outerWidth(tabs.hintSpace);
+            $('#tabs-left-hint').show();
+        };
+        
+        /*
+         * Display scrolling paraphenalia for tabs scrolled to far left
+         */
+        tabs.tabsAtFarLeft = () => {
+            tabs.disableScroll('left', true);
+            $('#tabs-left-hint').hide();
+            $('#tabs-right-hint').outerWidth(tabs.hintSpace);
+            $('#tabs-right-hint').show();
+        };
+        
+        /*
+         * Display scrolling paraphenalia for tabs somewhere in middle of scrolling range
+         */
+        tabs.tabsInMiddle = () => {
+            $('#tabs-left-hint').outerWidth(tabs.hintSpace / 2);
+            $('#tabs-left-hint').show();
+            $('#tabs-right-hint').outerWidth(tabs.hintSpace / 2);
+            $('#tabs-right-hint').show();
+        };
+        
+        /*
+         * Display newly visible tabs after scrolling has occured
+         */
+        tabs.updateTabsDisplay = () => {
+            $('#tabs-header > .tab-header').hide();
+            $.each(Object.keys(tabs.cache).slice(tabs.leftMostTab, tabs.leftMostTab+tabs.maxNumTabsVisible), function(idx, value) {
+                $(`#${value}-tab-header`).show();
+            });
+        };
+        
         // insert DOM elements for general header and contents section
         $(`#${_parent.tabsContainerId}`).append(`<div id="tabs-wrapper">
                                                     <div id="tabs-header">
                                                         <div id="tabs-left-scroll" class="tabs-scroll clickable"> < </div>
+                                                        <div id="tabs-left-hint" class="tabs-hint clickable"></div>
                                                         <div id="tabs-right-scroll" class="tabs-scroll clickable"> > </div>
+                                                        <div id="tabs-right-hint" class="tabs-hint clickable"></div>
                                                     </div>
                                                     <div id="tabs-contents"></div>
                                                  </div>`);
         
         $('#tabs-left-scroll').hide();
         $('#tabs-right-scroll').hide();
+        $('#tabs-left-hint').hide();
+        $('#tabs-right-hint').hide();
         
         $('#tabs-left-scroll').on('click', function(event) {
             if (!tabs.leftScrollDisabled) {
                 tabs.disableScroll('right', false);
-                $('#tabs-header > .tab-header').hide();
                 tabs.leftMostTab--;
-                var tabsToDisplay = Object.keys(tabs.cache).slice(tabs.leftMostTab, tabs.leftMostTab+tabs.maxNumTabsVisible);
-                $.each(tabsToDisplay, function(idx, value) {
-                    $(`#${tabsToDisplay[idx]}-tab-header`).show();      
-                });
-                if (tabs.leftMostTab === 0) {
-                    tabs.disableScroll('left', true);
+                tabs.updateTabsDisplay();
+                if (tabs.leftMostTab > 0 && Object.keys(tabs.cache).length > tabs.maxNumTabsVisible+1) {
+                    tabs.tabsInMiddle();
+                } else if (tabs.leftMostTab === 0) {
+                    tabs.tabsAtFarLeft();
                 }
             }
+        });
+        
+        $('#tabs-left-hint').on('click', function(event) {
+            tabs.selectTab(Object.keys(tabs.cache)[tabs.leftMostTab-1]);
+            $('#tabs-left-scroll').trigger('click');
         });
         
         $('#tabs-right-scroll').on('click', function(event) {
             if (!tabs.rightScrollDisabled) {
                 tabs.disableScroll('left', false);
-                $('#tabs-header > .tab-header').hide();
                 tabs.leftMostTab++;
-                var tabsToDisplay = Object.keys(tabs.cache).slice(tabs.leftMostTab, tabs.leftMostTab+tabs.maxNumTabsVisible);
-                $.each(tabsToDisplay, function(idx, value) {
-                    $(`#${tabsToDisplay[idx]}-tab-header`).show();
-                });
+                tabs.updateTabsDisplay();
                 if (tabs.leftMostTab === Object.keys(tabs.cache).length - tabs.maxNumTabsVisible) {
-                    tabs.disableScroll('right', true);
+                    tabs.tabsAtFarRight();
+                } else if (tabs.leftMostTab > 0 && Object.keys(tabs.cache).length > tabs.maxNumTabsVisible+1) {
+                    tabs.tabsInMiddle();
                 }
             }
+        });
+        
+        $('#tabs-right-hint').on('click', function(event) {
+            tabs.selectTab(Object.keys(tabs.cache)[tabs.leftMostTab+3]);
+            $('#tabs-right-scroll').trigger('click');
         });
         
         // insert the template for each header and corresponding contents
