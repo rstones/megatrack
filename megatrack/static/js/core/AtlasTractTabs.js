@@ -72,9 +72,6 @@ mgtrk.AtlasTractTabs = (function() {
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
-                                <div id="${state.code}-tract-info" class="tab-content-tract-info">
-                                    ${state.description}
-                                </div>
                                 <ul id="${state.code}-colormap-select" class="colormap-select"></ul>
                             </div>`;
                             
