@@ -12,20 +12,14 @@ mgtrk.LesionTractTabs = (function() {
         // insert a popup to show tract info
         var infoPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
-                                            <div id="tract-info-popup-trk"></div>
+                                            <div id="tract-info-popup-trk-display">
+                                                <div id="tract-info-popup-trk"></div>
+                                                <div id="tract-info-popup-trk-instructions">
+                                                    Drag or scroll to control tract display
+                                                </div>
+                                            </div>
                                             <div id="tract-info-popup-description"></div>
                                             <div id="tract-info-popup-citations"></div>`);
-                                            
-//             const trkRenderer = new X.renderer3D();
-//             trkRenderer.container = 'tract-info-popup-trk';
-//             trkRenderer.config.PICKING_ENABLED = false;
-//             trkRenderer.init();
-//             const trk = new X.fibers();
-//             
-//                 $('#tract-info-overlay-close').on('click', function(event) {
-//                     clearInterval(tractSelect.cameraMotion);
-//                     $('#tract-info-overlay').hide();
-//                 });
         };
         
         var infoPopup = mgtrk.Popup.init({}, `${_parent.tractTabsContainerId}`, 'tract-info-popup', infoPopupContent, 'info-popup');

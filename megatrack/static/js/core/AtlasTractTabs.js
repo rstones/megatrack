@@ -12,7 +12,12 @@ mgtrk.AtlasTractTabs = (function() {
         // insert a popup to show tract info
         var infoPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
-                                            <div id="tract-info-popup-trk"></div>
+                                            <div id="tract-info-popup-trk-display">
+                                                <div id="tract-info-popup-trk"></div>
+                                                <div id="tract-info-popup-trk-instructions">
+                                                    Drag or scroll to control tract display
+                                                </div>
+                                            </div>
                                             <div id="tract-info-popup-description"></div>
                                             <div id="tract-info-popup-citations"></div>`);
         };
