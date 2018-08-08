@@ -535,11 +535,15 @@ def lesion_analysis(lesion_code, threshold):
     
     data_dir = current_app.config['DATA_FILE_PATH']
     
-    lesion_upload = LesionUpload.query.get(lesion_code)
-    
-    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
-    
-    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    if lesion_code == 'example':
+        lesion_data = du.get_nifti_data(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
+    else:
+        lesion_upload = LesionUpload.query.get(lesion_code)
+        # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+        if not lesion_upload:
+            return 'Lesion code does not exist. Please re-upload lesion.', 500
+        lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+        
     rh = nib.load(current_app.config['RIGHT_HEMISPHERE_MASK']).get_data()
     lh = nib.load(current_app.config['LEFT_HEMISPHERE_MASK']).get_data()
     
