@@ -183,8 +183,13 @@ mgtrk.LesionMapping = (function() {
             });
             
             $('#example-lesion-button').on('click', function(event) {
+                // enable run analysis button
                 $('#run-analysis-button').removeClass('button-disabled');
                 $('#run-analysis-button').addClass('button');
+                
+                // reset upload form in case it was previously used
+                $('#upload-form-filename').html('');
+                $('#post-upload-message').html('');
                 
                 const lesionCode = 'example';
                 lesionMapping.currentLesionCode = lesionCode;
