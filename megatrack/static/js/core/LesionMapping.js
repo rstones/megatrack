@@ -170,7 +170,7 @@ mgtrk.LesionMapping = (function() {
                          $('#lesion-volume').html(data.volume.toFixed(2) + ' ml');
                          
                          setTimeout(function() {
-                                $('#lesion-upload-close').trigger('click');
+                            popup.close();
                          }, 2000);
                          
                      },
