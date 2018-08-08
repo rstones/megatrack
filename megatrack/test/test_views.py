@@ -101,7 +101,7 @@ class MegatrackTestCase(TestCase):
     # template and lesion to test lesion upload
     test_affine = np.eye(4)
     nifti_dim = (91,109,91)
-    template_filepath = 'Template_T1_2mm_new_RAS.nii.gz'
+    template_filepath = 'mgtrk_atlas_template.nii.gz'
     template = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), test_affine)
     lesion_filepath = 'lesion.nii.gz'
     lesion = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), test_affine)
@@ -939,6 +939,37 @@ class MegatrackTestCase(TestCase):
                 # assert lesion code is the db
                 # check consecutive uploads with same file name get distinct records in the db
                 # check volume is correct
+    
+    def test_get_example_lesion(self):
+        
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to create a response object without needing
+            to load a file from file system'''
+            global file_path_to_test
+            file_path_to_test = file_path
+            headers = Headers()
+            headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
+            #headers['Content-Length'] = 1431363
+            return Response(mimetype='application/octet-stream', headers=headers)
+        
+        with monkey_patch(views, 'send_file', send_file_patch):
+            resp = self.client.get('/lesion/example')
+        
+        assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}/{du.EXAMPLE_LESION_FILE_NAME}'
+        assert resp.mimetype == 'application/octet-stream'
+        assert resp.headers.get('Content-Disposition') == f'attachment; filename={du.EXAMPLE_LESION_FILE_NAME}'
+        #assert resp.headers.get('Content-Length') == '1431363'
+        
+    def test_get_example_lesion_file_not_found(self):
+        
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to generate FileNotFoundError'''
+            file = open('fail.nii.gz', 'rb')
+        
+        with monkey_patch(views, 'send_file', send_file_patch):
+            resp = self.client.get('/lesion/example')
+            
+        self.assert500(resp)
     
     def test_lesion_analysis(self):
         

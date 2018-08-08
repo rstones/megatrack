@@ -95,7 +95,7 @@ s4_mmse = None
 affine = np.eye(4)
 nifti_dim = (91,109,91)
 
-template_filepath = 'Template_T1_2mm_new_RAS.nii.gz'
+template_filepath = 'mgtrk_atlas_template.nii.gz'
 template_nifti = Nifti1Image(np.ones(nifti_dim, dtype=np.int16), affine)
 
 s1_MD = Nifti1Image(0.5*np.ones(nifti_dim, dtype=np.int16), affine)
