@@ -503,6 +503,18 @@ def get_lesion(lesion_code):
     #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
     return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
 
+@megatrack.route('/lesion/example')
+def get_example_lesion():
+    current_app.logger.info('Fetching example lesion...')
+    data_dir = current_app.config['DATA_FILE_PATH']
+    file_path = file_path_relative_to_root_path(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
+    try:
+        r = send_file(file_path, as_attachment=True, attachment_filename=du.EXAMPLE_LESION_FILE_NAME, conditional=True, add_etags=True)
+        r.make_conditional(request)
+        return r
+    except FileNotFoundError:
+        return "Could not find example lesion!", 500
+
 @megatrack.route('/lesion_analysis/<lesion_code>/<threshold>')
 def lesion_analysis(lesion_code, threshold):
     

@@ -10,7 +10,8 @@ import nibabel as nib
 import datetime
 from nibabel.nifti1 import Nifti1Image
 
-TEMPLATE_FILE_NAME = 'Template_T1_2mm_new_RAS.nii.gz'
+TEMPLATE_FILE_NAME = 'mgtrk_atlas_template.nii.gz'
+EXAMPLE_LESION_FILE_NAME = 'mgtrk_atlas_lesion.nii.gz'
 
 def file_path(data_dir, dataset_dir, subdir, method, subject_id, space, code, file_type):
     '''Constructs a file path to some data following the convention
