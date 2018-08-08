@@ -1018,6 +1018,7 @@ class MegatrackTestCase(TestCase):
         # mock data_utils.generate_averaged_density_map to return a tract file path to be used with nib.load
         # mock nibabel load
         
+        # test request where lesion code == 'example'
         
         # test request with lesion code that isn't in db
         
