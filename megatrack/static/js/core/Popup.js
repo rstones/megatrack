@@ -68,17 +68,17 @@ mgtrk.Popup = (function() {
             Popup.hideScreen();
         };
         
-        $(`#${popupId}-close`).on('click', function(event) {
-            popup.close(); 
-        });
-        
         $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''} popup">
                                         <div id="${popupId}-close" class="popup-remove-icon clickable"></div>
                                         <div id="${popupId}-content"></div>
                                     </div>`);
         
+        $(`#${popupId}-close`).on('click', function(event) {
+            popup.close(); 
+        });
+        
         // pass popup object to insertContent so events inside that function can
-        // access popup close
+        // access popup.close()
         insertContent(`${popupId}-content`, popup);
         
         $(`#${popupId}`).hide();
