@@ -45,15 +45,6 @@ mgtrk.Popup = (function() {
     
         const popup = {};
         
-        $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''} popup">
-                                        <div id="${popupId}-close" class="popup-remove-icon clickable"></div>
-                                        <div id="${popupId}-content"></div>
-                                    </div>`);
-                                    
-        insertContent(`${popupId}-content`);
-        
-        $(`#${popupId}`).hide();
-        
         // keep track of all popups in app
         Popup.popupIds.push(popupId);
         
@@ -80,6 +71,17 @@ mgtrk.Popup = (function() {
         $(`#${popupId}-close`).on('click', function(event) {
             popup.close(); 
         });
+        
+        $(`#${containerId}`).append(`<div id="${popupId}" class="${popupCls || ''} popup">
+                                        <div id="${popupId}-close" class="popup-remove-icon clickable"></div>
+                                        <div id="${popupId}-content"></div>
+                                    </div>`);
+        
+        // pass popup object to insertContent so events inside that function can
+        // access popup close
+        insertContent(`${popupId}-content`, popup);
+        
+        $(`#${popupId}`).hide();
         
         return popup;
     };

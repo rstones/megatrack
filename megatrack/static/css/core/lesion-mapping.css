@@ -208,7 +208,19 @@
 }
 
 #post-upload-message {
-    margin-top: 20px;
+    /*margin-top: 20px;*/
+    height: 30px;
+}
+
+#lesion-upload-or {
+    text-align: left;
+    font-size: 110%;
+}
+
+#example-lesion-button {
+    width: 190px;
+    margin-left: 102px;
+    margin-top: 10px;
 }
 
 #lesion-analysis-running {

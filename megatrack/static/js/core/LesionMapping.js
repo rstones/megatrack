@@ -71,15 +71,14 @@ mgtrk.LesionMapping = (function() {
             Init the lesion upload popup and set up event listener
         */
         
-        var lesionUploadPopupContent = function(popupContentId) {
+        var lesionUploadPopupContent = function(popupContentId, popup) {
             $(`#${popupContentId}`).append(`<div id="lesion-upload-title">Lesion Upload</div>
-                                            <!-- <div id="lesion-upload-close" class="remove-icon clickable"></div> -->
                                             <div class="clear"></div>
                                             <div id="pre-upload-info">
                                                 Upload your lesion map as a gzipped nifti (nii.gz) file.<br><br>
                                                 You must transform your map to MNI space using the following template:
                                                 <div class="clear"></div>
-                                                <div id="template-download-button" class="button"><span>Template Download</span><div class="download-icon"></div></div>
+                                                <div id="template-download-button" class="button"><span>Template download</span><div class="download-icon"></div></div>
                                                 <div class="clear"></div>
                                                 You must also use RAS coordinates.<br>
                                             </div>
@@ -96,7 +95,9 @@ mgtrk.LesionMapping = (function() {
                                                     <div id="upload-form-submit" class="button">Upload</div>
                                                 </div>
                                             </div>
-                                            <div id="post-upload-message"></div>`);
+                                            <div id="post-upload-message"></div>
+                                            <div id="lesion-upload-or">Or...</div>
+                                            <div id="example-lesion-button" class="button">Use example lesion</div>`);
                                             
             $('#template-download-button').on('click', function(event) {
                 event.preventDefault();
@@ -114,6 +115,30 @@ mgtrk.LesionMapping = (function() {
             $('#upload-form-submit').on('click', function(event) {
                  $('#lesion-upload-form > input[type=submit]').trigger('click');
             });
+            
+            lesionMapping.renderLesion = (lesionCode) => {
+                if (_parent.labelmaps.lesion[0]) { // update lesion map
+                    const settings = {
+                                       code: lesionCode,
+                                       colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
+                                   };
+                    _parent.labelmaps.lesion[0] = settings;
+                    
+                    const idx = _parent.findVolumeLabelmapIndex(lesionCode);
+                    _parent.renderers.updateLabelmapFileNew('lesion', lesionCode, idx);
+                } else { // add the lesion map for the first time
+                    const settings = {
+                                       code: lesionCode,
+                                       colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
+                                   };
+                    _parent.labelmaps.lesion[0] = settings;
+                    
+                    const idx = _parent.findVolumeLabelmapIndex(lesionCode);
+                    _parent.renderers.addLabelmapToVolumeNew('lesion', lesionCode, idx, settings);
+                }
+                
+                _parent.renderers.resetSlicesForDirtyFiles();
+            };
             
             $('#lesion-upload-form').submit(function(event) {
                  event.preventDefault();
@@ -138,27 +163,7 @@ mgtrk.LesionMapping = (function() {
                          $('#run-analysis-button').removeClass('button-disabled');
                          $('#run-analysis-button').addClass('button');
                          
-                         if (_parent.labelmaps.lesion[0]) { // update lesion map
-                             const settings = {
-                                                code: lesionCode,
-                                                colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
-                                            };
-                             _parent.labelmaps.lesion[0] = settings;
-                             
-                             const idx = _parent.findVolumeLabelmapIndex(lesionCode);
-                             _parent.renderers.updateLabelmapFileNew('lesion', lesionCode, idx);
-                         } else { // add the lesion map for the first time
-                             const settings = {
-                                                code: lesionCode,
-                                                colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
-                                            };
-                             _parent.labelmaps.lesion[0] = settings;
-                             
-                             const idx = _parent.findVolumeLabelmapIndex(lesionCode);
-                             _parent.renderers.addLabelmapToVolumeNew('lesion', lesionCode, idx, settings);
-                         }
-                         
-                         _parent.renderers.resetSlicesForDirtyFiles();
+                        lesionMapping.renderLesion(lesionCode);
                          
                          $('#lesion-opacity-slider').slider('enable');
                          
@@ -176,6 +181,24 @@ mgtrk.LesionMapping = (function() {
                      }
                  });
             });
+            
+            $('#example-lesion-button').on('click', function(event) {
+                $('#run-analysis-button').removeClass('button-disabled');
+                $('#run-analysis-button').addClass('button');
+                
+                const lesionCode = 'example';
+                lesionMapping.currentLesionCode = lesionCode;
+                
+                lesionMapping.renderLesion(lesionCode);
+                
+                $('#lesion-opacity-slider').slider('enable');
+                
+                $('#lesion-volume').html('3.38 ml');
+                
+                setTimeout(function() {
+                    popup.close();
+                }, 1000);
+            }); 
         };
         
         var lesionUploadPopup = mgtrk.Popup.init(lesionMapping, 'lesion-mapping-wrapper', 'lesion-upload-popup', lesionUploadPopupContent);
