@@ -1,0 +1,10 @@
+# exclude data directory
+data
+
+# exclude passwords and config
+.env
+.cfg
+config.py
+
+# exclude git
+.git

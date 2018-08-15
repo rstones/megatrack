@@ -8,7 +8,7 @@ from flask_assets import Environment, Bundle
 
 # set up application
 application = Flask(__name__)
-application.config.from_object('config.BaseConfig')
+application.config.from_envvar('APP_CONFIG')
 application.json_encoder = AlchemyEncoder
 application.cache = RedisCache(application.config['REDIS_HOST'], application.config['REDIS_PORT'], \
                                default_timeout=application.config['CACHE_TIMEOUT'])

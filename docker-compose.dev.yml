@@ -1,0 +1,9 @@
+# add some extra commands to docker-compose for faster
+# development
+
+version: "2"
+services:
+  megatrack:
+    volumes:  
+      - ./megatrack:/mgtk/megatrack
+    command: "true"
