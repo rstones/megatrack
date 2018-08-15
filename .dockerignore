@@ -1,6 +1,9 @@
 # exclude data directory
 data
 
+# log files
+log/
+
 # exclude passwords and config
 .env
 .cfg
@@ -8,3 +11,10 @@ config.py
 
 # exclude git
 .git
+
+# virtualenv
+megatrackvenv/
+
+# volumes of nginx and db containers
+nginx/
+mysqldb/
