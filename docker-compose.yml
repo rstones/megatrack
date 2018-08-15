@@ -30,7 +30,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - "${MGTK_NGINX_CONFIG}:/etc/nginx/conf.d"
     networks:
