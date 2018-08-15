@@ -189,7 +189,7 @@ mgtrk.QueryBuilder = (function() {
 //                 }
 //                 $('#'+datasetQuery.dataset.code+'-query').remove();
 //                 $('#update-query-button').trigger('constraint:change');
-                
+               
                 /*
                  * Remove current dataset from table
                  * Change dataset select default to 'Add dataset...' and enable all datasets
@@ -198,7 +198,17 @@ mgtrk.QueryBuilder = (function() {
                 $(`#add-dataset-select option[value=${datasetCode}]`).prop('disabled', false);
                 $(`#add-dataset-select option[value=default`).html('Add dataset...');
                 removeDatasetQuery(datasetQuery.dataset.code);
-                $('#update-query-button').trigger('constraint:change');
+                
+                // for now trigger dataset:change which will clear the renderers and TractTabs
+                // since only one dataset can be selected at a time
+                // eventually will need to enable #update-query-button
+                // but disable it for now
+                //$('#update-query-button').trigger('constraint:change');
+                const updateButton = $('#update-query-button');
+                updateButton.removeClass('update-query-button-active');
+                updateButton.removeClass('clickable');
+                updateButton.addClass('update-query-button-disabled');
+                $(document).trigger('dataset:change', [datasetCode]);
             });
             
             return datasetQuery;
@@ -413,7 +423,7 @@ mgtrk.QueryBuilder = (function() {
             if (updateButton.hasClass('update-query-button-active')) {
                 var newQuery = buildQueryObject();
                 if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
-                    $.event.trigger('query:update', newQuery); // trigger updating for tract explorer etc...
+                    $(document).trigger('query:update', newQuery); // trigger updating for tract explorer etc...
                     // show loading gif in #query-info div here
                     $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+'<div class="loading-gif"></div></span>');
                     $.ajax({

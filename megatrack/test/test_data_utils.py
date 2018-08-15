@@ -25,28 +25,32 @@ class DataUtilsTestCase(unittest.TestCase):
     nifti_dim = (91,109,91)
     
     def test_file_path(self):
-        mni_file_path = 'data/test_dataset/test_tract/mni/TEST001_MNI_TRACT_CODE.nii.gz'
-        native_file_path = 'data/test_dataset/test_tract/native/TEST001_Native_TRACT_CODE.nii.gz'
+        mni_file_path = 'data/test_dataset/test_tract/dti/mni/TEST001_MNI_TRACT_CODE.nii.gz'
+        native_file_path = 'data/test_dataset/test_tract/dti/native/TEST001_Native_TRACT_CODE.nii.gz'
+        full_brain_map_path = 'data/test_dataset/full_brain_maps/mni/TEST001_MNI_MD.nii.gz'
         
-        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'MNI', 'TRACT_CODE', 'nii.gz')
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'MNI', 'TRACT_CODE', 'nii.gz')
         assert file_path == mni_file_path
         
-        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'mni', 'TRACT_CODE', 'nii.gz')
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'mni', 'TRACT_CODE', 'nii.gz')
         assert file_path == mni_file_path
         
-        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'Native', 'TRACT_CODE', 'nii.gz')
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'Native', 'TRACT_CODE', 'nii.gz')
         assert file_path == native_file_path
         
-        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'native', 'TRACT_CODE', 'nii.gz')
+        file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'native', 'TRACT_CODE', 'nii.gz')
         assert file_path == native_file_path
+        
+        file_path = du.file_path('data', 'test_dataset', 'full_brain_maps', '', 'TEST001', 'mni', 'MD', 'nii.gz')
+        assert file_path == full_brain_map_path
         
         try:
-            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'UNEXPECTED_SPACE_CODE', 'TRACT_CODE', 'nii.gz')
+            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'UNEXPECTED_SPACE_CODE', 'TRACT_CODE', 'nii.gz')
         except ValueError:
             assert True
             
         try:
-            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'TEST001', 'mni', 'TRACT_CODE', '.exe')
+            file_path = du.file_path('data', 'test_dataset', 'test_tract', 'dti', 'TEST001', 'mni', 'TRACT_CODE', '.exe')
         except ValueError:
             assert True
             

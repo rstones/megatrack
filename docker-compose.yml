@@ -1,0 +1,48 @@
+# base docker-compose file for use in production
+
+version: "2"
+services:
+  megatrack:
+    build: .
+    networks:
+      - db_nw
+      - web_nw
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - "${MGTK_APP_CONFIG}:/mgtk/.cfg"
+      - "${MGTK_DATA_LOCATION}:/mgtk/data"
+      - "${MGTK_LOG_LOCATION}:/mgtk/logs"
+    environment:
+      - APP_CONFIG=/mgtk/.cfg
+  db:
+    image: mysql:5.7
+    volumes:
+      - "${MGTK_DB_LOCATION}:/var/lib/mysql/"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MGTK_DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: megatrack
+      MYSQL_USER: megatrack
+      MYSQL_PASSWORD: "${MGTK_DB_PASSWORD}"
+    networks:
+      - db_nw
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - "${MGTK_NGINX_CONFIG}:/etc/nginx/conf.d"
+    networks:
+      - web_nw
+    depends_on:
+      - megatrack
+  redis:
+    image: redis:alpine
+    networks:
+      - db_nw
+networks:
+  db_nw:
+    driver: bridge
+  web_nw:
+    driver: bridge

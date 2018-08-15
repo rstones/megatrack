@@ -21,6 +21,15 @@ def file_path_relative_to_root_path(file_path):
     above the megatrack package). Config is defined relative to cwd so this fixes that issue.'''
     return '../' + file_path 
 
+def check_request_query(query):
+    if not isinstance(query, dict):
+        return False
+    else:
+        for key in query:
+            if not isinstance(query[key], dict):
+                return False
+    return True
+
 @megatrack.route('/')
 def index():
     return render_template('index.html')
@@ -167,9 +176,12 @@ def get_template():
     current_app.logger.info('Loading template...')
     data_dir = current_app.config['DATA_FILE_PATH']
     file_path = file_path_relative_to_root_path(data_dir+'/'+du.TEMPLATE_FILE_NAME)
-    r = send_file(file_path, as_attachment=True, attachment_filename=du.TEMPLATE_FILE_NAME, conditional=True, add_etags=True)
-    r.make_conditional(request)
-    return r
+    try:
+        r = send_file(file_path, as_attachment=True, attachment_filename=du.TEMPLATE_FILE_NAME, conditional=True, add_etags=True)
+        r.make_conditional(request)
+        return r
+    except FileNotFoundError:
+        return "Could not find MRI template.", 500
 
 @jsonapi
 @megatrack.route('/tract_select')
@@ -200,6 +212,11 @@ def query_report():
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
         current_app.logger.info('Calculating cache stuff...')
         request_query = jquery_unparam(query_string_decoded)
+                
+        if not check_request_query(request_query):
+            current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+            return 'Could not parse query param string.', 400
+        
         query_report = dbu.subjects_per_dataset(request_query)
         
         cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
@@ -214,6 +231,11 @@ def generate_mean_maps():
     cached_data = current_app.cache.get(cache_key)
     data_dir = current_app.config['DATA_FILE_PATH']
     request_query = jquery_unparam(query_string_decoded)
+    
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        return 'Could not parse query param string.', 400
+    
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report'):
         # construct query report and subject file paths again
         current_app.logger.info('Regenerating full subject file paths...')
@@ -231,27 +253,33 @@ def generate_mean_maps():
         current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
         current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
     
-    return 'Success!', 202
+    return 'Mean maps successfully created.', 204
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     
-    tract = dbu.get_tract(tract_code)
-    cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+    # process query string
+    query_string_decoded = request.query_string.decode('utf-8')
+    cache_key = cu.construct_cache_key(query_string_decoded)
+    request_query = jquery_unparam(query_string_decoded)
+    request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        return 'Could not parse query param string.', 400
+    
+    # validate tract code
+    tract = dbu.get_tract(tract_code) 
+    if not tract:
+        return 'The requested tract ' + tract_code + ' does not exist', 400
+    
     cached_data = current_app.cache.get(cache_key)
     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code): # either request not cached or associated density map doesn't exist
         current_app.logger.info('No density map in cache so calculating average from scratch')
-        if not tract:
-            return 'The requested tract ' + tract_code + ' does not exist', 404
-        
-        data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
-        request_query = jquery_unparam(request.query_string.decode('utf-8'))
-        request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side 
-        #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
-        file_path_data = dbu.density_map_file_path_data(request_query)
-        
+    
+        file_path_data = dbu.density_map_file_path_data(request_query)    
         if len(file_path_data) > 0:
+            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
             temp_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
@@ -475,11 +503,22 @@ def get_lesion(lesion_code):
     #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
     return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
 
+@megatrack.route('/lesion/example')
+def get_example_lesion():
+    current_app.logger.info('Fetching example lesion...')
+    data_dir = current_app.config['DATA_FILE_PATH']
+    file_path = file_path_relative_to_root_path(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
+    try:
+        r = send_file(file_path, as_attachment=True, attachment_filename=du.EXAMPLE_LESION_FILE_NAME, conditional=True, add_etags=True)
+        r.make_conditional(request)
+        return r
+    except FileNotFoundError:
+        return "Could not find example lesion!", 500
+
 @megatrack.route('/lesion_analysis/<lesion_code>/<threshold>')
 def lesion_analysis(lesion_code, threshold):
     
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
-    
     
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
@@ -496,11 +535,15 @@ def lesion_analysis(lesion_code, threshold):
     
     data_dir = current_app.config['DATA_FILE_PATH']
     
-    lesion_upload = LesionUpload.query.get(lesion_code)
-    
-    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
-    
-    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    if lesion_code == 'example':
+        lesion_data = du.get_nifti_data(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
+    else:
+        lesion_upload = LesionUpload.query.get(lesion_code)
+        # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+        if not lesion_upload:
+            return 'Lesion code does not exist. Please re-upload lesion.', 500
+        lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+        
     rh = nib.load(current_app.config['RIGHT_HEMISPHERE_MASK']).get_data()
     lh = nib.load(current_app.config['LEFT_HEMISPHERE_MASK']).get_data()
     
@@ -542,9 +585,9 @@ def lesion_analysis(lesion_code, threshold):
             masked_tract_data = ma.masked_where(tract_data < threshold, tract_data)
             overlap = lesion_data * masked_tract_data
             over_threshold_count = masked_tract_data.count()
-            print(tract.code, over_threshold_count)
+            #print(tract.code, over_threshold_count)
             over_threshold_overlap_count = len(overlap.nonzero()[0]) # np.count_nonzero(overlap)
-            print(tract.code, over_threshold_overlap_count)
+            #print(tract.code, over_threshold_overlap_count)
             if over_threshold_overlap_count:
                 overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
                 # add dict to intersecting_tracts list
@@ -554,22 +597,34 @@ def lesion_analysis(lesion_code, threshold):
                                             "description": tract.description})
     
     '''Can speed up the loop through tracts by using multiprocessing pool'''
-    
+                
+    # get unique tract codes for the datasets / methods selected
+    tract_codes = set()
+    for key in request_query.keys():
+        dc = key
+        mc = request_query[key]['method']
+        tcs = DatasetTracts.query.with_entities(DatasetTracts.tract_code).filter((DatasetTracts.dataset_code==dc) & (DatasetTracts.method_code==mc)).all()
+        tcs = set(tcs)
+        tract_codes = tract_codes or tcs
+        tract_codes = tract_codes.intersection(tcs)      
+    # explode the inner tuples
+    tract_codes = [tc[0] for tc in tract_codes]
+
     if np.any(rh_overlap):
         current_app.logger.info('Checking lesion overlap with right hemisphere tracts.')
         # loop through right hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%_R%')).all()
+        tracts = Tract.query.filter(Tract.code.in_(tract_codes) & Tract.code.like('%\_R')).all() # escape sql wildcard _
         check_lesion_tract_overlaps(tracts)
     
     if np.any(lh_overlap):
         current_app.logger.info('Checking lesion overlap with left hemisphere tracts.')
         # loop through left hemisphere tracts
-        tracts = Tract.query.filter(Tract.code.like('%_L%')).all()
+        tracts = Tract.query.filter(Tract.code.in_(tract_codes) & Tract.code.like('%\_L')).all()
         check_lesion_tract_overlaps(tracts)
     
     # loop through tracts connecting hemispheres
     current_app.logger.info('Checking lesion overlap with tracts connecting hemispheres.')
-    tracts = Tract.query.filter(~Tract.code.like('%_R%') & ~Tract.code.like('%_L%')).all() # ~ negates the like
+    tracts = Tract.query.filter(Tract.code.in_(tract_codes) & ~Tract.code.like('%\_R') & ~Tract.code.like('%\_L')).all() # ~ negates the like
     check_lesion_tract_overlaps(tracts)
     
     # sort tracts by overlap score (highest to lowest)

@@ -24,6 +24,7 @@ hr {
     border-radius: 5px;
     height: 23px;
     padding-top: 3px;
+    line-height: 17px;
 }
 
 .button:hover {

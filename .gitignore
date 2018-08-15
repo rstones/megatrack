@@ -41,3 +41,9 @@ megatrack/static/css/core/*.min.css
 
 # webassets cache
 megatrack/static/.webassets-cache/
+
+# config stuff
+.cfg
+.env
+nginx/
+mysqldb/

@@ -110,6 +110,8 @@ def density_map_file_path_data(request_query):
         dataset_filter.append(Subject.dataset_code == key)
         sbjct_data = Subject.query.join(Dataset).with_entities(Subject.subject_id, Dataset.file_path).filter(*dataset_filter).all()
         sbjct_data = np.array(sbjct_data)
+        if len(sbjct_data) == 0: # in case there are no subjects returned for this dataset
+            continue
         method_column = np.empty((sbjct_data.shape[0], 1), dtype=object)
         method_column.fill(request_query[key]['method'])
         data += np.append(sbjct_data, method_column, axis=1).tolist()
@@ -117,19 +119,32 @@ def density_map_file_path_data(request_query):
 
 def subject_tract_metrics(request_query, tract_code):
     '''Get the subject tract metrics for the subjects returned from the given query and the given tract code.'''
-    subject_ids = []
+    subject_ids_methods = []
     for key in request_query:
         dataset_filter = construct_subject_query_filter(request_query[key]['constraints'])
         dataset_filter.append(Subject.dataset_code == key)
         ids = Subject.query.with_entities(Subject.subject_id).filter(*dataset_filter).all()
-        subject_ids += np.array(ids).squeeze().tolist()
+        subject_ids = np.array(ids).squeeze().tolist()
+        method = request_query[key]['method']
+        subject_ids_methods += [(sub_id, method) for sub_id in subject_ids]
+        
 
-    subject_tract_metrics = SubjectTractMetrics.query.with_entities(
-                                                            SubjectTractMetrics.volume, SubjectTractMetrics.mean_FA, 
-                                                            SubjectTractMetrics.mean_MD, SubjectTractMetrics.std_FA,
-                                                            SubjectTractMetrics.std_MD
-                                                        ).filter(SubjectTractMetrics.tract_code == tract_code, \
-                                                             SubjectTractMetrics.subject_id.in_(subject_ids)).all()
+#     subject_tract_metrics = SubjectTractMetrics.query.with_entities(
+#                                                             SubjectTractMetrics.volume, SubjectTractMetrics.mean_FA, 
+#                                                             SubjectTractMetrics.mean_MD, SubjectTractMetrics.std_FA,
+#                                                             SubjectTractMetrics.std_MD
+#                                                         ).filter(SubjectTractMetrics.tract_code == tract_code, \
+#                                                              SubjectTractMetrics.subject_id.in_(subject_ids)).all()
+    subject_tract_metrics = []
+    # there must be a way to do this in a single query!
+    for sm in subject_ids_methods:
+        subject_tract_metrics += SubjectTractMetrics.query.with_entities(
+                                                    SubjectTractMetrics.volume, SubjectTractMetrics.mean_FA, 
+                                                    SubjectTractMetrics.mean_MD, SubjectTractMetrics.std_FA,
+                                                    SubjectTractMetrics.std_MD
+                                                ).filter(SubjectTractMetrics.tract_code == tract_code, \
+                                                     SubjectTractMetrics.subject_id == sm[0], \
+                                                     SubjectTractMetrics.method_code == sm[1]).all()
                                     
     subject_tract_metrics = np.array(subject_tract_metrics).astype(np.float)
     return subject_tract_metrics

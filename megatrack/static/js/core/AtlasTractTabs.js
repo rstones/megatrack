@@ -12,7 +12,12 @@ mgtrk.AtlasTractTabs = (function() {
         // insert a popup to show tract info
         var infoPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
-                                            <div id="tract-info-popup-trk"></div>
+                                            <div id="tract-info-popup-trk-display">
+                                                <div id="tract-info-popup-trk"></div>
+                                                <div id="tract-info-popup-trk-instructions">
+                                                    Drag or scroll to control tract display
+                                                </div>
+                                            </div>
                                             <div id="tract-info-popup-description"></div>
                                             <div id="tract-info-popup-citations"></div>`);
         };
@@ -59,7 +64,7 @@ mgtrk.AtlasTractTabs = (function() {
                                     </div>
                                     <div id="misc-controls">
                                         <div id="${state.code}-download-button" class="download-button button clickable">Download</div>
-                                        <div id="${state.code}-info-button" class="info-button button clickable">View info</div>
+                                        <div id="${state.code}-info-button" class="info-button button clickable">Tract info</div>
                                     </div>
                                 </div>
                                 <div class="tab-content-tract-metrics">
@@ -71,9 +76,6 @@ mgtrk.AtlasTractTabs = (function() {
                                         <span class="metrics-label">Population metrics:</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
-                                </div>
-                                <div id="${state.code}-tract-info" class="tab-content-tract-info">
-                                    ${state.description}
                                 </div>
                                 <ul id="${state.code}-colormap-select" class="colormap-select"></ul>
                             </div>`;
