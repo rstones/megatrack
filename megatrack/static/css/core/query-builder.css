@@ -211,23 +211,15 @@
 }
 
 .query-slider-handle {
-    font-size: 80%;
+    font-size: small;
+    width: 1.9em !important;
+    text-align: center;
+    top: -0.4em !important;
+    line-height: 17px;
 }
 
 #query-range-slider {
     height: 8px;
-}
-
-#query-range-min-handle {
-    width: 1.7em;
-    text-align: center;
-    top: -0.3em;
-}
-
-#query-range-max-handle {
-    width: 1.7em;
-    text-align: center;
-    top: -0.3em;
 }
 
 .dataset-select-container {
