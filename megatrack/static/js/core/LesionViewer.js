@@ -76,10 +76,10 @@ mgtrk.LesionViewer = (function() {
         };
         
         lesionViewer.clearTracts = function() {
-            for (let i=lesionViewer.labelmaps.tracts.length; i--;) {
-                const idx = lesionViewer.findVolumeLabelmapIndex(lesionViewer.labelmaps.tracts[i].code);
-                lesionViewer.renderers.removeLabelmapFromVolumeNew(idx);
-            }
+//             for (let i=lesionViewer.labelmaps.tracts.length; i--;) {
+//                 const idx = lesionViewer.findVolumeLabelmapIndex(lesionViewer.labelmaps.tracts[i].code);
+//                 lesionViewer.renderers.removeLabelmapFromVolumeNew(idx);
+//             }
             lesionViewer.labelmaps.tracts = [];
         };
         

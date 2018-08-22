@@ -265,10 +265,7 @@ mgtrk.LesionMapping = (function() {
                     //data: {lesionCode: lesionMapping.currentLesionCode},
                     success: function(data) {
                         $('#run-analysis-button > .loading-gif').remove();
-                        // clear tract table and current tract labelmaps
-                        //tractTable.clear();
                         tractTabs.removeAll();
-                        //_parent.clearTracts();
                          
                         const dataLen = data.length;
                         for (let i=0; i<dataLen; i++) {
@@ -324,6 +321,8 @@ mgtrk.LesionMapping = (function() {
         
         $(document).on('tabs:remove', function(event, tractCode) {
              _parent.renderers.removeLabelmapFromVolumeNew(_parent.renderers.findVolumeLabelmapIndex(tractCode));
+             const idx = _parent.findVolumeLabelmapIndex(tractCode);
+             _parent.labelmaps.tracts.splice(idx, 1);
         });
        
         return {lesionMapping: lesionMapping};
