@@ -6,4 +6,6 @@ services:
   megatrack:
     volumes:  
       - ./megatrack:/mgtk/megatrack
+      - ./migrations:/mgtk/migrations
     command: "true"
+
