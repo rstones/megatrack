@@ -643,12 +643,15 @@ def lesion_tract_disconnect(lesion_code, tract_code):
     
     data_dir = current_app.config['DATA_FILE_PATH']
     
-    lesion_upload = LesionUpload.query.get(lesion_code)
-    tract = Tract.query.get(tract_code)
-    
+    if lesion_code == 'example':
+        lesion_file_name = f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}'
+    else:
+        lesion_upload = LesionUpload.query.get(lesion_code)
+        lesion_file_name = lesion_upload.saved_file_name
     # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
+    lesion_data = du.get_nifti_data(lesion_file_name)
     
-    lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
+    tract = Tract.query.get(tract_code)
     
     num_streamlines_per_subject = []
     disconnected_streamlines_per_subject = []
