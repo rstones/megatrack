@@ -12,6 +12,7 @@ RUN pip install gunicorn
 
 COPY megatrack megatrack
 COPY migrations migrations
+COPY scripts scripts
 COPY run.py ./
 COPY boot.sh ./
 RUN chmod +x boot.sh
