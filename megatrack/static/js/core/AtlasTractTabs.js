@@ -13,7 +13,7 @@ mgtrk.AtlasTractTabs = (function() {
         var infoPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
                                             <div id="tract-info-popup-trk-display">
-                                                <div id="tract-info-popup-trk"></div>
+                                                <div id="tract-info-popup-renderer"></div>
                                                 <div id="tract-info-popup-trk-instructions">
                                                     Drag or scroll to control tract display
                                                 </div>
@@ -33,11 +33,20 @@ mgtrk.AtlasTractTabs = (function() {
         
         // setup trk renderer within the popup
         var atlasTractTabs = {};
-        atlasTractTabs.trkRenderer = new X.renderer3D();
-        atlasTractTabs.trkRenderer.container = 'tract-info-popup-trk';
-        atlasTractTabs.trkRenderer.config.PICKING_ENABLED = false;
-        atlasTractTabs.trkRenderer.init();
+        atlasTractTabs.tractInfoRenderer = new X.renderer3D();
+        atlasTractTabs.tractInfoRenderer.container = 'tract-info-popup-renderer';
+        atlasTractTabs.tractInfoRenderer.config.PICKING_ENABLED = false;
+        atlasTractTabs.tractInfoRenderer.init();
         atlasTractTabs.trk = new X.fibers();
+        atlasTractTabs.mesh = new X.mesh();
+        
+        atlasTractTabs.mesh = new X.mesh();
+        atlasTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
+        atlasTractTabs.mesh.magicmode = false;
+        atlasTractTabs.mesh.color = [0.3, 0.3, 0.3];
+        atlasTractTabs.mesh.opacity = 0.4;
+        
+        atlasTractTabs.tractInfoRenderer.add(atlasTractTabs.mesh);
         
         const contentTemplate = function(state, wrapperId, contentsId) {
             var template = `<div id="${wrapperId}" class="tract-contents">
@@ -207,14 +216,23 @@ mgtrk.AtlasTractTabs = (function() {
                         $('#tract-info-popup-description').html(state.description);
                         $('#tract-info-popup-citations').html(state.citations);
                         
-                        var renderer = atlasTractTabs.trkRenderer;
+                        var renderer = atlasTractTabs.tractInfoRenderer;
                         renderer.remove(atlasTractTabs.trk);
+                        //renderer.remove(atlasTractTabs.mesh);
                         renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
                         
+                        atlasTractTabs.trk = new X.fibers();
                         atlasTractTabs.trk.file = `${_parent.rootPath}/get_trk/${state.code}?.trk`;
                         atlasTractTabs.trk.opacity = 1.0;
                         
+//                         atlasTractTabs.mesh = new X.mesh();
+//                         atlasTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
+//                         atlasTractTabs.mesh.magicmode = false;
+//                         atlasTractTabs.mesh.color = [0.3, 0.3, 0.3];
+//                         atlasTractTabs.mesh.opacity = 0.4;
+                        
                         renderer.add(atlasTractTabs.trk);
+//                         renderer.add(atlasTractTabs.mesh);
                         renderer.render();
                         
                         atlasTractTabs.cameraMotion = setInterval(function() {

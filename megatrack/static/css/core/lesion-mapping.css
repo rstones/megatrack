@@ -341,7 +341,7 @@
     float: left;
 }
 
-#tract-info-popup-trk {
+#tract-info-popup-renderer {
     width: 250px;
     height: 250px;
     border: 1px solid lightgrey;

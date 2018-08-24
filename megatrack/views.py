@@ -403,6 +403,11 @@ def get_trk(tract_code):
     data_dir = current_app.config['DATA_FILE_PATH']
     return send_file('../'+data_dir+'/trk/'+tract.file_path+'.trk', as_attachment=True, attachment_filename=tract.code+'.trk', conditional=True, add_etags=True)
 
+@megatrack.route('/get_cortex')
+def get_cortex():
+    data_dir = current_app.config['DATA_FILE_PATH']
+    return send_file('../'+data_dir+'/cortex6mb.stl', as_attachment=True, attachment_filename='cortex.stl', conditional=True, add_etags=True)
+
 
 ################################################################################
 #
