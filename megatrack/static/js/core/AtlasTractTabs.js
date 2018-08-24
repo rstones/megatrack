@@ -15,7 +15,7 @@ mgtrk.AtlasTractTabs = (function() {
                                             <div id="tract-info-popup-trk-display">
                                                 <div id="tract-info-popup-renderer"></div>
                                                 <div id="tract-info-popup-trk-instructions">
-                                                    Drag or scroll to control tract display
+                                                    Drag or scroll to control display
                                                 </div>
                                             </div>
                                             <div id="tract-info-popup-description"></div>
@@ -37,9 +37,12 @@ mgtrk.AtlasTractTabs = (function() {
         atlasTractTabs.tractInfoRenderer.container = 'tract-info-popup-renderer';
         atlasTractTabs.tractInfoRenderer.config.PICKING_ENABLED = false;
         atlasTractTabs.tractInfoRenderer.init();
-        atlasTractTabs.trk = new X.fibers();
-        atlasTractTabs.mesh = new X.mesh();
+        var viewMatrix = atlasTractTabs.tractInfoRenderer.camera.view;
+        viewMatrix[14] = -200; 
         
+        atlasTractTabs.trk = new X.fibers();
+        
+        atlasTractTabs.mesh = new X.mesh();
         atlasTractTabs.mesh = new X.mesh();
         atlasTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
         atlasTractTabs.mesh.magicmode = false;
@@ -218,21 +221,13 @@ mgtrk.AtlasTractTabs = (function() {
                         
                         var renderer = atlasTractTabs.tractInfoRenderer;
                         renderer.remove(atlasTractTabs.trk);
-                        //renderer.remove(atlasTractTabs.mesh);
                         renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
                         
                         atlasTractTabs.trk = new X.fibers();
                         atlasTractTabs.trk.file = `${_parent.rootPath}/get_trk/${state.code}?.trk`;
                         atlasTractTabs.trk.opacity = 1.0;
                         
-//                         atlasTractTabs.mesh = new X.mesh();
-//                         atlasTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
-//                         atlasTractTabs.mesh.magicmode = false;
-//                         atlasTractTabs.mesh.color = [0.3, 0.3, 0.3];
-//                         atlasTractTabs.mesh.opacity = 0.4;
-                        
                         renderer.add(atlasTractTabs.trk);
-//                         renderer.add(atlasTractTabs.mesh);
                         renderer.render();
                         
                         atlasTractTabs.cameraMotion = setInterval(function() {
@@ -241,7 +236,13 @@ mgtrk.AtlasTractTabs = (function() {
                     }
                 };
                 
-                infoPopup.open(updatePopupContent);
+                const cleanUpRenderer = function() {
+                    clearInterval(atlasTractTabs.cameraMotion);
+                    var renderer = atlasTractTabs.tractInfoRenderer;
+                    renderer.pauseRendering();
+                };
+                
+                infoPopup.open(updatePopupContent, cleanUpRenderer);
             });
             
             $(`.prob-metrics-help`).on('click', function(event) {
