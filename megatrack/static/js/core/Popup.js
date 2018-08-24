@@ -30,6 +30,8 @@ mgtrk.Popup = (function() {
         $('#popup-background-screen').hide();
     };
     
+    Popup.cleanUp = null;
+    
     /**
      * Initialise a popup instance.
      * @param {Object} _parent          The parent object.
@@ -51,8 +53,9 @@ mgtrk.Popup = (function() {
         /**
          * Open the popup.
          * @param {Function} updateContent      Update the content popup before opening.
+         * @param {Function} cleanUp            Clean up resources like renderers on close
          */
-        popup.open = (updateContent) => {
+        popup.open = (updateContent, cleanUp) => {
             Popup.showScreen();
             const popup = $(`#${popupId}`);
             popup.show();
@@ -61,9 +64,17 @@ mgtrk.Popup = (function() {
             if (updateContent) {
                 updateContent();
             }
+            
+            if (cleanUp) {
+                Popup.cleanUp = cleanUp;
+            }
         };
         
         popup.close = () => {
+            if (Popup.cleanUp) {
+                Popup.cleanUp();
+            }
+            Popup.cleanUp = null; // reset cleanUp
             $(`#${popupId}`).hide();
             Popup.hideScreen();
         };
