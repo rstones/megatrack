@@ -9,39 +9,10 @@ mgtrk.LesionTractTabs = (function() {
     
     LesionTractTabs.init = (_parent, initState) => {
     
-        // insert a popup to show tract info
-        var infoPopupContent = function(popupContentId) {
-            $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
-                                            <div id="tract-info-popup-trk-display">
-                                                <div id="tract-info-popup-renderer"></div>
-                                                <div id="tract-info-popup-trk-instructions">
-                                                    Drag or scroll to control display
-                                                </div>
-                                            </div>
-                                            <div id="tract-info-popup-description"></div>
-                                            <div id="tract-info-popup-citations"></div>`);
-        };
-        
-        var infoPopup = mgtrk.Popup.init({}, `${_parent.tractTabsContainerId}`, 'tract-info-popup', infoPopupContent, 'info-popup');
-        
-        // setup trk renderer within the popup
         var lesionTractTabs = {};
-        lesionTractTabs.tractInfoRenderer = new X.renderer3D();
-        lesionTractTabs.tractInfoRenderer.container = 'tract-info-popup-renderer';
-        lesionTractTabs.tractInfoRenderer.config.PICKING_ENABLED = false;
-        lesionTractTabs.tractInfoRenderer.init();
-        var viewMatrix = lesionTractTabs.tractInfoRenderer.camera.view;
-        viewMatrix[14] = -200;
+        lesionTractTabs.rootPath = _parent.rootPath;
         
-        lesionTractTabs.trk = new X.fibers();
-        
-        lesionTractTabs.mesh = new X.mesh();
-        lesionTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
-        lesionTractTabs.mesh.magicmode = false;
-        lesionTractTabs.mesh.color = [0.3, 0.3, 0.3];
-        lesionTractTabs.mesh.opacity = 0.4;
-        
-        lesionTractTabs.tractInfoRenderer.add(lesionTractTabs.mesh);
+        var infoPopup = mgtrk.TractInfoPopup.init(lesionTractTabs, `${_parent.tractTabsContainerId}`, 'tract-info-popup', 'info-popup');
         
         // define the tab contents template of the LesionTractTabs then add the TractTabs object
         const contentTemplate = function(state, wrapperId, contentsId) {
@@ -205,30 +176,7 @@ mgtrk.LesionTractTabs = (function() {
             
             $(`#${state.code}-info-button`).on('click', function(event) {
                 event.preventDefault();
-                
-                const updatePopupContent = function() {
-                    if (state.name) {
-                        $('#tract-info-popup-title').html(state.name);
-                        $('#tract-info-popup-description').html(state.description);
-                        $('#tract-info-popup-citations').html(state.citations);
-                        
-                        var renderer = lesionTractTabs.tractInfoRenderer;
-                        renderer.remove(lesionTractTabs.trk);
-                        renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
-                        
-                        lesionTractTabs.trk.file = `${_parent.rootPath}/get_trk/${state.code}?.trk`;
-                        lesionTractTabs.trk.opacity = 1.0;
-                        
-                        renderer.add(lesionTractTabs.trk);
-                        renderer.render();
-                        
-                        lesionTractTabs.cameraMotion = setInterval(function() {
-                            renderer.camera.rotate([3,0]);
-                        }, 50);
-                    }
-                };
-                
-                infoPopup.open(updatePopupContent);
+                infoPopup.open(state);
             });
             
             $(`#${state.code}-run-disconnect-button`).on('click', function(event) {
