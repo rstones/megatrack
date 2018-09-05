@@ -43,7 +43,6 @@ mgtrk.AtlasTractTabs = (function() {
         atlasTractTabs.trk = new X.fibers();
         
         atlasTractTabs.mesh = new X.mesh();
-        atlasTractTabs.mesh = new X.mesh();
         atlasTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
         atlasTractTabs.mesh.magicmode = false;
         atlasTractTabs.mesh.color = [0.3, 0.3, 0.3];

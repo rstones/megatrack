@@ -13,9 +13,9 @@ mgtrk.LesionTractTabs = (function() {
         var infoPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="tract-info-popup-title"></div>
                                             <div id="tract-info-popup-trk-display">
-                                                <div id="tract-info-popup-trk"></div>
+                                                <div id="tract-info-popup-renderer"></div>
                                                 <div id="tract-info-popup-trk-instructions">
-                                                    Drag or scroll to control tract display
+                                                    Drag or scroll to control display
                                                 </div>
                                             </div>
                                             <div id="tract-info-popup-description"></div>
@@ -26,11 +26,22 @@ mgtrk.LesionTractTabs = (function() {
         
         // setup trk renderer within the popup
         var lesionTractTabs = {};
-        lesionTractTabs.trkRenderer = new X.renderer3D();
-        lesionTractTabs.trkRenderer.container = 'tract-info-popup-trk';
-        lesionTractTabs.trkRenderer.config.PICKING_ENABLED = false;
-        lesionTractTabs.trkRenderer.init();
+        lesionTractTabs.tractInfoRenderer = new X.renderer3D();
+        lesionTractTabs.tractInfoRenderer.container = 'tract-info-popup-renderer';
+        lesionTractTabs.tractInfoRenderer.config.PICKING_ENABLED = false;
+        lesionTractTabs.tractInfoRenderer.init();
+        var viewMatrix = lesionTractTabs.tractInfoRenderer.camera.view;
+        viewMatrix[14] = -200;
+        
         lesionTractTabs.trk = new X.fibers();
+        
+        lesionTractTabs.mesh = new X.mesh();
+        lesionTractTabs.mesh.file = `${_parent.rootPath}/get_cortex?.stl`;
+        lesionTractTabs.mesh.magicmode = false;
+        lesionTractTabs.mesh.color = [0.3, 0.3, 0.3];
+        lesionTractTabs.mesh.opacity = 0.4;
+        
+        lesionTractTabs.tractInfoRenderer.add(lesionTractTabs.mesh);
         
         // define the tab contents template of the LesionTractTabs then add the TractTabs object
         const contentTemplate = function(state, wrapperId, contentsId) {
@@ -165,10 +176,6 @@ mgtrk.LesionTractTabs = (function() {
                 const indicatorOffset = $(`#${tractCode}-colormap-indicator`).offset();
                 const colormapSelect = $(`#${tractCode}-colormap-select`);
                 
-                console.log(indicatorOffset);
-                console.log(colormapSelect.height());
-                console.log(indicatorPos);
-                
                 if ((indicatorOffset.top - $(window).scrollTop()) + colormapSelect.height() + 20 > $(window).height()) {
                     colormapSelect.css('top', indicatorPos.top - colormapSelect.height());
                 } else{
@@ -205,7 +212,7 @@ mgtrk.LesionTractTabs = (function() {
                         $('#tract-info-popup-description').html(state.description);
                         $('#tract-info-popup-citations').html(state.citations);
                         
-                        var renderer = lesionTractTabs.trkRenderer;
+                        var renderer = lesionTractTabs.tractInfoRenderer;
                         renderer.remove(lesionTractTabs.trk);
                         renderer.resize(); // call the resize function to ensure the canvas gets the dimensions of the visible container
                         
