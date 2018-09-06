@@ -43,17 +43,27 @@ mgtrk.LesionTractTabs = (function() {
                                         <div id="${state.code}-info-button" class="info-button button clickable">View info</div>
                                     </div>
                                 </div>
-                                <!--<div class="tab-content-tract-info">
-                                    <div id=""overlap-score>Overlap score:</div>
-                                </div>-->
-                                <div class="tab-content-tract-disconnection">
+                                <div class="tab-content-disconnect-metrics">
+                                    <div id="${state.code}-disconnect-metrics-column" class="disconnect-metrics-column">
+                                        <div id="overlap-score-row">
+                                            <div class="overlap-score-label">Overlap score: </div> ${state.overlapScore.toFixed(2)} 
+                                        </div>
+                                        <div id="overlap-score-help" class="help-icon clickable"></div>
+                                        <div class="clear"></div>
+                                        <div id="${state.code}-run-disconnect-button" class="run-disconnect-button button clickable">Calculate tract disconnection</div>
+                                    </div>
+                                    <div id="${state.code}-disconnect-histogram-column" class="disconnect-histogram-column">
+                                    
+                                    </div>
+                                </div>
+                                <!-- <div class="tab-content-tract-disconnection">
                                     <div id="${state.code}-disconnect-results" class="disconnect-results">
                                         <span style="font-size: 110%">Overlap score: </span> ${state.overlapScore.toFixed(2)}<br><br>
                                     </div>
                                     <div id="${state.code}-disconnect-histogram-wrapper" class="disconnect-histogram-wrapper">
                                         <div id="${state.code}-run-disconnect-button" class="run-disconnect-button button clickable">Calculate tract disconnection</div>    
                                     </div>
-                                </div>
+                                </div> -->
                                 <ul id="${state.code}-colormap-select" class="colormap-select"></ul>
                             </div>`;
                             
@@ -189,11 +199,22 @@ mgtrk.LesionTractTabs = (function() {
                     //data: {lesionCode: lesionMapping.currentLesionCode},
                     success: function(data) {
                         $(`#${state.code}-run-disconnect-button`).remove();
-                        $(`#${state.code}-disconnect-results`).append(
-                            `<span style="font-size: 110%">Disconnection results</span><br>
-                            Average num. streamlines: ${Math.round(data.averageNumStreamlines)}<br>
-                            Av. disconnected streamlines: ${Math.round(data.averageDisconnectedStreamlines)}<br>
-                            Av. % disconnection: ${data.averageDisconnect.toFixed(2)}%`
+                        $(`#${state.code}-disconnect-metrics-column`).append(
+                            `<div id="${state.code}-disconnect-results-wrapper" class="disconnect-results-wrapper">
+                                <span class="disconnect-results-label">Disconnection results:</span>
+                                <div id="${state.code}-disconnect-help" class="disconnect-help help-icon clickable"></div>
+                                <div class="disconnect-results">
+                                    <div class="disconnect-results-row">
+                                        Average num. streamlines: <span style="float: right;">${Math.round(data.averageNumStreamlines)}</span>
+                                    </div>
+                                    <div class="disconnect-results-row">
+                                        Av. disconnected streamlines: <span style="float: right;">${Math.round(data.averageDisconnectedStreamlines)}</span>
+                                    </div>
+                                    <div class="disconnect-results-row">
+                                        Av. % disconnection: <span style="float: right;">${data.averageDisconnect.toFixed(2)}%</span>
+                                    </div>
+                                </div>
+                            </div>`
                         );
                     
                         // display info
@@ -224,7 +245,7 @@ mgtrk.LesionTractTabs = (function() {
                                 t: 0
                             }
                         };
-                        Plotly.newPlot(`${state.code}-disconnect-histogram-wrapper`, [trace], layout, {staticPlot: true});
+                        Plotly.newPlot(`${state.code}-disconnect-histogram-column`, [trace], layout, {staticPlot: true});
                         
                         // add data to cache
 //                             disconnectDataCache[tractCode] = {
