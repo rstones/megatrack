@@ -101,6 +101,10 @@ select {
 	padding-left: 3px;
 }
 
+.select-small {
+    background-position: 90% !important;
+}
+
 select:hover {
 	background-color: #F5F5F5;
 	border: 1px solid grey;

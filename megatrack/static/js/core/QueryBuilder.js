@@ -80,7 +80,7 @@ mgtrk.QueryBuilder = (function() {
             $('#'+tableId+' > tbody').append('<tr id="'+datasetQuery.dataset.code+'-query" class="dataset-query-row"><td class="dataset-query-cell">'
                     +'<div class="dataset-query-heading">'+datasetQuery.dataset.name+'</div>'
                     +'<div class="dataset-query-constraint-select"><select id="'+datasetQuery.dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
-                    +'<div class="dataset-query-method-select"><select id="'+datasetQuery.dataset.code+'-method-select"><option value="default" disabled selected>Method...</option></select></div>'
+                    +'<div class="dataset-query-method-select"><select id="'+datasetQuery.dataset.code+'-method-select" class="select-small"><option value="default" disabled selected>Method...</option></select></div>'
                     //+'<div class="dataset-exclude"><form><input id="'+datasetQuery.dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+datasetQuery.dataset.code+'-exclude">Exclude</label></form></div>'
                     +'<div class="dataset-remove"><div id="'+datasetQuery.dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
                     +'<div class="clear"></div>'
