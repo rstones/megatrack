@@ -51,6 +51,7 @@ mgtrk.TractSelect = (function() {
         });
           
         const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {});
+        $(`#${tractSelect.tractTabsContainerId}`).hide();
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
@@ -84,7 +85,10 @@ mgtrk.TractSelect = (function() {
                             };
             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, 0, settings, _parent.currentQuery);
             _parent.renderers.resetSlicesForDirtyFiles();
-
+            
+            if ($(`#${tractSelect.tractTabsContainerId}`).is(':hidden')) {
+                $(`#${tractSelect.tractTabsContainerId}`).show();
+            }
             tractTabs.addTab(settings);
             tractTabs.selectTab(settings.code);           
         });
@@ -111,6 +115,7 @@ mgtrk.TractSelect = (function() {
             
             $('#add-tract-select').prop('disabled', true);
             $('#tract-disabled-msg-text').show();
+            $(`#${tractSelect.tractTabsContainerId}`).hide();
         });
         
 //         $(document).on('dataset:remove', function(event, datasetCode, noDatasetSelected) {
@@ -125,6 +130,7 @@ mgtrk.TractSelect = (function() {
             if ($('#add-tract-select').prop('disabled')) {
                 $('#add-tract-select').prop('disabled', false);
                 $('#tract-disabled-msg-text').hide();
+                //$(`#${tractSelect.tractTabsContainerId}`).show();
             }
             
             // we are restricting the user to selecting only a single
