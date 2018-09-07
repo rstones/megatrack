@@ -56,14 +56,6 @@ mgtrk.LesionTractTabs = (function() {
                                     
                                     </div>
                                 </div>
-                                <!-- <div class="tab-content-tract-disconnection">
-                                    <div id="${state.code}-disconnect-results" class="disconnect-results">
-                                        <span style="font-size: 110%">Overlap score: </span> ${state.overlapScore.toFixed(2)}<br><br>
-                                    </div>
-                                    <div id="${state.code}-disconnect-histogram-wrapper" class="disconnect-histogram-wrapper">
-                                        <div id="${state.code}-run-disconnect-button" class="run-disconnect-button button clickable">Calculate tract disconnection</div>    
-                                    </div>
-                                </div> -->
                                 <ul id="${state.code}-colormap-select" class="colormap-select"></ul>
                             </div>`;
                             
@@ -166,7 +158,6 @@ mgtrk.LesionTractTabs = (function() {
                 
                 // show colormap select
                 colormapSelect.show('blind');
-                //$(`#${tractCode}-colormap-select`).css('display', 'block');
             });
             
             $(document).on('click', function(event) {
@@ -246,14 +237,6 @@ mgtrk.LesionTractTabs = (function() {
                             }
                         };
                         Plotly.newPlot(`${state.code}-disconnect-histogram-column`, [trace], layout, {staticPlot: true});
-                        
-                        // add data to cache
-//                             disconnectDataCache[tractCode] = {
-//                                 lesionCode: lesionMapping.currentLesionCode,
-//                                 query: currentQuery,
-//                                 data: data,
-//                                 name: tractName
-//                             }
                     }
                 });
             });
