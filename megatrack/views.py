@@ -590,9 +590,7 @@ def lesion_analysis(lesion_code, threshold):
             masked_tract_data = ma.masked_where(tract_data < threshold, tract_data)
             overlap = lesion_data * masked_tract_data
             over_threshold_count = masked_tract_data.count()
-            #print(tract.code, over_threshold_count)
-            over_threshold_overlap_count = len(overlap.nonzero()[0]) # np.count_nonzero(overlap)
-            #print(tract.code, over_threshold_overlap_count)
+            over_threshold_overlap_count = len(overlap.nonzero()[0])
             if over_threshold_overlap_count:
                 overlap_percent = (over_threshold_overlap_count / over_threshold_count) * 100.
                 # add dict to intersecting_tracts list
@@ -611,7 +609,7 @@ def lesion_analysis(lesion_code, threshold):
         tcs = DatasetTracts.query.with_entities(DatasetTracts.tract_code).filter((DatasetTracts.dataset_code==dc) & (DatasetTracts.method_code==mc)).all()
         tcs = set(tcs)
         tract_codes = tract_codes or tcs
-        tract_codes = tract_codes.intersection(tcs)      
+        tract_codes = tract_codes.intersection(tcs)
     # explode the inner tuples
     tract_codes = [tc[0] for tc in tract_codes]
 
