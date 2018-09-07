@@ -42,6 +42,7 @@ mgtrk.LesionMapping = (function() {
                                     +'</div>');
         
         const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {});
+        $(`#${lesionMapping.tractTabsContainerId}`).hide();
         
         // will store the disconnection data for each tract
         // needs emptying when query or lesion changes
@@ -266,7 +267,9 @@ mgtrk.LesionMapping = (function() {
                     success: function(data) {
                         $('#run-analysis-button > .loading-gif').remove();
                         tractTabs.removeAll();
-                         
+                        if ($(`#${lesionMapping.tractTabsContainerId}`).is(':hidden')) {
+                            $(`#${lesionMapping.tractTabsContainerId}`).show();
+                        }
                         const dataLen = data.length;
                         for (let i=0; i<dataLen; i++) {
                             const tractCode = data[i].tractCode;
@@ -292,6 +295,7 @@ mgtrk.LesionMapping = (function() {
                              
                              tractTabs.addTab(settings);
                         }
+                        
                         tractTabs.selectTab(data[0].tractCode);
                         _parent.renderers.resetSlicesForDirtyFiles();
                     },
@@ -313,10 +317,12 @@ mgtrk.LesionMapping = (function() {
         
         $(document).on('dataset:change', function(event, datasetCode) {
             tractTabs.removeAll(); // Tabs.removeTab will fire a tabs:remove event which we use to clear renderer
+            $(`#${lesionMapping.tractTabsContainerId}`).hide();
         });
         
         $(document).on('query:update', function(event, newQuery) {
             tractTabs.removeAll();
+            $(`#${lesionMapping.tractTabsContainerId}`).hide();
         });
         
         $(document).on('tabs:remove', function(event, tractCode) {
