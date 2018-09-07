@@ -297,6 +297,29 @@
     margin-top: 3px;
 }
 
+#overlap-score-popup {
+    width: 700px;
+    height: 200px;
+}
+
+#overlap-score-popup-title {
+    text-align: left;
+    font-size: 120%;
+    float: left;
+    width: 700px;
+    margin-bottom: 20px;
+}
+
+#overlap-score-popup-description {
+    text-align: left;
+}
+
+#overlap-score-popup-description > ul {
+    list-style: circle;
+    padding: 20px;
+    line-height: 22px;
+}
+
 .run-disconnect-button {
     font-size: 80%;
     width: 200px;
