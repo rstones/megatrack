@@ -378,6 +378,29 @@
     text-align: left;
 }
 
+#disconnect-popup {
+    width: 700px;
+    height: 200px;
+}
+
+#disconnect-popup-title {
+    text-align: left;
+    font-size: 120%;
+    float: left;
+    width: 700px;
+    margin-bottom: 20px;
+}
+
+#disconnect-popup-description {
+    text-align: left;
+}
+
+#disconnect-popup-description > ul {
+    list-style: circle;
+    padding: 20px;
+    line-height: 22px;
+}
+
 #disconnect-title {
 
 }
