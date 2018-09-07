@@ -12,7 +12,22 @@ mgtrk.LesionTractTabs = (function() {
         var lesionTractTabs = {};
         lesionTractTabs.rootPath = _parent.rootPath;
         
-        var infoPopup = mgtrk.TractInfoPopup.init(lesionTractTabs, `${_parent.tractTabsContainerId}`, 'tract-info-popup', 'info-popup');
+        var infoPopup = mgtrk.TractInfoPopup.init(lesionTractTabs, 
+                                                  `${_parent.tractTabsContainerId}`,
+                                                  'tract-info-popup',
+                                                  'info-popup');
+                                                  
+        var overlapScorePopup = mgtrk.Popup.init(lesionTractTabs,
+                                                 _parent.tractTabsContainerId,
+                                                 'overlap-score-popup',
+                                                 mgtrk.popupContent.overlapScore,
+                                                 'overlap-score-popup');
+                                                 
+        var disconnectPopup = mgtrk.Popup.init(lesionTractTabs,
+                                               _parent.tractTabsContainerId,
+                                               'disconnect-popup',
+                                               mgtrk.popupContent.disconnect,
+                                               'disconnect-popup');
         
         // define the tab contents template of the LesionTractTabs then add the TractTabs object
         const contentTemplate = function(state, wrapperId, contentsId) {
@@ -180,6 +195,10 @@ mgtrk.LesionTractTabs = (function() {
                 infoPopup.open(state);
             });
             
+            $('#overlap-score-help').on('click', function(event) {
+                overlapScorePopup.open();
+            });
+            
             $(`#${state.code}-run-disconnect-button`).on('click', function(event) {
                 event.preventDefault();
                 $(`#${state.code}-run-disconnect-button`).append('&nbsp<div class="loading-gif"></div>');
@@ -207,6 +226,10 @@ mgtrk.LesionTractTabs = (function() {
                                 </div>
                             </div>`
                         );
+                        
+                        $('.disconnect-help').on('click', function(event) {
+                            disconnectPopup.open();
+                        });
                     
                         // display info
                         const trace = {
