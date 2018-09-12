@@ -1,9 +1,9 @@
-from flask import Flask
-import flask
-import unittest
-import mock
 import json
+
+import flask
+from flask import Flask
 from flask_testing import TestCase
+
 from megatrack.admin.models import User
 from megatrack.models import Tract, Dataset, Subject
 from megatrack.alchemy_encoder import AlchemyEncoder
