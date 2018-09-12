@@ -8,10 +8,13 @@ import flask
 import unittest
 import mock
 from flask_testing import TestCase
-from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject, LesionUpload
+from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject
+from megatrack.lesion.models import LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
-import megatrack.views as views
+from megatrack.lesion.views import lesion
+from megatrack import views
+from megatrack.lesion import views as lesion_views
 import megatrack.data_utils as du
 from .cache_mock import CacheMock
 import numpy as np
@@ -134,6 +137,7 @@ class MegatrackTestCase(TestCase):
         
         db.init_app(app)
         app.register_blueprint(megatrack)
+        app.register_blueprint(lesion)
         return app
     
     def setUp(self):
@@ -208,7 +212,7 @@ class MegatrackTestCase(TestCase):
         assert b'MegaTrack Atlas' in resp.get_data()
         
     def test_lesions(self):
-        resp = self.client.get('/lesions')
+        resp = self.client.get('/lesion')
         assert b'Lesion' in resp.get_data()
     
     def test_about(self):
@@ -942,17 +946,21 @@ class MegatrackTestCase(TestCase):
     
     def test_get_example_lesion(self):
         
+        file_path_to_test = ''
+        
         def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
             '''Monkey patch flask.send_file with this function to create a response object without needing
             to load a file from file system'''
-            global file_path_to_test
+            nonlocal file_path_to_test
             file_path_to_test = file_path
+            print(f'FILE PATH TO TEST: {file_path_to_test}')
             headers = Headers()
             headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
             #headers['Content-Length'] = 1431363
             return Response(mimetype='application/octet-stream', headers=headers)
         
-        with monkey_patch(views, 'send_file', send_file_patch):
+        with monkey_patch(lesion_views, 'send_file', send_file_patch):
+            print(f'LESION EXAMPLE')
             resp = self.client.get('/lesion/example')
         
         assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}/{du.EXAMPLE_LESION_FILE_NAME}'

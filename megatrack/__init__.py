@@ -10,7 +10,8 @@ from flask_assets import Environment, Bundle
 application = Flask(__name__)
 application.config.from_envvar('APP_CONFIG')
 application.json_encoder = AlchemyEncoder
-application.cache = RedisCache(application.config['REDIS_HOST'], application.config['REDIS_PORT'], \
+application.cache = RedisCache(application.config['REDIS_HOST'],
+                               application.config['REDIS_PORT'], \
                                default_timeout=application.config['CACHE_TIMEOUT'])
 
 # set up authentication
@@ -33,8 +34,12 @@ db = SQLAlchemy()
 db.init_app(application)
 
 # import blueprint with routes after application is set up
-from .views import megatrack
+from megatrack.views import megatrack
 application.register_blueprint(megatrack, url_prefix='/megatrack')
 
+from megatrack.lesion.views import lesion
+application.register_blueprint(lesion, url_prefix='/megatrack')
+
 # import models after application is set up
-from megatrack import models
+import megatrack.models
+import megatrack.lesion.models
