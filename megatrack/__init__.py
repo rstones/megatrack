@@ -40,6 +40,10 @@ application.register_blueprint(megatrack, url_prefix='/megatrack')
 from megatrack.lesion.views import lesion
 application.register_blueprint(lesion, url_prefix='/megatrack')
 
+from megatrack.admin.views import admin
+application.register_blueprint(admin, url_prefix='/megatrack')
+
 # import models after application is set up
 import megatrack.models
 import megatrack.lesion.models
+import megatrack.admin.models

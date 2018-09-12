@@ -4,10 +4,13 @@ import unittest
 import mock
 import json
 from flask_testing import TestCase
-from megatrack.models import Tract, Dataset, Subject, User
+from megatrack.admin.models import User
+from megatrack.models import Tract, Dataset, Subject
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
-import megatrack.views as views
+from megatrack.admin.views import admin
+from megatrack import views
+from megatrack.admin import views as admin_views
 from megatrack import db
 
 class AdminTestCase(TestCase):
@@ -19,6 +22,7 @@ class AdminTestCase(TestCase):
         #app.cache = CacheMock()
         db.init_app(app)
         app.register_blueprint(megatrack)
+        app.register_blueprint(admin)
         return app
     
     def setUp(self):
@@ -78,12 +82,12 @@ class AdminTestCase(TestCase):
         db.session.commit()
         
         # test correct log in credentials
-        resp = self.client.post('/login', data={'username': test_user_name, 'password': test_password})
+        resp = self.client.post('/admin/login', data={'username': test_user_name, 'password': test_password})
         assert resp.status_code == 200
         assert b'Successfully logged in!' in resp.get_data()
         
         # test incorrect log in credentials
-        resp = self.client.post('/login', data={'username': test_user_name, 'password': test_password+'asdfas'})
+        resp = self.client.post('/admin/login', data={'username': test_user_name, 'password': test_password+'asdfas'})
         assert resp.status_code == 404
         assert b'User does not exist or incorrect password used. Please try again.' in resp.get_data()
         
@@ -99,20 +103,20 @@ class AdminTestCase(TestCase):
         invalid_token = test_user2.encode_auth_token(test_user2.user_id)
         
         # send request to client for valid user
-        resp = self.client.get('/datasets', headers={'Authorization': 'Bearer ' + valid_token.decode()})
+        resp = self.client.get('/admin/datasets', headers={'Authorization': 'Bearer ' + valid_token.decode()})
         data = json.loads(resp.get_data())
         assert resp.status_code == 200
         assert 'Success' in data['message']
         assert len(data['datasets']) == 2
         
         # send request to client for invalid user
-        resp = self.client.get('/datasets', headers={'Authorization': 'Bearer ' + invalid_token.decode()})
+        resp = self.client.get('/admin/datasets', headers={'Authorization': 'Bearer ' + invalid_token.decode()})
         data = resp.get_data()
         assert resp.status_code == 401
         assert b'Invalid' in data
         
         # send request to client without Authorization header
-        resp = self.client.get('/datasets')
+        resp = self.client.get('/admin/datasets')
         data = resp.get_data()
         assert resp.status_code == 401
         assert b'No authentication' in data
@@ -134,7 +138,7 @@ class AdminTestCase(TestCase):
         
         # test authenticated insert
         resp = self.client.post(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + valid_token.decode()},
                         data={'code':code, 'name':name, 'filePath':file_path, 'queryParams':query_params}
                     )
@@ -146,7 +150,7 @@ class AdminTestCase(TestCase):
         
         # test invalid authentication
         resp = self.client.post(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + invalid_token.decode()},
                         data={'code':code, 'name':name, 'filePath':file_path, 'queryParams':query_params}
                     )
@@ -157,7 +161,7 @@ class AdminTestCase(TestCase):
         
         # test case where dataset code already exists
         resp = self.client.post(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + valid_token.decode()},
                         data={'code':dataset1.code, 'name':name, 'filePath':file_path, 'queryParams':query_params}
                     )
@@ -178,7 +182,7 @@ class AdminTestCase(TestCase):
         
         # test valid authentication
         resp = self.client.put(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + valid_token.decode()},
                         data={'code':dataset1.code, 'name':dataset1_name_updated,
                               'filePath':dataset1.file_path, 'queryParams':dataset1.query_params}
@@ -192,7 +196,7 @@ class AdminTestCase(TestCase):
         
         # test invalid authentication
         resp = self.client.put(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + invalid_token.decode()},
                         data={'code':dataset1.code, 'name':dataset1_name_updated,
                               'filePath':dataset1.file_path, 'queryParams':dataset1.query_params}
@@ -211,7 +215,7 @@ class AdminTestCase(TestCase):
         new_dataset_query_params = '{"new": "params"}'
         
         resp = self.client.put(
-                        '/datasets',
+                        '/admin/datasets',
                         headers={'Authorization': 'Bearer ' + valid_token.decode()},
                         data={'code':new_dataset_code, 'name':new_dataset_name,
                               'filePath':new_dataset_file_path, 'queryParams':new_dataset_query_params}
@@ -233,7 +237,7 @@ class AdminTestCase(TestCase):
         
         # test valid authentication
         resp = self.client.delete(
-                        '/datasets?code='+dataset1.code,
+                        '/admin/datasets?code='+dataset1.code,
                         headers={'Authorization': 'Bearer ' + valid_token.decode()}
                     )
         data = resp.get_data()
@@ -245,7 +249,7 @@ class AdminTestCase(TestCase):
         
         # test invalid authentication
         resp = self.client.put(
-                        '/datasets?code='+dataset2.code,
+                        '/admin/datasets?code='+dataset2.code,
                         headers={'Authorization': 'Bearer ' + invalid_token.decode()}
                     )
         data = resp.get_data()
@@ -256,7 +260,7 @@ class AdminTestCase(TestCase):
         
         # test attempted delete of record that doesn't exist
         resp = self.client.delete(
-                        '/datasets?code=TEST_DATASET_CODE',
+                        '/admin/datasets?code=TEST_DATASET_CODE',
                         headers={'Authorization': 'Bearer ' + valid_token.decode()}
                     )
         data = resp.get_data()
