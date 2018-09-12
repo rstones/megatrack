@@ -5,7 +5,7 @@ Created on 14 Sep 2017
 '''
 import unittest
 import mock
-import megatrack.cache_utils as cu
+import megatrack.utils.cache_utils as cu
 
 class CacheUtilsTestCase(unittest.TestCase):
     

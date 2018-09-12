@@ -15,7 +15,7 @@ from megatrack.views import megatrack
 from megatrack.lesion.views import lesion
 from megatrack import views
 from megatrack.lesion import views as lesion_views
-import megatrack.data_utils as du
+import megatrack.utils.data_utils as du
 from .cache_mock import CacheMock
 import numpy as np
 from nibabel import Nifti1Image, Nifti1Header

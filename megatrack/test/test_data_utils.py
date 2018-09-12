@@ -6,7 +6,7 @@ Created on 14 Sep 2017
 import unittest
 import mock
 import numpy as np
-import megatrack.data_utils as du
+import megatrack.utils.data_utils as du
 import contextlib
 from nibabel import Nifti1Image, Nifti1Header
 

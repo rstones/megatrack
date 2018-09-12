@@ -12,9 +12,9 @@ from jquery_unparam import jquery_unparam
 
 from megatrack import db
 from megatrack.views import file_path_relative_to_root_path
-from megatrack import data_utils as du
-from megatrack import cache_utils as cu
-from megatrack import database_utils as dbu
+from megatrack.utils import data_utils as du
+from megatrack.utils import cache_utils as cu
+from megatrack.utils import database_utils as dbu
 from megatrack.lesion.models import LesionUpload
 from megatrack.models import Tract, Subject, DatasetTracts
 import megatrack.lesion.lesion_utils as lu

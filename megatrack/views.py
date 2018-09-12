@@ -10,9 +10,9 @@ from jquery_unparam import jquery_unparam
 
 from megatrack import bcrypt, db
 from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
-import megatrack.cache_utils as cu
-import megatrack.data_utils as du
-import megatrack.database_utils as dbu
+import megatrack.utils.cache_utils as cu
+import megatrack.utils.data_utils as du
+import megatrack.utils.database_utils as dbu
 
 megatrack = Blueprint('megatrack', __name__)
 

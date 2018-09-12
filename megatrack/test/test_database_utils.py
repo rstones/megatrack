@@ -7,7 +7,7 @@ import unittest
 from flask_testing import TestCase
 import mock
 import numpy as np
-import megatrack.database_utils as dbu
+import megatrack.utils.database_utils as dbu
 from megatrack.models import db, Tract, Dataset, Method, Subject, DatasetTracts, SubjectTractMetrics
 from megatrack.alchemy_encoder import AlchemyEncoder
 from sqlalchemy.sql.expression import BinaryExpression
