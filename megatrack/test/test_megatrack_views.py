@@ -26,69 +26,6 @@ from megatrack.test.mock_data import *
         
 class MegatrackTestCase(TestCase):
     
-    # test tract data
-    tract_code = 'AFL_ANT'
-    tract_name = 'Left Anterior AF'
-    tract_file_path ='Left_AF_anterior'
-    tract_description = 'This is a tract etc etc...'
-    
-    t2_code = 'AFL_POST'
-    t2_name = 'Left Posterior AF'
-    t2_file_path = 'Left_Posterior_AF'
-    t2_description = 'This is a tract etc...'
-    
-    # test dataset data
-    dataset1_code = 'BRC_ATLAS'
-    dataset1_name = 'BRC Atlas'
-    dataset1_file_path = 'brc_atlas'
-    dataset1_query_params = '{"test":"dataset1"}'
-    
-    dataset2_code = 'TEST_DATASET2'
-    dataset2_name = 'Test Dataset 2'
-    dataset2_file_path = 'test_dataset_2'
-    dataset2_query_params = '{"test":"dataset2"}'
-    
-    # test subject data
-    sbjct1_subject_id = 'BRCATLAS001'
-    sbjct1_gender = 'M'
-    sbjct1_age = 25
-    sbjct1_handedness = 'R'
-    sbjct1_edinburgh_handedness_raw = 100
-    sbjct1_dataset_code = dataset1_code
-    sbjct1_ravens_iq_raw = 60
-    sbjct1_file_path = 'BRCATLASB001_MNI_'
-    sbjct1_mmse = None
-    
-    sbjct2_subject_id = 'BRCATLAS002'
-    sbjct2_gender = 'F'
-    sbjct2_age = 45
-    sbjct2_handedness = 'R'
-    sbjct2_edinburgh_handedness_raw = 50
-    sbjct2_dataset_code = dataset1_code
-    sbjct2_ravens_iq_raw = 58
-    sbjct2_file_path = 'BRCATLASB002_MNI_'
-    sbjct2_mmse = None
-    
-    sbjct3_subject_id = 'BRCATLAS003'
-    sbjct3_gender = 'M'
-    sbjct3_age = 70
-    sbjct3_handedness = 'L'
-    sbjct3_edinburgh_handedness_raw = -70
-    sbjct3_dataset_code = dataset1_code
-    sbjct3_ravens_iq_raw = 49
-    sbjct3_file_path = 'BRCATLASB003_MNI_'
-    sbjct3_mmse = None
-    
-    sbjct4_subject_id = 'TESTDATASET004'
-    sbjct4_gender = 'F'
-    sbjct4_age = 35
-    sbjct4_handedness = 'L'
-    sbjct4_edinburgh_handedness_raw = -70
-    sbjct4_dataset_code = dataset2_code
-    sbjct4_ravens_iq_raw = 55
-    sbjct4_file_path = 'TESTDATASETB004_MNI_'
-    sbjct4_mmse = None
-    
     def create_app(self):
         app = Flask(__name__, template_folder='../templates')
         app.config.from_object('config.TestConfig')
@@ -112,65 +49,6 @@ class MegatrackTestCase(TestCase):
         db.session.remove()
         db.drop_all()
         self.app.cache.flush()
-        
-    def setup_query_data(self):
-        # insert a tract
-        tract = Tract(code=self.tract_code, name=self.tract_name, file_path=self.tract_file_path, description=self.tract_description)
-        db.session.add(tract)
-        # insert datasets
-        dataset1 = Dataset(code=self.dataset1_code,
-                          name=self.dataset1_name,
-                          file_path=self.dataset1_file_path,
-                          query_params=self.dataset1_query_params)
-        db.session.add(dataset1)
-        dataset2 = Dataset(code=self.dataset2_code,
-                          name=self.dataset2_name,
-                          file_path=self.dataset2_file_path,
-                          query_params=self.dataset2_query_params)
-        db.session.add(dataset2)
-        # insert subjects
-        sbjct1 = Subject(subject_id=self.sbjct1_subject_id,
-                         gender=self.sbjct1_gender,
-                         age=self.sbjct1_age,
-                         handedness=self.sbjct1_handedness,
-                         edinburgh_handedness_raw=self.sbjct1_edinburgh_handedness_raw,
-                         ravens_iq_raw=self.sbjct1_ravens_iq_raw,
-                         dataset_code=self.sbjct1_dataset_code,
-                         file_path=self.sbjct1_file_path,
-                         mmse=self.sbjct1_mmse)
-        db.session.add(sbjct1)
-        sbjct2 = Subject(subject_id=self.sbjct2_subject_id,
-                         gender=self.sbjct2_gender,
-                         age=self.sbjct2_age,
-                         handedness=self.sbjct2_handedness,
-                         edinburgh_handedness_raw=self.sbjct2_edinburgh_handedness_raw,
-                         ravens_iq_raw=self.sbjct2_ravens_iq_raw,
-                         dataset_code=self.sbjct2_dataset_code,
-                         file_path=self.sbjct2_file_path,
-                         mmse=self.sbjct2_mmse)
-        db.session.add(sbjct2)
-        sbjct3 = Subject(subject_id=self.sbjct3_subject_id,
-                         gender=self.sbjct3_gender,
-                         age=self.sbjct3_age,
-                         handedness=self.sbjct3_handedness,
-                         edinburgh_handedness_raw=self.sbjct3_edinburgh_handedness_raw,
-                         ravens_iq_raw=self.sbjct3_ravens_iq_raw,
-                         dataset_code=self.sbjct3_dataset_code,
-                         file_path=self.sbjct3_file_path,
-                         mmse=self.sbjct3_mmse)
-        db.session.add(sbjct3)
-        sbjct4 = Subject(subject_id=self.sbjct4_subject_id,
-                         gender=self.sbjct4_gender,
-                         age=self.sbjct4_age,
-                         handedness=self.sbjct4_handedness,
-                         edinburgh_handedness_raw=self.sbjct4_edinburgh_handedness_raw,
-                         ravens_iq_raw=self.sbjct4_ravens_iq_raw,
-                         dataset_code=self.sbjct4_dataset_code,
-                         file_path=self.sbjct4_file_path,
-                         mmse=self.sbjct4_mmse)
-        db.session.add(sbjct4)
-        
-        db.session.commit()
     
     def test_index(self):
         resp = self.client.get('/')
@@ -194,10 +72,13 @@ class MegatrackTestCase(TestCase):
     
     def test_get_template(self):
         
-        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
-            '''Monkey patch flask.send_file with this function to create a response object without needing
-            to load a file from file system'''
-            global file_path_to_test
+        file_path_to_test = ''
+        
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None,
+                            conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to create a
+            response object without needing to load a file from file system'''
+            nonlocal file_path_to_test
             file_path_to_test = file_path
             headers = Headers()
             headers.add('Content-Disposition', 'attachment', filename=attachment_filename)
@@ -207,15 +88,19 @@ class MegatrackTestCase(TestCase):
         with monkey_patch(views, 'send_file', send_file_patch):
             resp = self.client.get('/get_template')
         
-        assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}/{du.TEMPLATE_FILE_NAME}'
+        assert file_path_to_test == f'../{current_app.config["DATA_FILE_PATH"]}' \
+                                    f'/{du.TEMPLATE_FILE_NAME}'
         assert resp.mimetype == 'application/octet-stream'
-        assert resp.headers.get('Content-Disposition') == f'attachment; filename={du.TEMPLATE_FILE_NAME}'
+        assert resp.headers.get('Content-Disposition') == f'attachment; ' \
+                                                          f'filename={du.TEMPLATE_FILE_NAME}'
         assert resp.headers.get('Content-Length') == '1431363'
         
     def test_get_template_file_not_found(self):
         
-        def send_file_patch(file_path, as_attachment=True, attachment_filename=None, conditional=True, add_etags=True):
-            '''Monkey patch flask.send_file with this function to generate FileNotFoundError'''
+        def send_file_patch(file_path, as_attachment=True, attachment_filename=None,
+                            conditional=True, add_etags=True):
+            '''Monkey patch flask.send_file with this function to
+            generate FileNotFoundError'''
             file = open('fail.nii.gz', 'rb')
         
         with monkey_patch(views, 'send_file', send_file_patch):
@@ -578,15 +463,6 @@ class MegatrackTestCase(TestCase):
     def test_generate_mean_maps_invalid_query(self):
         resp = self.client.get(f'/generate_mean_maps?{invalid_param_string}')
         self.assert400(resp)
-    
-#     @mock.patch.object(flask, 'send_file', autospec=True)
-#     def test_get_tract(self, mock_put_object):
-#         valid_jquery_param_string = 'BRC_ATLAS%5Bgender%5D%5Btype%5D=radio&BRC_ATLAS%5Bgender%5D%5Bvalue%5D=M&file_type=.nii.gz'
-#         self.setup_query_data()
-#         resp = self.client.get(f'/tract/{self.tract_code}?{brc_atlas_males_query}&file_type=.nii.gz')
-#         mock_put_object.assert_called_with('asdfadfsd')
-# #         assert resp.mimetype == 'application/octet-stream'
-# #         assert 'attachment;' in resp.headers.get('Content-Disposition')
 
     def insert_tract_test_data(self):
         s1 = Subject(subject_id=s1_subject_id,
