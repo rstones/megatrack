@@ -8,6 +8,12 @@ import subprocess
 import nibabel as nib
 import numpy as np
 
+# assign raw_input to input if running with python 2
+try:
+    input = raw_input
+except NameError:
+    pass
+
 parser = argparse.ArgumentParser()
 parser.add_argument('target_dir',
                     help='Relative path to the directory containing niftis to convert.')
