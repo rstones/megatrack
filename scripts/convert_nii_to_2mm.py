@@ -11,6 +11,16 @@ import subprocess
 import nibabel as nib
 import numpy as np
 
+""" Script to convert 1mm voxel niftis to 2mm voxel using the fsl
+tool flirt. Niftis that don't have 1mm voxel size are ignored.
+
+Script args:
+    target_dir    The directory containing nifti files to convert.
+    -k            Optional flag indicating to keep the existing 
+                    1mm voxel files rather than overwriting them.
+                    
+"""
+
 # assign raw_input to input if running with python 2
 try:
     input = raw_input
@@ -28,7 +38,7 @@ args = parser.parse_args()
 
 if not args.k:
     print('Continuing will convert all 1mm voxel niftis in {td}'.format(td=args.target_dir),
-          'to 2mm nifits, overwriting the 1mm niftis in the process.',
+          'to 2mm niftis, overwriting the 1mm niftis in the process.',
           'Do you wish to continue? [y/n]')
     cont = input('> ')
     if cont.lower() in ['n', 'no', '']:
