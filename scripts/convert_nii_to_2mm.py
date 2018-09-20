@@ -12,14 +12,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('target_dir',
                     help='Relative path to the directory containing niftis to convert.')
 parser.add_argument('-k',
-                    help='Don\'t overwrite the 1mm niftis with 2mm ones. '
-                         'Append \'2mm\' to the converted filenames',
+                    help=('Don\'t overwrite the 1mm niftis with 2mm ones. ',
+                         'Append \'2mm\' to the converted filenames'),
                     action='store_true')
 args = parser.parse_args()
 
 if not args.k:
-    print(f'Continuing will convert all 1mm voxel niftis in {args.target_dir}',
-          f'to 2mm nifits, overwriting the 1mm niftis in the process.',
+    print('Continuing will convert all 1mm voxel niftis in {td}'.format(td=args.target_dir),
+          'to 2mm nifits, overwriting the 1mm niftis in the process.',
           'Do you wish to continue? [y/n]')
     cont = input('> ')
     if cont.lower() in ['n', 'no', '']:
@@ -29,13 +29,13 @@ if not args.k:
         pass
     
 def construct_cmd(target_dir, filename_in, filename_out):
-    return (f'flirt  -interp trilinear -in {target_dir}/{filename_in} '
-            f'-ref {target_dir}/{filename_in} -out {target_dir}/{filename_out} '
-            f'-applyisoxfm 2')
+    return ('flirt  -interp trilinear -in {td}/{fnin} '.format(td=target_dir, fnin=filename_in),
+            '-ref {td}/{fnin} -out {td}/{fnout} '.format(td=target_dir, fnin=filename_in, fnout=filename_out),
+            '-applyisoxfm 2')
 
 for filename in os.listdir(args.target_dir):
     if '.nii.gz' in filename:
-        header = nib.load(f'{args.target_dir}/{filename}').header
+        header = nib.load(args.target_dir + '/' + filename).header
         pixdim = header.get('pixdim')
         if pixdim is not None and np.all(pixdim[1:4] == 1):
             if not args.k:
@@ -44,12 +44,12 @@ for filename in os.listdir(args.target_dir):
             else:
                 # construct a new filename for the 2mm nifti
                 s = filename.rsplit('.', maxsplit=2)
-                newfilename = f'{s[0]}_2mm.{s[1]}.{s[2]}'
+                newfilename = s[0] + '_2mm.' + s[1] + '.' + s[2]
                 cmd = construct_cmd(args.target_dir, filename, newfilename)
-            print(f'Converting {filename}...')
+            print('Converting {fn}...'.format(fn=filename))
             subprocess.run(cmd, shell=True, check=True)
         else:
-            print(f'Ignoring {filename}')
+            print('Ignoring {fn}'.format(fn=filename))
         
         
         
