@@ -56,7 +56,7 @@ for filename in os.listdir(args.target_dir):
                 newfilename = s[0] + '_2mm.' + s[1] + '.' + s[2]
                 cmd = construct_cmd(args.target_dir, filename, newfilename)
             print('Converting {fn}...'.format(fn=filename))
-            subprocess.run(cmd, shell=True, check=True)
+            subprocess.check_call(cmd, shell=True)
         else:
             print('Ignoring {fn}'.format(fn=filename))
         
