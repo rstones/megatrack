@@ -3,6 +3,9 @@
 import sys
 import os
 import argparse
+
+from future import standard_library
+standard_library.install_aliases()
 import subprocess
 
 import nibabel as nib
@@ -35,9 +38,9 @@ if not args.k:
         pass
     
 def construct_cmd(target_dir, filename_in, filename_out):
-    return ('flirt  -interp trilinear -in {td}/{fnin} '.format(td=target_dir, fnin=filename_in),
-            '-ref {td}/{fnin} -out {td}/{fnout} '.format(td=target_dir, fnin=filename_in, fnout=filename_out),
-            '-applyisoxfm 2')
+    return 'flirt -interp trilinear -in {td}/{fnin} '.format(td=target_dir, fnin=filename_in) \
+            + '-ref {td}/{fnin} -out {td}/{fnout} '.format(td=target_dir, fnin=filename_in, fnout=filename_out) \
+            + '-applyisoxfm 2'
 
 for filename in os.listdir(args.target_dir):
     if '.nii.gz' in filename:
