@@ -35,7 +35,7 @@ mgtrk.QueryBuilder = (function() {
                         newQuery[queries[i].datasetCode].constraints[key] = {"type": queries[i].constraints[key].type};
                         switch (newQuery[queries[i].datasetCode].constraints[key].type) {
                             case "radio":
-                                newQuery[queries[i].datasetCode].constraints[key].value = constraint.queryRow.find('input[name="'+key+'"]:checked').val();
+                                newQuery[queries[i].datasetCode].constraints[key].value = constraint.queryRow.find(`input[name="${key}"]:checked`).val();
                                 break;
                             case "range":
                                 newQuery[queries[i].datasetCode].constraints[key].min = $(constraint.sliderDiv).slider('values',0);
@@ -44,7 +44,7 @@ mgtrk.QueryBuilder = (function() {
                             case "checkbox":
                                 // not sure if the following selector + .val() gets all the vals or just one. need to check.
                                 var vals = [];
-                                constraint.queryRow.find('input[name="'+key+'"]:checked').each(function() {
+                                constraint.queryRow.find(`input[name="${key}"]:checked`).each(function() {
                                                                                                     vals.push($(this).val());
                                                                                                 });
                                 if (vals.length > 0) {
@@ -77,16 +77,28 @@ mgtrk.QueryBuilder = (function() {
             };
             
             
-            $('#'+tableId+' > tbody').append('<tr id="'+datasetQuery.dataset.code+'-query" class="dataset-query-row"><td class="dataset-query-cell">'
-                    +'<div class="dataset-query-heading">'+datasetQuery.dataset.name+'</div>'
-                    +'<div class="dataset-query-constraint-select"><select id="'+datasetQuery.dataset.code+'-query-select"><option value="default" disabled selected>Add constraint...</option></select></div>'
-                    +'<div class="dataset-query-method-select"><select id="'+datasetQuery.dataset.code+'-method-select" class="select-small"><option value="default" disabled selected>Method...</option></select></div>'
-                    //+'<div class="dataset-exclude"><form><input id="'+datasetQuery.dataset.code+'-exclude" type="checkbox"><label class="dataset-exclude-label" for="'+datasetQuery.dataset.code+'-exclude">Exclude</label></form></div>'
-                    +'<div class="dataset-remove"><div id="'+datasetQuery.dataset.code+'-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div></div>'
-                    +'<div class="clear"></div>'
-                    +'<table id="'+datasetQuery.dataset.code+'-query-constraints-table" class="query-constraints-table"><tbody></tbody></table>'
-                    +'</td></tr>'
-                    +'<tr id="'+datasetQuery.dataset.code+'-spacer" class="dataset-spacer-row"><td></td></tr>');
+            $(`#${tableId} > tbody`).append(`
+                    <tr id="${datasetQuery.dataset.code}-query" class="dataset-query-row">
+                        <td class="dataset-query-cell">
+                            <div class="dataset-query-heading">${datasetQuery.dataset.name}</div>
+                            <div class="dataset-query-constraint-select">
+                                <select id="${datasetQuery.dataset.code}-query-select">
+                                    <option value="default" disabled selected>Add constraint...</option>
+                                </select>
+                            </div>
+                            <div class="dataset-query-method-select">
+                                <select id="${datasetQuery.dataset.code}-method-select" class="select-small">
+                                    <option value="default" disabled selected>Method...</option>
+                                </select>
+                            </div>       
+                            <div class="dataset-remove">
+                                <div id="${datasetQuery.dataset.code}-remove" class="clickable remove-icon dataset-remove-icon" title="Remove dataset"></div>
+                            </div>
+                            <div class="clear"></div>
+                            <table id="${datasetQuery.dataset.code}-query-constraints-table" class="query-constraints-table"><tbody></tbody></table>
+                        </td>
+                    </tr>
+                    <tr id="${datasetQuery.dataset.code}-spacer" class="dataset-spacer-row"><td></td></tr>`);
             
             // populate query select menu from query builder data for this dataset
             for (let key in dataset.queryParams) {
@@ -115,9 +127,9 @@ mgtrk.QueryBuilder = (function() {
                                                                         );
                 
                 // disable current query from select
-                $('#'+datasetQuery.dataset.code+'-query-select option[value='+queryCode+']').prop('disabled', true);
+                $(`#${datasetQuery.dataset.code}-query-select option[value=${queryCode}]`).prop('disabled', true);
                 // set selected value to 'Add query field...
-                $('#'+datasetQuery.dataset.code+'-query-select option[value=default]').prop('selected', true);
+                $(`#${datasetQuery.dataset.code}-query-select option[value=default]`).prop('selected', true);
                 $('#update-query-button').trigger('constraint:change');
                 return false;
                 
@@ -133,63 +145,7 @@ mgtrk.QueryBuilder = (function() {
                 $('#update-query-button').trigger('constraint:change');
             });
             
-//             // on exclude checkbox being ticked, disable the dataset from future queries
-//             $('#'+datasetQuery.dataset.code+'-exclude').on('change', function() {
-//                 if ($('#'+datasetQuery.dataset.code+'-exclude').prop('checked')) {
-//                     // switch class to excluded style for this dataset
-//                     $('#'+datasetQuery.dataset.code+'-query').addClass('dataset-query-row-excluded');
-//                     // disable the "Add constraint..." select
-//                     $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', true);
-//                     // switch the class of the query constraint rows to excluded style, disable their inputs
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
-//                                                                                                 $(this).prop('disabled', true);
-//                                                                                             });
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
-//                         $(this).slider('option', 'disabled', true);
-//                     });
-//                     // disable the remove icons of the query constraint rows
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon').each(function() {
-//                         $(this).removeClass('clickable');
-//                         $(this).removeClass('remove-icon');
-//                         $(this).addClass('remove-icon-disabled');
-//                     });
-//                     
-//                     // exclude in all future updates (ie. in buildQuery function), set a flag on the DatasetQuery obj for this
-//                     datasetQuery.excluded = true;
-//                     // enable "Update" button
-//                     $('#update-query-button').trigger('constraint:change');
-//                 } else {
-//                     $('#'+datasetQuery.dataset.code+'-query').removeClass('dataset-query-row-excluded');
-//                     $('#'+datasetQuery.dataset.code+'-query-select').prop('disabled', false);
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('input').each(function(){
-//                                                                                                 $(this).prop('disabled', false);
-//                                                                                             });
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.ui-slider').each(function() {
-//                         $(this).slider('option', 'disabled', false);
-//                     });
-//                     $('#'+datasetQuery.dataset.code+'-query-constraints-table').find('.remove-icon-disabled').each(function() {
-//                         $(this).addClass('clickable');
-//                         $(this).removeClass('remove-icon-disabled');
-//                         $(this).addClass('remove-icon');
-//                     });
-//                     datasetQuery.excluded = false;
-//                     // enable "Update" button
-//                     $('#update-query-button').trigger('constraint:change');
-//                 }
-//             });
-            
             $('#'+datasetQuery.dataset.code+'-remove').on('click', function(event) {
-//                 $('#add-dataset-select option[value='+datasetQuery.dataset.code+']').prop('disabled', false);
-//                 var datasetQueries = queryBuilder.datasetQueries;
-//                 for (let i=0; i<datasetQueries.length; i++) {
-//                     if (datasetQueries[i].datasetCode == datasetQuery.dataset.code) {
-//                         datasetQueries.splice(i, 1);
-//                         break;
-//                     }
-//                 }
-//                 $('#'+datasetQuery.dataset.code+'-query').remove();
-//                 $('#update-query-button').trigger('constraint:change');
-               
                 /*
                  * Remove current dataset from table
                  * Change dataset select default to 'Add dataset...' and enable all datasets
@@ -236,31 +192,26 @@ mgtrk.QueryBuilder = (function() {
                 datasetCode: datasetCode,
                 parent: parent
             };
-        
-    //         var instance = this;
-    //         this._type = type;
-    //         this._queryCode = queryCode;
-    //         this._queryParams = queryParams;
-    //         this._datasetCode = datasetCode;
-    //         this._parent = parent;
             
-            $('#'+datasetCode+'-query-constraints-table > tbody').append('<tr id="'+datasetCode+'-'+queryCode+'-query" class="query-constraint-row">'
-                                                                        +'<td id="query-name" class="query-constraint-table-cell">'+queryParams.label+'</td>'
-                                                                        +'<td id="query-control" class="query-constraint-table-cell"></td>'
-                                                                        +'<td id="query-remove" class="query-constraint-table-cell"><div class="clickable remove-icon" title="Remove constraint"></div></td>'
-                                                                        +'</tr>'
-                                                                        +'<tr id="'+datasetCode+'-'+queryCode+'-spacer" class="query-constraint-spacer-row"><td></td><td></td><td></td></tr>');
+            $(`#${datasetCode}-query-constraints-table > tbody`).append(`<tr id="${datasetCode}-${queryCode}-query" class="query-constraint-row">
+                                                                            <td id="query-name" class="query-constraint-table-cell">${queryParams.label}</td>
+                                                                            <td id="query-control" class="query-constraint-table-cell"></td>
+                                                                            <td id="query-remove" class="query-constraint-table-cell"><div class="clickable remove-icon" title="Remove constraint"></div></td>
+                                                                         </tr>
+                                                                         <tr id="${datasetCode}-${queryCode}-spacer" class="query-constraint-spacer-row">
+                                                                            <td></td><td></td><td></td>       
+                                                                         </tr>`);
             
             // listener to remove constraint from query
-            $('#'+datasetCode+'-'+queryCode+'-query > #query-remove').on('click', function(event) {
+            $(`#${datasetCode}-${queryCode}-query > #query-remove`).on('click', function(event) {
                 if (!queryConstraint.parent.excluded) {
                     // remove constraint from parent object
                     delete queryConstraint.parent.constraints[queryCode];
                     // reenable this query in the select
-                    $('#'+datasetCode+'-query-select option[value='+queryCode+']').prop('disabled', false);
+                    $(`#${datasetCode}-query-select option[value=${queryCode}]`).prop('disabled', false);
                     // remove query row and spacer row
-                    $('#'+datasetCode+'-'+queryCode+'-query').remove();
-                    $('#'+datasetCode+'-'+queryCode+'-spacer').remove();
+                    $(`#${datasetCode}-${queryCode}-query`).remove();
+                    $(`#${datasetCode}-${queryCode}-spacer`).remove();
                     $('#update-query-button').trigger('constraint:change');
                 }
                 
@@ -273,13 +224,13 @@ mgtrk.QueryBuilder = (function() {
             
             const rangeConstraint = function() {
                 var instance = this;
-                var controlCell = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control');
+                var controlCell = $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control`);
                 controlCell.append('<div id="query-range-slider"></div>');
-                queryConstraint.sliderDiv = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control > #query-range-slider');
+                queryConstraint.sliderDiv = $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider`);
                 queryConstraint.sliderDiv.append('<div id="query-range-min-handle" class="ui-slider-handle query-slider-handle"></div>');
                 queryConstraint.sliderDiv.append('<div id="query-range-max-handle" class="ui-slider-handle query-slider-handle"></div>');
-                var minHandle = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control > #query-range-slider > #query-range-min-handle');
-                var maxHandle = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control > #query-range-slider > #query-range-max-handle');
+                var minHandle = $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider > #query-range-min-handle`);
+                var maxHandle = $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider > #query-range-max-handle`);
                 queryConstraint.sliderDiv.slider({
                     range: true,
                     min: queryConstraint.queryParams.options.min,
@@ -306,25 +257,25 @@ mgtrk.QueryBuilder = (function() {
                 var queryValues = queryConstraint.queryParams.options.values;
                 var queryLabels = queryConstraint.queryParams.options.labels;
                 for (let i=0; i<queryValues.length; i++) {
-                    $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control > form').append('<input '
-                                                                                            +'type="radio" '
-                                                                                            +'class="query-constraint" '
-                                                                                            +'name="'+queryConstraint.queryCode+'" value="'+queryValues[i]+'" '+(i==0?'checked':'')+'>'
-                                                                                            +queryLabels[i]);
+                    $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control > form`).append(`<input
+                                                                                            type="radio" 
+                                                                                            class="query-constraint" 
+                                                                                            name="${queryConstraint.queryCode}" value="${queryValues[i]}" ${(i===0?'checked':'')}>
+                                                                                            ${queryLabels[i]}`);
                 }
             };
             
             const checkboxConstraint = function() {
                 queryConstraint.queryRow = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query');
-                $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control').append('<form>');
+                $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control`).append('<form>');
                 var queryValues = queryConstraint.queryParams.options.values;
                 var queryLabels = queryConstraint.queryParams.options.labels;
                 for (let i=0; i<queryValues.length; i++) {
-                    $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query > #query-control > form').append('<input '
-                                                                                            +'type="checkbox" '
-                                                                                            +'class="query-constraint" '
-                                                                                            +'name="'+queryConstraint.queryCode+'" value="'+queryValues[i]+'" checked>'
-                                                                                            +'<label class="query-constraint-checkbox-label">'+queryLabels[i]+'</label></form>');
+                    $(`#${queryConstraint.datasetCode}-${queryConstraint.queryCode}-query > #query-control > form`).append(`<input 
+                                                                                            type="checkbox" 
+                                                                                            class="query-constraint" 
+                                                                                            name="${queryConstraint.queryCode}" value="${queryValues[i]}" checked>
+                                                                                            <label class="query-constraint-checkbox-label">${queryLabels[i]}</label></form>`);
                 }
             };
             
@@ -347,23 +298,23 @@ mgtrk.QueryBuilder = (function() {
         
         
         // insert div for query builder
-        $('#'+containerId).append('<div id="query-builder-container">'
-                                    +'<div class="dataset-select-container">'
-                                        +'<select id="add-dataset-select">'
-                                            +'<option value="default" disabled selected>Add dataset...</option>'
-                                        +'</select>'
-                                    +'</div>'
-                                    +'<div id="update-query-button"><span id="update-query-button-text">Update</span></div>'
-                                    +'<div id="query-info"></div>'
-                                    +'<div class="clear"></div>'
-                                    +'<hr>'
-                                    +'<div id="dataset-table-wrapper">'
-                                    +'<table id="dataset-table">'
-                                    +'<tbody>'
-                                    +'</tbody>'
-                                    +'</table>'
-                                    +'</div>'
-                                    +'</div>');
+        $(`#${containerId}`).append(`<div id="query-builder-container">
+                                    <div class="dataset-select-container">
+                                        <select id="add-dataset-select">
+                                            <option value="default" disabled selected>Add dataset...</option>
+                                        </select>
+                                    </div>
+                                    <div id="update-query-button"><span id="update-query-button-text">Update</span></div>
+                                    <div id="query-info"></div>
+                                    <div class="clear"></div>
+                                    <hr>
+                                    <div id="dataset-table-wrapper">
+                                    <table id="dataset-table">
+                                    <tbody>
+                                    </tbody>
+                                    </table>
+                                    </div>
+                                    </div>`);
         
         $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+'0</span>');
         
@@ -389,9 +340,6 @@ mgtrk.QueryBuilder = (function() {
         
         $('#add-dataset-select').change(function(event) {
             const datasetCode = event.currentTarget.value;
-//             $('#add-dataset-select option[value='+datasetCode+']').prop('disabled', true);
-//             $('#add-dataset-select option[value=default]').prop('selected', true);
-//             queryBuilder.datasetQueries.push(addDatasetQuery(queryBuilder.datasetTableId, datasetCode, queryBuilder.data[datasetCode]));
             
             /*
              * Remove any current dataset from the query builder table
@@ -407,7 +355,7 @@ mgtrk.QueryBuilder = (function() {
             }
             queryBuilder.datasetQueries.push(addDatasetQuery(queryBuilder.datasetTableId, datasetCode, queryBuilder.data[datasetCode]));
             $(`#add-dataset-select option[value=${datasetCode}]`).prop('disabled', true);
-            $(`#add-dataset-select option[value=default]`).html('Change dataset...');
+            $('#add-dataset-select option[value=default]').html('Change dataset...');
             $('#add-dataset-select option[value=default]').prop('selected', true);
             
             $(document).trigger('dataset:change', [datasetCode]);
