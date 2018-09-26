@@ -290,9 +290,11 @@ mgtrk.QueryBuilder = (function() {
                         maxHandle.text($(this).slider("values",1));
                     },
                     slide: function(event, ui) {
-                        // update age range slider label
+                        // update range slider handle labels
                         minHandle.text(ui.values[0]);
                         maxHandle.text(ui.values[1]);
+                    },
+                    stop: function(event, ui) {
                         $('#update-query-button').trigger('constraint:change');
                     }
                 });
@@ -453,13 +455,13 @@ mgtrk.QueryBuilder = (function() {
         
         updateButton.on('constraint:change', function() {
             var newQuery = buildQueryObject();
-            // This object comparison will fail if two objects have the same properties
-            // but ordered differently
-            if ($.isEmptyObject(newQuery)) {
+            // This object comparison with stringify will fail if two objects
+            // have the same properties but ordered differently
+            if ($.isEmptyObject(newQuery) || JSON.stringify(newQuery) == JSON.stringify(_parent.currentQuery)) {
                 updateButton.removeClass('update-query-button-active');
                 updateButton.removeClass('clickable');
                 updateButton.addClass('update-query-button-disabled');
-            } else if (JSON.stringify(newQuery) != JSON.stringify(_parent.currentQuery)) {
+            } else {
                 updateButton.removeClass('update-query-button-disabled');
                 updateButton.addClass('update-query-button-active');
                 updateButton.addClass('clickable');
