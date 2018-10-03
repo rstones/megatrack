@@ -234,26 +234,6 @@ def get_dynamic_tract_info(tract_code, threshold):
 def get_static_tract_info(tract_code):
     '''Calculates the mean/std FA/MD + vol from the individual metrics of subjects in the query''' 
     current_app.logger.info('Getting static info for tract ' + tract_code)
-#     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
-#     cached_data = current_app.cache.get(cache_key)
-#     request_query = jquery_unparam(request.query_string.decode('utf-8'))
-#     data_dir = current_app.config['DATA_FILE_PATH']
-#     
-#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
-#         # recalculate average density map for tract
-#         #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
-#         file_path_data = dbu.density_map_file_path_data(request_query)
-#         tract = dbu.get_tract(tract_code)
-#         if not tract:
-#             return 'The requested tract ' + tract_code + ' does not exist', 404
-#         
-#         if len(file_path_data) > 0:
-#             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
-#             tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-#         
-#         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
-#         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
-#         current_app.cache.set(cache_key, cached_data)
     
     tract = dbu.get_tract(tract_code)
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
