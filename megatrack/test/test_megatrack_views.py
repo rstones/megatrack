@@ -654,6 +654,51 @@ class MegatrackTestCase(TestCase):
         self.assert200(resp)
         assert md.  t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
 
+    def test_get_dynamic_tract_info(self):
+        # need to monkey patch nib.load, nib.save
+        # insert subjects, dataset, dataset_tracts and tract into db
+        # make request with query returning no subjects
+        # self.assert404(resp)
+        assert False
+    
+    def test_get_static_tract_info(self):
+        ''' Test 404 returned when no subjects in query. '''
+        
+        s2 = Subject(subject_id=md.s2_subject_id,
+                     gender=md.s2_gender,
+                     age=md.s2_age,
+                     handedness=md.s2_handedness,
+                     edinburgh_handedness_raw=md.s2_edinburgh_handedness_raw,
+                     ravens_iq_raw=md.s2_ravens_iq_raw,
+                     dataset_code=md.s2_dataset_code,
+                     file_path=md.s2_file_path,
+                     mmse=md.s2_mmse)
+        db.session.add(s2)
+        
+        s4 = Subject(subject_id=md.s4_subject_id,
+                     gender=md.s4_gender,
+                     age=md.s4_age,
+                     handedness=md.s4_handedness,
+                     edinburgh_handedness_raw=md.s4_edinburgh_handedness_raw,
+                     ravens_iq_raw=md.s4_ravens_iq_raw,
+                     dataset_code=md.s4_dataset_code,
+                     file_path=md.s4_file_path,
+                     mmse=md.s4_mmse)
+        db.session.add(s4)
+        
+        d1 = Dataset(md.d1_code, md.d1_name, md.d1_file_path, md.d1_query_params)
+        db.session.add(d1)
+        
+        t1 = Tract(md.t1_code, md.t1_name, md.t1_file_path, md.t1_description)
+        db.session.add(t1)
+        
+        t2 = Tract(md.t2_code, md.t2_name, md.t2_file_path, md.t2_description)
+        db.session.add(t2)
+        
+        db.session.commit()
+        
+        resp = self.client.get(f'/get_tract_info/{md.t1_code}?{md.brc_atlas_males_query}')
+        self.assert404(resp)
 
 if __name__ == '__main__':
     unittest.main()
