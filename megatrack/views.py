@@ -116,22 +116,15 @@ def generate_mean_maps():
         current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
         return 'Could not parse query param string.', 400
     
-    if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report'):
-        # construct query report and subject file paths again
-        current_app.logger.info('Regenerating full subject file paths...')
-        query_report = dbu.subjects_per_dataset(request_query)
-        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
-        current_app.cache.set(cache_key, cached_data)
-    
-    
-    if not cu.check_items_in_cache(cached_data, 'FA', 'MD'):
-        current_app.logger.info('Generating mean MD and FA maps...')
+    if not cached_data or not cu.check_items_in_cache(cached_data, 'FA', 'MD'):
         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
         
-        mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
-        mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
-        current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
-        current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
+        if len(subject_ids_dataset_paths) > 0:
+            current_app.logger.info('Generating mean MD and FA maps...')
+            mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+            mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+            current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
+            current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
     
     return 'Mean maps successfully created.', 204
     
