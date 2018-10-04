@@ -19,6 +19,18 @@
     background-color: #e1e1d0;
 }
 
+.tab-header-disabled {
+    height: 22px;
+    width: 200px;
+    border-top: 1px solid lightgrey;
+    border-left: 1px solid lightgrey;
+    border-right: 1px solid lightgrey;
+    border-radius: 5px 5px 0 0;
+    padding: 4px;
+    float: left;
+    background-color: #ebebe0;
+}
+
 .tab-header-selected {
     background-color: white;
 }

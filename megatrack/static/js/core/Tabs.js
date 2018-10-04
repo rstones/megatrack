@@ -111,6 +111,9 @@ mgtrk.Tabs = (function() {
             insertHeader(state, `${id}-tab-header`);
             // have an event handler for clicks on the tab to display the contents
             $(`#${id}-tab-header`).on('click', function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                } 
                 tabs.selectTab(id);
             });
             // add content template to cache

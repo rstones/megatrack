@@ -19,6 +19,10 @@ mgtrk.TractTabs = (function() {
                     $(`#${state.code}-tab-remove`).on('click', function(event) {
                         // remove tract from renderer
                         // fire remove-tract event
+                        
+                        if ($(this).attr('disabled')) {
+                            return;
+                        }
                                             
                         var tractIds = Object.keys(tractTabs.cache);
                         if (state.code === tractTabs.selectedTabId && tractIds.length > 1) {
