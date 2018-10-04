@@ -11,6 +11,13 @@
     border: 1px solid grey;
 }
 
+.colormap-indicator-disabled {
+    border-radius: 10px;
+    border: 1px solid lightgrey;
+    height: 12px;
+    background: white;
+}
+
 .colormap-indicator-caret {
     float: right;
     position: relative;
@@ -20,13 +27,6 @@
     display: inline-block;
     margin-top: -.25em;
     background: url("../../images/select-caret.png") 30% 55% / 8px no-repeat rgba(0,0,0,0);
-}
-
-.colormap-indicator-disabled {
-    border-radius: 10px;
-    border: 1px solid lightgrey;
-    height: 12px;
-    background-color: lightgrey;
 }
 
 .colormap-indicator-caret-disabled {

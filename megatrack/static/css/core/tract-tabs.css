@@ -1,10 +1,13 @@
 .tab-header-color-swatch {
     width: 16px;
     height: 16px;
-    background: red;  
     border: 1px solid grey;
     border-radius: 3px;
     float: left;
+}
+
+.tab-header-color-swatch-disabled {
+    border: 1px solid lightgrey;
 }
 
 .tab-header-tract-name {

@@ -129,6 +129,7 @@ mgtrk.TractSelect = (function() {
             }
             
             // disable tract tabs
+            tractTabs.disable();
             
             // disable tract select
             $('#add-tract-select').prop('disabled', true);
@@ -149,6 +150,7 @@ mgtrk.TractSelect = (function() {
             }
             
             // enable tract tabs
+            tractTabs.enable();
             
         });
         

@@ -147,6 +147,9 @@ mgtrk.AtlasTractTabs = (function() {
             $(`#${state.code}-colormap-select`).hide();
             
             $(`#${state.code}-colormap-indicator`).on('click', {tractCode: state.code}, function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
                 const tractCode = event.data.tractCode;
                 // work out position of colormap indicator for current tract
                 const indicatorPos = $(`#${tractCode}-colormap-indicator`).position();
@@ -176,16 +179,25 @@ mgtrk.AtlasTractTabs = (function() {
             });
             
             $(`#${state.code}-download-button`).on('click', function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
                 event.preventDefault();
                 window.location.href = `tract/${state.code}?${$.param(_parent._parent.currentQuery)}&file_type=.nii.gz`;
             });
             
             $(`#${state.code}-info-button`).on('click', function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
                 event.preventDefault();
                 infoPopup.open(state);
             });
             
             $(`.prob-metrics-help`).on('click', function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
                 const updatePopupContent = function() {
                     $('#metrics-help-popup-title').html('Probabilistic metrics');
                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
@@ -208,6 +220,9 @@ mgtrk.AtlasTractTabs = (function() {
             });
             
             $(`.pop-metrics-help`).on('click', function(event) {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
                 const updatePopupContent = function() {
                     $('#metrics-help-popup-title').html('Population metrics');
                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
@@ -299,10 +314,100 @@ mgtrk.AtlasTractTabs = (function() {
             // loop through each tab
             // disable various elements on each tab
             // loop through headers, make them all grey and unclickable
+            const tabIds = Object.keys(atlasTractTabs.cache);
+            for (let i=0; i<tabIds.length; i++) {
+                const code = tabIds[i];
+                // prob range slider
+                $(`#${code}-prob-range-slider`).slider('disable');
+                // opacity slider
+                $(`#${code}-opacity-slider`).slider('disable');
+                // colour select (turn colour grey)
+                const $colormapIndicator = $(`#${code}-colormap-indicator`);
+                $colormapIndicator.removeClass('colormap-indicator');
+                $colormapIndicator.addClass('colormap-indicator-disabled');
+                $colormapIndicator.removeClass('clickable');
+                $colormapIndicator.removeClass(`${atlasTractTabs.cache[code].color}-colormap`);
+                $colormapIndicator.attr('disabled', true);
+                
+                // download and info button
+                const $download = $(`#${code}-download-button`);
+                $download.removeClass('button');
+                $download.addClass('button-disabled');
+                $download.removeClass('clickable');
+                $download.attr('disabled', true);
+                
+                const $info = $(`#${code}-info-button`);
+                $info.removeClass('button');
+                $info.addClass('button-disabled');
+                $info.removeClass('clickable');
+                $info.attr('disabled', true);
+                
+                // metrics + metrics info popups
+                $(`#${code}-prob-metrics`).html('');
+                $(`#${code}-pop-metrics`).html('');
+                
+                const $probHelp = $(`#${code}-prob-metrics-wrapper > .prob-metrics-help`);
+                $probHelp.removeClass('clickable');
+                $probHelp.attr('disabled', true);
+                
+                const $popHelp = $(`#${code}-pop-metrics-wrapper > .pop-metrics-help`);
+                $popHelp.removeClass('clickable');
+                $popHelp.attr('disabled', true);
+                
+                // header (unclickable, turn background grey, turn colour swatch grey)
+                $(`#${code}-tab-header`).removeClass('clickable');
+                const $colorSwatch = $(`#${code}-tab-header > .tab-header-color-swatch`);
+                $colorSwatch.removeClass(`${atlasTractTabs.cache[code].color}-colormap`);
+                $colorSwatch.addClass('tab-header-color-swatch-disabled');
+            }
+            
         };
         
         atlasTractTabs.enable = () => {
             // reverse disable
+            const tabIds = Object.keys(atlasTractTabs.cache);
+            for (let i=0; i<tabIds.length; i++) {
+                const code = tabIds[i];
+                // prob range slider
+                $(`#${code}-prob-range-slider`).slider('enable');
+                // opacity slider
+                $(`#${code}-opacity-slider`).slider('enable');
+                // colour select (turn colour grey)
+                const $colormapIndicator = $(`#${code}-colormap-indicator`);
+                $colormapIndicator.addClass('colormap-indicator');
+                $colormapIndicator.removeClass('colormap-indicator-disabled');
+                $colormapIndicator.addClass('clickable');
+                $colormapIndicator.addClass(`${atlasTractTabs.cache[code].color}-colormap`);
+                $colormapIndicator.attr('disabled', false);
+                
+                // download and info button
+                const $download = $(`#${code}-download-button`);
+                $download.removeClass('button-disabled');
+                $download.addClass('button');
+                $download.addClass('clickable');
+                $download.attr('disabled', false);
+                
+                const $info = $(`#${code}-info-button`);
+                $info.removeClass('button-disabled');
+                $info.addClass('button');
+                $info.addClass('clickable');
+                $info.attr('disabled', false);
+                
+                // metrics + metrics info popups
+                const $probHelp = $(`#${code}-prob-metrics-wrapper > .prob-metrics-help`);
+                $probHelp.addClass('clickable');
+                $probHelp.attr('disabled', false);
+                
+                const $popHelp = $(`#${code}-pop-metrics-wrapper > .pop-metrics-help`);
+                $popHelp.addClass('clickable');
+                $popHelp.attr('disabled', false);
+                
+                // header (unclickable, turn background grey, turn colour swatch grey)
+                $(`#${code}-tab-header`).addClass('clickable');
+                const $colorSwatch = $(`#${code}-tab-header > .tab-header-color-swatch`);
+                $colorSwatch.addClass(`${atlasTractTabs.cache[code].color}-colormap`);
+                $colorSwatch.removeClass('tab-header-color-swatch-disabled');
+            }
         };
         
         return atlasTractTabs;

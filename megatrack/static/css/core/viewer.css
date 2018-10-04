@@ -36,6 +36,10 @@ hr {
 .button-disabled {
     border: 1px solid lightgrey;
     color: lightgrey;
+    border-radius: 5px;
+    height: 23px;
+    padding-top: 3px;
+    line-height: 17px;
 }
 
 .ui-slider {
