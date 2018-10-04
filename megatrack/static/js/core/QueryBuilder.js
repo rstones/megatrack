@@ -165,6 +165,8 @@ mgtrk.QueryBuilder = (function() {
                 updateButton.removeClass('clickable');
                 updateButton.addClass('update-query-button-disabled');
                 $(document).trigger('dataset:change', [datasetCode]);
+                $('#query-info').html(`<span id="query-info-text">${queryBuilder.queryInfoText}0</span>`);
+                _parent.currentQuery = {};
             });
             
             return datasetQuery;
@@ -389,6 +391,9 @@ mgtrk.QueryBuilder = (function() {
                             if (totalSubjects === 0) {
                                 $(document).trigger('query:zero'); // calls listener in TractSelect
                             }
+                            // *******************
+                            // if totalSubjects > 0 need to reenable tract tabs, tracts etc if already disabled
+                            // *******************
                         }
                     });
                     $.ajax({
