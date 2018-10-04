@@ -116,9 +116,15 @@ mgtrk.TractSelect = (function() {
             $(`#${tractSelect.tractTabsContainerId}`).hide();
         });
         
-//         $(document).on('dataset:remove', function(event, datasetCode, noDatasetSelected) {
-//             
-//         });
+        $(document).on('query:zero', function(event) {
+            // remove tracts from renderer
+            // disable tract tabs
+            // disable tract select
+            // show alert message next to tract select
+            _parent.renderers.removeAllLabelmaps();
+            
+            $('#add-tract-select').prop('disabled', true);
+        });
         
         $(document).on('query:update', function(event, newQuery) {
         

@@ -295,6 +295,16 @@ mgtrk.AtlasTractTabs = (function() {
             atlasTractTabs._addTab(state.code, atlasTractTabs.templates.header, atlasTractTabs.templates.content, state);
         };
         
+        atlasTractTabs.disable = () => {
+            // loop through each tab
+            // disable various elements on each tab
+            // loop through headers, make them all grey and unclickable
+        };
+        
+        atlasTractTabs.enable = () => {
+            // reverse disable
+        };
+        
         return atlasTractTabs;
     };
     

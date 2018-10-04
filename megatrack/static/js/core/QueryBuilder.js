@@ -385,7 +385,11 @@ mgtrk.QueryBuilder = (function() {
                                 totalSubjects += data.dataset[key];
                             }
                             $('#query-info').html('<span id="query-info-text">'+queryBuilder.queryInfoText+totalSubjects+'</span>');
-                        } 
+                            
+                            if (totalSubjects === 0) {
+                                $(document).trigger('query:zero'); // calls listener in TractSelect
+                            }
+                        }
                     });
                     $.ajax({
                         url: _parent.rootPath + '/generate_mean_maps?'+$.param(newQuery),
