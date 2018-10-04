@@ -116,6 +116,13 @@
     vertical-align: -webkit-baseline-middle;
 }
 
+#zero-query-msg-text {
+    color: #F00202;
+    font-size: 75%;
+    vertical-align: middle;
+    vertical-align: -webkit-baseline-middle;
+}
+
 #tract-select-wrapper {
     height: 250px;
     width: 700px;

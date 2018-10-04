@@ -32,11 +32,14 @@ mgtrk.TractSelect = (function() {
                                         </div>
                                         <div id="tract-disabled-msg-container">
                                             <span id="tract-disabled-msg-text">Query a dataset before selecting a tract</span>
+                                            <span id="zero-query-msg-text">Zero subjects in current query - change query to select tracts</span>
                                         </div>
                                         <div class="clear"></div>
                                         <hr>
                                         <div id="${tractSelect.tractTabsContainerId}"></div>
                                     </div>`);
+                                    
+        $('#zero-query-msg-text').hide();
         
         $.ajax({
             dataType: 'json',
@@ -117,13 +120,36 @@ mgtrk.TractSelect = (function() {
         });
         
         $(document).on('query:zero', function(event) {
-            // remove tracts from renderer
-            // disable tract tabs
-            // disable tract select
-            // show alert message next to tract select
-            _parent.renderers.removeAllLabelmaps();
+            // set labelmap opacity to zero
+            const tabsCacheKeys = Object.keys(tractTabs.cache);
+            for (let i=0; i<tabsCacheKeys.length; i++) {
+                const state = tractTabs.cache[tabsCacheKeys[i]];
+                state.opacity = 0;
+                $(document).trigger('colormap:change', [state]);
+            }
             
+            // disable tract tabs
+            
+            // disable tract select
             $('#add-tract-select').prop('disabled', true);
+            
+            // show alert message next to tract select
+            $('#zero-query-msg-text').show();
+        });
+        
+        $(document).on('query:nonzero', function(event) {
+            // check if stuff is disabled first
+        
+             // set labelmap opacity to 100%
+            const tabsCacheKeys = Object.keys(tractTabs.cache);
+            for (let i=0; i<tabsCacheKeys.length; i++) {
+                const state = tractTabs.cache[tabsCacheKeys[i]];
+                state.opacity = 1;
+                $(document).trigger('colormap:change', [state]);
+            }
+            
+            // enable tract tabs
+            
         });
         
         $(document).on('query:update', function(event, newQuery) {
@@ -133,8 +159,7 @@ mgtrk.TractSelect = (function() {
             // remove the disabled tract select message
             if ($('#add-tract-select').prop('disabled')) {
                 $('#add-tract-select').prop('disabled', false);
-                $('#tract-disabled-msg-text').hide();
-                //$(`#${tractSelect.tractTabsContainerId}`).show();
+                $('#tract-disabled-msg-container').children().hide();
             }
             
             // we are restricting the user to selecting only a single
