@@ -100,10 +100,7 @@ mgtrk.TractSelect = (function() {
              * Remove tabs from AtlasTractTabs
              * Disable tract select
              */
-            const numTracts = _parent.renderers.volume.labelmap.length;
-            for (let i=0; i < numTracts; i++) {
-                _parent.renderers.removeLabelmapFromVolumeNew(i);
-            }
+            _parent.renderers.removeAllLabelmaps();
             
             tractSelect.selectedTracts = {};
             

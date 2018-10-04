@@ -130,6 +130,13 @@ mgtrk.Renderers = (function() {
             renderers.views.axial.renderer.update(renderers.volume);
         };
         
+        renderers.removeAllLabelmaps = function() {
+            const numLabelmaps = renderers.volume.labelmap.length;
+            for (let k=0; k < numLabelmaps; k++) {
+                renderers.removeLabelmapFromVolumeNew(0);
+            }  
+        };
+        
         renderers.addLabelmapToVolume = function(tractCode, newQuery) {
             renderers.addingNewTract = true;
             $(document).trigger('view:disable');
