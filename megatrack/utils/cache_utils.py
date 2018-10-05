@@ -38,4 +38,93 @@ def check_items_in_cache(cached_data, *args):
         except KeyError:
             return False
     return True
+
+
+
+class JobCache(object):
+    
+    # job statuses
+    IN_PROGRESS = 'IN_PROGRESS'
+    COMPLETE = 'COMPLETE'
+    FAILED = 'FAILED'
+
+    def __init__(self, cache):
+        self.cache = cache
         
+    def add_job(self, key, job_key):
+        '''
+        Adds a job to the cache with status IN_PROGRESS. If the job already exists
+        no action is taken. '''
+        
+        jobs = self.cache.get(key)
+        if jobs:
+            # jobs already exist for this key
+            job = jobs.get(job_key)
+            if job:
+                # job already exists
+                return f'Job {job_key} already exists for key {key}.'
+            else:
+                # create job
+                jobs[job_key] = {'status': self.IN_PROGRESS, 'result': ''}
+                self.cache.set(key, jobs)
+                return 'Success'
+        else:
+            # no jobs exist yet for this key
+            self.cache.set(key, {
+                job_key: {'status': self.IN_PROGRESS, 'result': ''}
+            })
+            return 'Success'
+        
+    def restart_job(self, key, job_key):
+        raise NotImplementedError
+    
+    def job_complete(self, key, job_key, result):
+        '''
+        Sets job status to COMPLETE and updates the result of that job even if the
+        job status was previously COMPLETE. If the job doesn't exist a KeyError
+        if raised. '''
+        
+        jobs = self.cache.get(key)
+        if jobs:
+            job = jobs.get(job_key)
+            if job:
+                job['status'] = self.COMPLETE
+                job['result'] = result
+                jobs[job_key] = job
+                self.cache.set(key, jobs)
+                return 'Success'
+            else:
+                raise KeyError(f'Job {job_key} does not exist for key {key}.')
+        else:
+            raise KeyError(f'No jobs in cache for key {key}.')
+            
+    
+    def job_failed(self, key, job_key, err_msg=''):
+        jobs = self.cache.get(key)
+        if jobs:
+            job = jobs.get(job_key)
+            if job and job['status'] == self.IN_PROGRESS:
+                job['status'] = self.FAILED
+                job['error_message'] = err_msg
+                jobs[job_key] = job
+                self.cache.set(key, jobs)
+                return 'Success'
+            elif job and job['status'] in [self.COMPLETE, self.FAILED]:
+                return
+            else:
+                raise KeyError(f'Job {job_key} does not exist for key {key}.')
+        else:
+            raise KeyError(f'No jobs in cache for key {key}.')
+                
+    
+    def job_status(self, key, job_key):
+        jobs = self.cache.get(key)
+        if jobs:
+            job = jobs.get(job_key)
+            if job:
+                return job.get('status')
+            else:
+                raise KeyError(f'Job {job_key} does not exist for key {key}.')
+        else:
+            raise KeyError(f'No jobs in cache for key {key}.')
+    
