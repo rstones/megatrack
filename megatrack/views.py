@@ -1,5 +1,6 @@
 import json
 import datetime
+import time
 
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
@@ -11,6 +12,7 @@ from jquery_unparam import jquery_unparam
 from megatrack import bcrypt, db
 from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
 import megatrack.utils.cache_utils as cu
+from megatrack.utils.cache_utils import JobCache
 import megatrack.utils.data_utils as du
 import megatrack.utils.database_utils as dbu
 
@@ -106,64 +108,160 @@ def query_report():
 
 @megatrack.route('/generate_mean_maps')
 def generate_mean_maps():
+    # instantiate JobCache
+    cache = JobCache(current_app.cache)
+    
+    # construct cache key
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
-    cached_data = current_app.cache.get(cache_key)
-    data_dir = current_app.config['DATA_FILE_PATH']
-    request_query = jquery_unparam(query_string_decoded)
     
+    # jquery_unparam query string
+    # check request query is valid
+    request_query = jquery_unparam(query_string_decoded)
     if not check_request_query(request_query):
-        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        current_app.logger.info(f'Could not properly parse param string in /generate_mean_maps. Param string is {query_string_decoded}')
         return 'Could not parse query param string.', 400
     
-    if not cached_data or not cu.check_items_in_cache(cached_data, 'FA', 'MD'):
+    # check if mean_maps job exists and what status it has
+    status = cache.job_status(cache_key, 'mean_maps')
+    
+    if status and status in ['IN_PROGRESS', 'COMPLETE']:
+        # job exists, return
+        current_app.logger.info('mean_maps job in_progress or complete.')
+        return 'Mean maps job in progress or complete', 204
+    else:
+        # job doesn't exist or has failed, calculate mean FA map
+        cache.add_job(cache_key, 'mean_maps')
         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
         
         if len(subject_ids_dataset_paths) > 0:
-            current_app.logger.info('Generating mean MD and FA maps...')
+            current_app.logger.info('Generating mean FA and MD maps...')
+            data_dir = current_app.config['DATA_FILE_PATH']
             mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
             mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
-            current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
-            current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
+            cache.job_complete(cache_key, 'mean_maps', {'FA': mean_FA, 'MD': mean_MD})
+            return 'Mean maps created', 204
+        else:
+            # no subjects returned in query
+            current_app.logger.info('No subjects returned for current query.')
+            return 'No subjects returned in query', 204
+        
     
-    return 'Mean maps successfully created.', 204
+#     query_string_decoded = request.query_string.decode('utf-8')
+#     cache_key = cu.construct_cache_key(query_string_decoded)
+#     cached_data = current_app.cache.get(cache_key)
+#     data_dir = current_app.config['DATA_FILE_PATH']
+#     request_query = jquery_unparam(query_string_decoded)
+#     
+#     if not check_request_query(request_query):
+#         current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+#         return 'Could not parse query param string.', 400
+#     
+#     if not cached_data or not cu.check_items_in_cache(cached_data, 'FA', 'MD'):
+#         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+#         
+#         if len(subject_ids_dataset_paths) > 0:
+#             current_app.logger.info('Generating mean MD and FA maps...')
+#             mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+#             mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+#             current_app.logger.info('Putting mean map file paths in cache for query\n' + json.dumps(request_query, indent=4))
+#             current_app.cache.set(cache_key, cu.add_to_cache_dict(cached_data, {'FA': mean_FA, 'MD': mean_MD}))
+#     
+#     return 'Mean maps successfully created.', 204
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
     current_app.logger.info('Getting tract ' + tract_code)
     
-    # process query string
+    cache = JobCache(current_app.cache)
+    
+    # construct cache key
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
+    
+    # jquery_unparam query string
+    # check request query is valid
     request_query = jquery_unparam(query_string_decoded)
     request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
     if not check_request_query(request_query):
-        current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+        current_app.logger.info(f'Could not properly parse param string in /generate_mean_maps. Param string is {query_string_decoded}')
         return 'Could not parse query param string.', 400
     
     # validate tract code
     tract = dbu.get_tract(tract_code) 
     if not tract:
+        current_app.logger.info(f'Request to /get_tract with nonexistent tract code {tract_code}')
         return 'The requested tract ' + tract_code + ' does not exist', 400
     
-    cached_data = current_app.cache.get(cache_key)
-    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code): # either request not cached or associated density map doesn't exist
-        current_app.logger.info('No density map in cache so calculating average from scratch')
+    if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
+        # poll cache waiting for complete status (max wait 1 min before quitting)
+        start = datetime.datetime.now()
+        while cache.job_status(cache_key, tract_code) == 'IN_PROGRESS' \
+                and datetime.datetime.now() - start < datetime.timedelta(minutes=1):
+            time.sleep(0.2)
+        
+        # set status to FAILED if not COMPLETE after 1 min
+        if cache.job_status(cache_key, tract_code) != 'COMPLETE':
+            cache.job_failed(cache_key, tract_code)
     
-        file_path_data = dbu.density_map_file_path_data(request_query)    
-        if len(file_path_data) > 0:
-            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
-            temp_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-            current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
-            cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
-            current_app.cache.set(cache_key, cached_data)
-        else:
-            return "No subjects returned for the current query", 404
+    if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+        # job has already been run, get file_path from cache
+        file_path = cache.cache.get(cache_key).get(tract_code)
+        return send_file(file_path,
+                         as_attachment=True,
+                         attachment_filename=tract_code+'.nii.gz',
+                         conditional=True,
+                         add_etags=True)
+        
     else:
-        temp_file_path = cached_data[tract_code]
-            
-    temp_file_path = file_path_relative_to_root_path(temp_file_path)
-    return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
+        # first time to run job or FAILED status
+        file_path_data = dbu.density_map_file_path_data(request_query)
+        if len(file_path_data) > 0:
+            cache.add_job(cache_key, tract_code)
+            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
+            file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+            current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+            cache.job_complete(cache_key, tract_code, file_path)
+            return send_file(file_path,
+                             as_attachment=True,
+                             attachment_filename=tract_code+'.nii.gz',
+                             conditional=True,
+                             add_etags=True)
+        else:
+            return "No subjects returned for the current query", 404    
+    
+#     # process query string
+#     query_string_decoded = request.query_string.decode('utf-8')
+#     cache_key = cu.construct_cache_key(query_string_decoded)
+#     request_query = jquery_unparam(query_string_decoded)
+#     request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
+#     if not check_request_query(request_query):
+#         current_app.logger.info(f'Could not properly parse param string in /query_report. Param string is {query_string_decoded}')
+#         return 'Could not parse query param string.', 400
+#     
+#     # validate tract code
+#     tract = dbu.get_tract(tract_code) 
+#     if not tract:
+#         return 'The requested tract ' + tract_code + ' does not exist', 400
+#     
+#     cached_data = current_app.cache.get(cache_key)
+#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code): # either request not cached or associated density map doesn't exist
+#         current_app.logger.info('No density map in cache so calculating average from scratch')
+#     
+#         file_path_data = dbu.density_map_file_path_data(request_query)    
+#         if len(file_path_data) > 0:
+#             data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
+#             temp_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+#             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+#             cached_data = cu.add_to_cache_dict(cached_data, {tract_code:temp_file_path})
+#             current_app.cache.set(cache_key, cached_data)
+#         else:
+#             return "No subjects returned for the current query", 404
+#     else:
+#         temp_file_path = cached_data[tract_code]
+#             
+#     temp_file_path = file_path_relative_to_root_path(temp_file_path)
+#     return send_file(temp_file_path, as_attachment=True, attachment_filename=tract_code+'.nii.gz', conditional=True, add_etags=True)
 
 @jsonapi
 @megatrack.route('/get_tract_info/<tract_code>/<threshold>')
