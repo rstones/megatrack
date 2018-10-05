@@ -266,6 +266,59 @@ def get_tract(tract_code):
 @jsonapi
 @megatrack.route('/get_tract_info/<tract_code>/<threshold>')
 def get_dynamic_tract_info(tract_code, threshold):
+    
+    cache = JobCache(current_app.cache)
+    
+    query_string_decoded = request.query_string.decode('utf-8')
+    cache_key = cu.construct_cache_key(query_string_decoded)
+    
+    # jquery_unparam query string
+    # check request query is valid
+    request_query = jquery_unparam(query_string_decoded)
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string in /generate_mean_maps. Param string is {query_string_decoded}')
+        return 'Could not parse query param string.', 400
+    
+    # validate tract code
+    tract = dbu.get_tract(tract_code)
+    if not tract:
+        return 'The requested tract ' + tract_code + ' does not exist', 404
+    
+    # validate threshold
+    try:
+        threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+    except ValueError:
+        current_app.logger.info('Invalid threshold value applied, returning 404...')
+        return f'Invalid threshold value {threshold} sent to server.', 404
+    
+    # check mean_maps job
+    if cache.job_status(cache_key, 'mean_maps') == 'IN_PROGRESS':
+        # poll cache until COMPLETE
+        # set status to failed if waiting over 1 min
+        pass
+        
+    if cache.job_status(cache_key, 'mean_maps') == 'COMPLETE':
+        # get FA and MD maps from cache
+        pass
+    else:
+        # restart mean_maps job
+        pass
+    
+    # check tract_code job
+    if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
+        # poll cache until COMPLETE
+        # set status to failed if waiting over 1 min
+        pass
+    
+    if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+        # get density map
+        pass
+    else:
+        # restart tract_code job
+    
+    # calculate results and return 
+    
+    
     '''Calculates the mean/std FA/MD + vol for the thresholded averaged tract density map''' 
     current_app.logger.info('Getting dynamic info for tract ' + tract_code)
     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
