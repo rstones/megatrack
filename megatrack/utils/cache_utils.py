@@ -60,7 +60,7 @@ class JobCache(object):
         if jobs:
             # jobs already exist for this key
             job = jobs.get(job_key)
-            if job:
+            if job and job['status'] != self.FAILED:
                 # job already exists
                 return f'Job {job_key} already exists for key {key}.'
             else:
