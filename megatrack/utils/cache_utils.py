@@ -4,6 +4,8 @@ Created on 13 Sep 2017
 @author: richard
 '''
 import os
+import datetime
+import time
 
 def construct_cache_key(query_string):
     # remove file_type=.nii.gz if its there as its only used to load tracts from XTK javascript lib
@@ -123,8 +125,19 @@ class JobCache(object):
             job = jobs.get(job_key)
             if job:
                 return job.get('status')
-            else:
-                raise KeyError(f'Job {job_key} does not exist for key {key}.')
-        else:
-            raise KeyError(f'No jobs in cache for key {key}.')
+        
+#         if jobs:
+#             job = jobs.get(job_key)
+#             if job:
+#                 return job.get('status')
+#             else:
+#                 raise KeyError(f'Job {job_key} does not exist for key {key}.')
+#         else:
+#             raise KeyError(f'No jobs in cache for key {key}.')
+
+    def poll_cache(self, key, job_key, timeout, wait):
+        start = datetime.datetime.now()
+        while self.cache.job_status(key, job_key) == 'IN_PROGRESS' \
+                and datetime.datetime.now() - start < datetime.timedelta(seconds=timeout):
+            time.sleep(wait)
     

@@ -116,8 +116,12 @@ class JobCacheTestCase(unittest.TestCase):
         assert status == 'IN_PROGRESS'
         
         # test when job doesn't exist (but some jobs do exist for key)
-        self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
+        #self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
+        status = job_cache.job_status(self.TEST_KEY, self.JOB2_KEY)
+        assert status is None
         
         # test when no jobs exist for key
         cache.flush()
-        self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
+        status = job_cache.job_status(self.TEST_KEY, self.JOB2_KEY)
+        #self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
+        assert status is None
