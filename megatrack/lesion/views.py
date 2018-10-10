@@ -14,6 +14,7 @@ from megatrack import db
 from megatrack.views import file_path_relative_to_root_path
 from megatrack.utils import data_utils as du
 from megatrack.utils import cache_utils as cu
+from megatrack.utils.cache_utils import JobCache
 from megatrack.utils import database_utils as dbu
 from megatrack.lesion.models import LesionUpload
 from megatrack.models import Tract, Subject, DatasetTracts
@@ -158,19 +159,37 @@ def lesion_analysis(lesion_code, threshold):
     
     def check_lesion_tract_overlaps(tracts):
         
-        cached_data = current_app.cache.get(cache_key)
+        #cached_data = current_app.cache.get(cache_key)
+        cache = JobCache(current_app.cache)
         
         for tract in tracts:
             # average density maps for this tract based on current query
             # save averaged map and cache the file path
-            if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
-                tract_code = tract.code
-                tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-                current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
-                cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
-                current_app.cache.set(cache_key, cached_data)
+            status = cache.job_status(cache_key, tract.code)
+            if status == 'COMPLETE':
+                # get file path from cache
+                tract_file_path = cache.cache.get(cache_key).get(tract.code).get('result')
             else:
-                tract_file_path = cached_data[tract.code]
+                # recalculate density map
+                file_path_data = dbu.density_map_file_path_data(request_query)
+                if len(file_path_data) > 0:
+                    cache.add_job(cache_key, tract.code)
+                    data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
+                    tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+                    current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract.code)
+                    cache.job_complete(cache_key, tract.code, tract_file_path)
+                else:
+                    return 'No subjects returned for the current query', 404
+            
+            
+#             if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
+#                 tract_code = tract.code
+#                 tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+#                 current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+#                 cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+#                 current_app.cache.set(cache_key, cached_data)
+#             else:
+#                 tract_file_path = cached_data[tract.code]
                 
             
 #             # perform weighted overlap: lesion * tract

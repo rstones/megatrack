@@ -130,6 +130,7 @@ def generate_mean_maps():
         current_app.logger.info('mean_maps job in_progress or complete.')
         return 'Mean maps job in progress or complete', 204
     else:
+        current_app.logger.info('Generating mean maps...')
         # job doesn't exist or has failed, calculate mean FA map
         cache.add_job(cache_key, 'mean_maps')
         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
@@ -179,7 +180,7 @@ def get_tract(tract_code):
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
     
-    # jquery_unparam query string
+    # jquery_unparam qcurrent_app.logger.info(f'Mean MD file path: {MD_file_path}')uery string
     # check request query is valid
     request_query = jquery_unparam(query_string_decoded)
     request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
@@ -194,19 +195,20 @@ def get_tract(tract_code):
         return 'The requested tract ' + tract_code + ' does not exist', 400
     
     if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
-        # poll cache waiting for complete status (max wait 1 min before quitting)
-        start = datetime.datetime.now()
-        while cache.job_status(cache_key, tract_code) == 'IN_PROGRESS' \
-                and datetime.datetime.now() - start < datetime.timedelta(minutes=1):
-            time.sleep(0.2)
+        current_app.logger.info(f'{tract_code} job in progress, waiting to complete...')
+        # poll cache waiting for complete status (max wait 15 secs before quitting)
+        cache.poll_cache(cache_key, tract_code, 15, 0.2)
         
-        # set status to FAILED if not COMPLETE after 1 min
+        # set status to FAILED if not COMPLETE after 15 secs
         if cache.job_status(cache_key, tract_code) != 'COMPLETE':
+            current_app.logger.info(f'{tract_code} job timed out, setting status to FAILED.')
             cache.job_failed(cache_key, tract_code)
     
     if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+        current_app.logger.info(f'{tract_code} job complete.')
         # job has already been run, get file_path from cache
-        file_path = cache.cache.get(cache_key).get(tract_code)
+        file_path = cache.cache.get(cache_key).get(tract_code).get('result')
+        file_path = file_path_relative_to_root_path(file_path)
         return send_file(file_path,
                          as_attachment=True,
                          attachment_filename=tract_code+'.nii.gz',
@@ -214,6 +216,7 @@ def get_tract(tract_code):
                          add_etags=True)
         
     else:
+        current_app.logger.info(f'Calculating density map for tract {tract_code}...')
         # first time to run job or FAILED status
         file_path_data = dbu.density_map_file_path_data(request_query)
         if len(file_path_data) > 0:
@@ -222,6 +225,7 @@ def get_tract(tract_code):
             file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
             current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
             cache.job_complete(cache_key, tract_code, file_path)
+            file_path = file_path_relative_to_root_path(file_path)
             return send_file(file_path,
                              as_attachment=True,
                              attachment_filename=tract_code+'.nii.gz',
@@ -266,6 +270,7 @@ def get_tract(tract_code):
 @jsonapi
 @megatrack.route('/get_tract_info/<tract_code>/<threshold>')
 def get_dynamic_tract_info(tract_code, threshold):
+    current_app.logger.info(f'Getting dynamic tract info for tract {tract_code} and threshold {threshold}.')
     
     cache = JobCache(current_app.cache)
     
@@ -276,12 +281,13 @@ def get_dynamic_tract_info(tract_code, threshold):
     # check request query is valid
     request_query = jquery_unparam(query_string_decoded)
     if not check_request_query(request_query):
-        current_app.logger.info(f'Could not properly parse param string in /generate_mean_maps. Param string is {query_string_decoded}')
+        current_app.logger.info(f'Could not properly parse param string {query_string_decoded} in /generate_mean_maps, returning 400...')
         return 'Could not parse query param string.', 400
     
     # validate tract code
     tract = dbu.get_tract(tract_code)
     if not tract:
+        current_app.logger.info(f'Tract with code {tract_code} does not exist, returning 404...')
         return 'The requested tract ' + tract_code + ' does not exist', 404
     
     # validate threshold
@@ -293,79 +299,66 @@ def get_dynamic_tract_info(tract_code, threshold):
     
     # check mean_maps job
     if cache.job_status(cache_key, 'mean_maps') == 'IN_PROGRESS':
+        current_app.logger.info(f'mean_maps job in progress waiting for job to finish...')
         # poll cache until COMPLETE
-        # set status to failed if waiting over 1 min
-        pass
+        # set status to failed if waiting 30 secs
+        timeout = 30
+        cache.poll_cache(cache_key, 'mean_maps', timeout, 0.2)
+        
+        if cache.job_status(cache_key, 'mean_maps') != 'COMPLETE':
+            current_app.logger.warn(f'mean_maps job failed to complete in {timeout} secs, setting job status to FAILED.')
+            cache.job_failed(cache_key, 'mean_maps')
         
     if cache.job_status(cache_key, 'mean_maps') == 'COMPLETE':
+        current_app.logger.info('mean_maps job complete ')
         # get FA and MD maps from cache
-        pass
+        mean_maps = cache.cache.get(cache_key).get('mean_maps').get('result')
+        FA_file_path = mean_maps.get('FA')
+        MD_file_path = mean_maps.get('MD')
     else:
         # restart mean_maps job
-        pass
+        cache.add_job(cache_key, 'mean_maps')
+        subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+        
+        if len(subject_ids_dataset_paths) > 0:
+            current_app.logger.info('Generating mean FA and MD maps...')
+            data_dir = current_app.config['DATA_FILE_PATH']
+            FA_file_path = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+            MD_file_path = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+            cache.job_complete(cache_key, 'mean_maps', {'FA': FA_file_path, 'MD': MD_file_path})
+        else:
+            # no subjects returned in query
+            current_app.logger.info('No subjects returned for current query.')
+            return 'No subjects returned in query', 404
     
     # check tract_code job
     if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
+        current_app.logger.info(f'{tract_code} job in progress, waiting for job to finish...')
         # poll cache until COMPLETE
-        # set status to failed if waiting over 1 min
-        pass
+        # set status to failed if waiting over 15 secs
+        cache.poll_cache(cache_key, tract_code, 15, 0.2)
+        if cache.job_status(cache_key, tract_code) != 'COMPLETE':
+            cache.job_failed(cache_key, tract_code)
     
     if cache.job_status(cache_key, tract_code) == 'COMPLETE':
         # get density map
-        pass
+        tract_file_path = cache.cache.get(cache_key).get(tract_code).get('result')
     else:
         # restart tract_code job
-        pass
-    
-    # calculate results and return 
-    
-    
-    '''Calculates the mean/std FA/MD + vol for the thresholded averaged tract density map''' 
-    current_app.logger.info('Getting dynamic info for tract ' + tract_code)
-    cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
-    cached_data = current_app.cache.get(cache_key)
-    request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    data_dir = current_app.config['DATA_FILE_PATH']
-    
-    try:
-        threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
-    except ValueError:
-        current_app.logger.info('Invalid threshold value applied returning 404...')
-        return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
-    
-    tract = dbu.get_tract(tract_code)
-    if not tract:
-        return 'The requested tract ' + tract_code + ' does not exist', 404
-
-    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
-        # recalculate average density map for tract
         file_path_data = dbu.density_map_file_path_data(request_query)
-        
         if len(file_path_data) > 0:
-            current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
+            cache.add_job(cache_key, tract_code)
+            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
             tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+            current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
+            cache.job_complete(cache_key, tract_code, tract_file_path)
         else:
-            return 'No subjects returned for the current query', 404
-        
-        current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
-        cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
-        current_app.cache.set(cache_key, cached_data)
+            return "No subjects returned for the current query", 404
     
-    if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, 'FA', 'MD'):
-        # recalculate mean FA/MD etc...
-        current_app.logger.info('Recalculating mean FA/MD maps for  query\n' + json.dumps(request_query, indent=4))
-        
-        subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
-        mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
-        mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
-        
-        current_app.logger.info('Caching MD/FA file paths for query\n' + json.dumps(request_query, indent=4))
-        cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD})
-        current_app.cache.set(cache_key, cached_data)
-        
-    FA_map_data = du.get_nifti_data(cached_data['FA'])
-    MD_map_data = du.get_nifti_data(cached_data['MD'])
-    tract_data = du.get_nifti_data(cached_data[tract_code])
+    # calculate results and return
+    FA_map_data = du.get_nifti_data(FA_file_path)
+    MD_map_data = du.get_nifti_data(MD_file_path)
+    tract_data = du.get_nifti_data(tract_file_path)
     mean_FA, std_FA = du.averaged_tract_mean_std(FA_map_data, tract_data, threshold)
     mean_MD, std_MD = du.averaged_tract_mean_std(MD_map_data, tract_data, threshold)
     vol = du.averaged_tract_volume(tract_data, threshold)
@@ -380,6 +373,127 @@ def get_dynamic_tract_info(tract_code, threshold):
     results['stdMD'] = std_MD
 
     return jsonify(results)
+    
+    
+#     '''Calculates the mean/std FA/MD + vol for the thresholded averaged tract density map''' 
+#     current_app.logger.info('Getting dynamic info for tract ' + tract_code)
+#     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+#     cached_data = current_app.cache.get(cache_key)
+#     request_query = jquery_unparam(request.query_string.decode('utf-8'))
+#     data_dir = current_app.config['DATA_FILE_PATH']
+#     
+#     try:
+#         threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+#     except ValueError:
+#         current_app.logger.info('Invalid threshold value applied returning 404...')
+#         return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
+#     
+#     tract = dbu.get_tract(tract_code)
+#     if not tract:
+#         return 'The requested tract ' + tract_code + ' does not exist', 404
+# 
+#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
+#         # recalculate average density map for tract
+#         file_path_data = dbu.density_map_file_path_data(request_query)
+#         
+#         if len(file_path_data) > 0:
+#             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
+#             tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+#         else:
+#             return 'No subjects returned for the current query', 404
+#         
+#         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
+#         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+#         current_app.cache.set(cache_key, cached_data)
+#     
+#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, 'FA', 'MD'):
+#         # recalculate mean FA/MD etc...#     '''Calculates the mean/std FA/MD + vol for the thresholded averaged tract density map''' 
+#     current_app.logger.info('Getting dynamic info for tract ' + tract_code)
+#     cache_key = cu.construct_cache_key(request.query_string.decode('utf-8'))
+#     cached_data = current_app.cache.get(cache_key)
+#     request_query = jquery_unparam(request.query_string.decode('utf-8'))
+#     data_dir = current_app.config['DATA_FILE_PATH']
+#     
+#     try:
+#         threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+#     except ValueError:
+#         current_app.logger.info('Invalid threshold value applied returning 404...')
+#         return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
+#     
+#     tract = dbu.get_tract(tract_code)
+#     if not tract:
+#         return 'The requested tract ' + tract_code + ' does not exist', 404
+# 
+#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract_code):
+#         # recalculate average density map for tract
+#         file_path_data = dbu.density_map_file_path_data(request_query)
+#         
+#         if len(file_path_data) > 0:
+#             current_app.logger.info('Generating averaged tract density map for ' + tract_code + '...')
+#             tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+#         else:
+#             return 'No subjects returned for the current query', 404
+#         
+#         current_app.logger.info('Caching ' + str(tract.code) + ' density map for query\n' + json.dumps(request_query, indent=4))
+#         cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
+#         current_app.cache.set(cache_key, cached_data)
+#     
+#     if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, 'FA', 'MD'):
+#         # recalculate mean FA/MD etc...
+#         current_app.logger.info('Recalculating mean FA/MD maps for  query\n' + json.dumps(request_query, indent=4))
+#         
+#         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+#         mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+#         mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+#         
+#         current_app.logger.info('Caching MD/FA file paths for query\n' + json.dumps(request_query, indent=4))
+#         cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD})
+#         current_app.cache.set(cache_key, cached_data)
+#         
+#     FA_map_data = du.get_nifti_data(cached_data['FA'])
+#     MD_map_data = du.get_nifti_data(cached_data['MD'])
+#     tract_data = du.get_nifti_data(cached_data[tract_code])
+#     mean_FA, std_FA = du.averaged_tract_mean_std(FA_map_data, tract_data, threshold)
+#     mean_MD, std_MD = du.averaged_tract_mean_std(MD_map_data, tract_data, threshold)
+#     vol = du.averaged_tract_volume(tract_data, threshold)
+#     
+#     results = {}
+#     results['tractCode'] = tract_code
+#     results['tractName'] = tract.name
+#     results['volume'] = vol
+#     results['meanFA'] = mean_FA
+#     results['stdFA'] = std_FA
+#     results['meanMD'] = mean_MD
+#     results['stdMD'] = std_MD
+# 
+#     return jsonify(results)
+#         current_app.logger.info('Recalculating mean FA/MD maps for  query\n' + json.dumps(request_query, indent=4))
+#         
+#         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+#         mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+#         mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+#         
+#         current_app.logger.info('Caching MD/FA file paths for query\n' + json.dumps(request_query, indent=4))
+#         cached_data = cu.add_to_cache_dict(cached_data, {'FA':mean_FA, 'MD':mean_MD})
+#         current_app.cache.set(cache_key, cached_data)
+#         
+#     FA_map_data = du.get_nifti_data(cached_data['FA'])
+#     MD_map_data = du.get_nifti_data(cached_data['MD'])
+#     tract_data = du.get_nifti_data(cached_data[tract_code])
+#     mean_FA, std_FA = du.averaged_tract_mean_std(FA_map_data, tract_data, threshold)
+#     mean_MD, std_MD = du.averaged_tract_mean_std(MD_map_data, tract_data, threshold)
+#     vol = du.averaged_tract_volume(tract_data, threshold)
+#     
+#     results = {}
+#     results['tractCode'] = tract_code
+#     results['tractName'] = tract.name
+#     results['volume'] = vol
+#     results['meanFA'] = mean_FA
+#     results['stdFA'] = std_FA
+#     results['meanMD'] = mean_MD
+#     results['stdMD'] = std_MD
+# 
+#     return jsonify(results)
 
 @jsonapi
 @megatrack.route('/get_tract_info/<tract_code>')
