@@ -137,7 +137,7 @@ class JobCache(object):
 
     def poll_cache(self, key, job_key, timeout, wait):
         start = datetime.datetime.now()
-        while self.cache.job_status(key, job_key) == 'IN_PROGRESS' \
+        while self.job_status(key, job_key) == 'IN_PROGRESS' \
                 and datetime.datetime.now() - start < datetime.timedelta(seconds=timeout):
             time.sleep(wait)
     
