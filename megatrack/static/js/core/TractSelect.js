@@ -135,6 +135,7 @@ mgtrk.TractSelect = (function() {
             $('#add-tract-select').prop('disabled', true);
             
             // show alert message next to tract select
+            $('#tract-disabled-msg-text').hide();
             $('#zero-query-msg-text').show();
         });
         
