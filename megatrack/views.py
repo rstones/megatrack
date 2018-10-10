@@ -315,6 +315,7 @@ def get_dynamic_tract_info(tract_code, threshold):
         pass
     else:
         # restart tract_code job
+        pass
     
     # calculate results and return 
     
