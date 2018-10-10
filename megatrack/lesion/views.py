@@ -168,7 +168,7 @@ def lesion_analysis(lesion_code, threshold):
             status = cache.job_status(cache_key, tract.code)
             if status == 'COMPLETE':
                 # get file path from cache
-                tract_file_path = cache.cache.get(cache_key).get(tract.code).get('result')
+                tract_file_path = cache.job_result(cache_key, tract.code)
             else:
                 # recalculate density map
                 file_path_data = dbu.density_map_file_path_data(request_query)

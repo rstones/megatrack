@@ -126,14 +126,14 @@ class JobCache(object):
             if job:
                 return job.get('status')
         
-#         if jobs:
-#             job = jobs.get(job_key)
-#             if job:
-#                 return job.get('status')
-#             else:
-#                 raise KeyError(f'Job {job_key} does not exist for key {key}.')
-#         else:
-#             raise KeyError(f'No jobs in cache for key {key}.')
+
+    def job_result(self, key, job_key):
+        jobs = self.cache.get(key)
+        if jobs:
+            job = jobs.get(job_key)
+            if job and job.get('status') == 'COMPLETE':
+                return job.get('result')
+            
 
     def poll_cache(self, key, job_key, timeout, wait):
         start = datetime.datetime.now()

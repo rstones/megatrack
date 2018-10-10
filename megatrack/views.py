@@ -180,7 +180,7 @@ def get_tract(tract_code):
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
     
-    # jquery_unparam qcurrent_app.logger.info(f'Mean MD file path: {MD_file_path}')uery string
+    # jquery_unparam query string
     # check request query is valid
     request_query = jquery_unparam(query_string_decoded)
     request_query.pop('file_type', None) # remove query param required for correct parsing of nii.gz client side
@@ -207,7 +207,7 @@ def get_tract(tract_code):
     if cache.job_status(cache_key, tract_code) == 'COMPLETE':
         current_app.logger.info(f'{tract_code} job complete.')
         # job has already been run, get file_path from cache
-        file_path = cache.cache.get(cache_key).get(tract_code).get('result')
+        file_path = cache.job_result(cache_key, tract_code)
         file_path = file_path_relative_to_root_path(file_path)
         return send_file(file_path,
                          as_attachment=True,
@@ -312,7 +312,7 @@ def get_dynamic_tract_info(tract_code, threshold):
     if cache.job_status(cache_key, 'mean_maps') == 'COMPLETE':
         current_app.logger.info('mean_maps job complete ')
         # get FA and MD maps from cache
-        mean_maps = cache.cache.get(cache_key).get('mean_maps').get('result')
+        mean_maps = cache.job_result(cache_key, 'mean_maps')
         FA_file_path = mean_maps.get('FA')
         MD_file_path = mean_maps.get('MD')
     else:
@@ -342,7 +342,7 @@ def get_dynamic_tract_info(tract_code, threshold):
     
     if cache.job_status(cache_key, tract_code) == 'COMPLETE':
         # get density map
-        tract_file_path = cache.cache.get(cache_key).get(tract_code).get('result')
+        tract_file_path = cache.job_result(cache_key, tract_code)
     else:
         # restart tract_code job
         file_path_data = dbu.density_map_file_path_data(request_query)
