@@ -439,6 +439,7 @@
 
 #metrics-help-popup-description {
     text-align: left;
+    line-height: 22px;
 }
 
 #metrics-help-popup-description > ul {

@@ -51,11 +51,11 @@ mgtrk.AtlasTractTabs = (function() {
                                 </div>
                                 <div class="tab-content-tract-metrics">
                                     <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Probabalistic metrics:</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Probability map analysis</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-prob-metrics"></div>
                                     </div>
                                     <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Population metrics:</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Demographic analysis</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
@@ -199,22 +199,40 @@ mgtrk.AtlasTractTabs = (function() {
                     return;
                 }
                 const updatePopupContent = function() {
-                    $('#metrics-help-popup-title').html('Probabilistic metrics');
-                    $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
-                                                                are calculated as follows:
-                                                                <ul>
-                                                                    <li>We obtain a tract population map from binarised density maps
-                                                                     of individual subject in a certain demographic.</li>
-                                                                    <li>The individual MD and FA maps for the subjects in a demographic
-                                                                     are averaged.</li>
-                                                                    <li>We use the thresholded tract population map (taking only voxels above
-                                                                     a given probability) as a mask for the averaged MD (FA) map.</li>
-                                                                     <li>A weighted mean of the unmasked averaged MD (FA) map voxels is then 
-                                                                     taken. The tract population voxels are used as the weights.</li>
-                                                                     <li>The volume of the tract is calculated by counting the number of
-                                                                     voxels in the thresholded tract population map.</li>
-                                                                     <li>All maps are in MNI space.</li>
-                                                                </ul>`);
+                    $('#metrics-help-popup-title').html('Probability map analysis');
+                    $('#metrics-help-popup-description').html(`Results for the tract volume (vol), mean diffusivity (MD) and fractional
+                                                                anisotropy (FA) are obtained from the tract probability map displayed in
+                                                                the viewer. The probability map is an average of the binarised tract
+                                                                density maps for each subject returned in the currently selected query.
+                                                                <br><br>
+                                                                Before calculating the results a threshold is applied to the probability
+                                                                map to exclude voxels below the lower limit of the selected probability
+                                                                range.
+                                                                <br><br>
+                                                                The tract volume is calculated by multiplying the number of voxels with
+                                                                probability exceeding the threshold by the volume of each voxel
+                                                                (2mm x 2mm x 2mm = 8mm<sup>3</sup>).
+                                                                <br><br>
+                                                                The tract MD and FA are weighted averages of the MD / FA values (from
+                                                                averaged MD and FA maps of all subjects in the current query)
+                                                                of each voxel with probability above the threshold. The weights are the
+                                                                probabilities at each voxel.
+                                                                `);
+//                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA)
+//                                                                 are calculated as follows:
+//                                                                 <ul>
+//                                                                     <li>We obtain a tract probability map from binarised density maps
+//                                                                      of individual subjects in a certain demographic.</li>
+//                                                                     <li>The individual MD and FA maps for the subjects in a demographic
+//                                                                      are averaged.</li>
+//                                                                     <li>We use the thresholded tract population map (taking only voxels above
+//                                                                      a given probability) as a mask for the averaged MD (FA) map.</li>
+//                                                                      <li>A weighted mean of the unmasked averaged MD (FA) map voxels is then 
+//                                                                      taken. The tract population voxels are used as the weights.</li>
+//                                                                      <li>The volume of the tract is calculated by counting the number of
+//                                                                      voxels in the thresholded tract population map.</li>
+//                                                                      <li>All maps are in MNI space.</li>
+//                                                                 </ul>`);
                 };
                 metricsHelpPopup.open(updatePopupContent);
             });
@@ -224,20 +242,30 @@ mgtrk.AtlasTractTabs = (function() {
                     return;
                 }
                 const updatePopupContent = function() {
-                    $('#metrics-help-popup-title').html('Population metrics');
-                    $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA) are
-                                                                are calculated as follows:
-                                                                <ul>
-                                                                    <li>The volumes of the individual subject tract density maps are averaged
-                                                                     to get the mean volume.</li>
-                                                                    <li>For individual subjects the tract density map is used as a mask for
-                                                                     MD (FA) map.</li>
-                                                                    <li>A weighted average of the unmasked MD (FA) voxels is carried out
-                                                                     using tract voxel densities as weights.</li>
-                                                                    <li>The individual subject MD (FA) results are then averaged among the 
-                                                                    subjects in the query.</li>
-                                                                    <li>All maps are in native space.</li>
-                                                                </ul>`);
+                    $('#metrics-help-popup-title').html('Demographic analysis');
+                    $('#metrics-help-popup-description').html(`Results for the tract volume (vol), mean diffusivity (MD) and fractional 
+                                                                anisotropy (FA) are obtained for individual subjects before being averaged
+                                                                over the queried demographic.
+                                                                <br><br>
+                                                                The tract volume is calculated by multiplying the number of non-zero voxels
+                                                                in a subjects density map by the volume of each voxel
+                                                                (2mm x 2mm x 2mm = 8mm<sup>3</sup>).
+                                                                <br><br>
+                                                                The tract MD and FA are weighted averages of the MD / FA values of each voxel
+                                                                occupied by the tract. The weights are the streamline densities at each voxel.`);
+//                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA)
+//                                                                 are calculated as follows:
+//                                                                 <ul>
+//                                                                     <li>The volumes of the individual subject tract density maps are averaged
+//                                                                      to get the mean volume.</li>
+//                                                                     <li>For individual subjects the tract density map is used as a mask for
+//                                                                      MD (FA) map.</li>
+//                                                                     <li>A weighted average of the unmasked MD (FA) voxels is carried out
+//                                                                      using tract voxel densities as weights.</li>
+//                                                                     <li>The individual subject MD (FA) results are then averaged among the 
+//                                                                     subjects in the query.</li>
+//                                                                     <li>All maps are in native space.</li>
+//                                                                 </ul>`);
                 };
                 metricsHelpPopup.open(updatePopupContent);
             });
