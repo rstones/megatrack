@@ -1,5 +1,6 @@
 import os
 import datetime
+import json
 
 from flask import render_template, current_app, Blueprint, request, make_response, send_file, jsonify
 from werkzeug.utils import secure_filename
@@ -30,22 +31,21 @@ def allowed_filename(filename):
 
 @lesion.route('/lesion_upload', methods=['POST'])
 def lesion_upload():
-    current_app.logger.info('Received request to upload lesion map.')
+    current_app.logger.info('Uploading lesion map...')
     if 'lesionmap' not in request.files:
-        current_app.logger.info('Request did not contain a file part.')
+        current_app.logger.warn('Request did not contain a file part.')
         return 'Request did not contain a file part', 400
     file = request.files['lesionmap']
     if file.filename == '':
-        current_app.logger.info('No file selected.')
+        current_app.logger.warn('No file selected.')
         return 'No file selected', 400
     
     filename = secure_filename(file.filename)
     
     if not allowed_filename(filename):
-        current_app.logger.info(f'Invalid filename extension for uploaded file {filename}')
+        current_app.logger.warn(f'Invalid filename extension for uploaded file {filename}')
         return f'Invalid filename extension {filename.split(".", 1)[1]}', 400
     
-    current_app.logger.info(f'Filename allowed so saving lesion map {filename}...')
     filename_components = filename.split('.', 1)
     filename = filename_components[0]
     extension = filename_components[1]
@@ -56,10 +56,13 @@ def lesion_upload():
     lesion_upload = LesionUpload(filename, saved_filename)
     #db.session.add(lesion_upload)
     
+    current_app.logger.info(f'Filename allowed so saving lesion map {filename} with id {lesion_upload.lesion_id}.')
+    
     #path = os.path.join(current_app.config['LESION_UPLOAD_FOLDER'], saved_filename)
     file.save(saved_filename)
     
     # now check the nifti MNI transformation matches template
+    current_app.logger.info('Checking lesion is in correct format...')
     
     lesion_map = nib.load(saved_filename) #nib.load(file_path_relative_to_root_path(saved_filename))
     lesion_map_header = lesion_map.header
@@ -71,12 +74,14 @@ def lesion_upload():
         lesion_upload.dim_match = 'N'
         db.session.add(lesion_upload)
         db.session.commit()
+        current_app.logger.warn(f'Nifti dimensions do not match template for lesion id {lesion_upload.lesion_id}.')
         return 'Nifti dimensions do not match template', 400
     elif not np.all(lesion_map_header['pixdim'][1:4] == template_header['pixdim'][1:4]):
         lesion_upload.dim_match = 'Y'
         lesion_upload.pixdim_match = 'N'
         db.session.add(lesion_upload)
         db.session.commit()
+        current_app.logger.warn(f'Voxel size does not match template for lesion id {lesion_upload.lesion_id}.')
         return 'Voxel size does not match template', 400
     elif npla.det(lesion_map_affine) < 0: # determinant of the affine should be positive for RAS coords
         lesion_upload.dim_match = 'Y'
@@ -84,6 +89,7 @@ def lesion_upload():
         lesion_upload.RAS = 'N'
         db.session.add(lesion_upload)
         db.session.commit()
+        current_app.logger.warn(f'Nifti not in RAS coordinates for lesion id {lesion_upload.lesion_id}.')
         return 'Nifti not in RAS coordinates', 400
     
     lesion_upload.dim_match = 'Y'
@@ -101,24 +107,35 @@ def lesion_upload():
             'message': 'Lesion map successfully uploaded'
         }
     return make_response(jsonify(response_object)), 200
-        
+
+
 @lesion.route('/lesion/<lesion_code>')
 def get_lesion(lesion_code):
-    lesion_upload = LesionUpload.query.get(lesion_code) #filter(LesionUpload.lesion_id == lesion_code).all()[0]
-    #return send_file('../'+current_app.config['LESION_UPLOAD_FOLDER']+lesion_code+'.nii.gz', as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
-    return send_file('../'+lesion_upload.saved_file_name, as_attachment=True, attachment_filename=lesion_code+'.nii.gz', conditional=True, add_etags=True)
+    lesion_upload = LesionUpload.query.get(lesion_code)
+    current_app.logger.info(f'Getting lesion map with id {lesion_upload.lesion_id}')
+    return send_file(f'../{lesion_upload.saved_file_name}',
+                     as_attachment=True,
+                     attachment_filename=f'{lesion_code}.nii.gz',
+                     conditional=True,
+                     add_etags=True)
+
 
 @lesion.route('/lesion/example')
 def get_example_lesion():
-    current_app.logger.info('Fetching example lesion...')
+    current_app.logger.info('Fetching example lesion map...')
     data_dir = current_app.config['DATA_FILE_PATH']
     file_path = file_path_relative_to_root_path(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
     try:
-        r = send_file(file_path, as_attachment=True, attachment_filename=du.EXAMPLE_LESION_FILE_NAME, conditional=True, add_etags=True)
+        r = send_file(file_path,
+                      as_attachment=True,
+                      attachment_filename=du.EXAMPLE_LESION_FILE_NAME,
+                      conditional=True,
+                      add_etags=True)
         r.make_conditional(request)
         return r
     except FileNotFoundError:
         return "Could not find example lesion!", 500
+
 
 @lesion.route('/lesion_analysis/<lesion_code>/<threshold>')
 def lesion_analysis(lesion_code, threshold):
@@ -127,16 +144,20 @@ def lesion_analysis(lesion_code, threshold):
     
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
+    
+    current_app.logger.info(f'Running lesion analysis for lesion id {lesion_code}, threshold {threshold} and query {json.dumps(request_query, indent=4)}')
+    
     #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
     file_path_data = dbu.density_map_file_path_data(request_query)
     if not len(file_path_data):
+        current_app.logger.info(f'No subjects in query {json.dumps(request_query, indent=4)}')
         return 'No subjects in dataset query', 400
     
     try:
         threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
     except ValueError:
-        current_app.logger.info('Invalid threshold value applied returning 404...')
-        return 'Invalid threshold value ' + str(threshold) + ' sent to server.', 404
+        current_app.logger.info(f'Invalid threshold value {threshold} applied, returning 404...')
+        return f'Invalid threshold value {threshold} sent to server.', 404
     
     data_dir = current_app.config['DATA_FILE_PATH']
     
@@ -144,8 +165,8 @@ def lesion_analysis(lesion_code, threshold):
         lesion_data = du.get_nifti_data(f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}')
     else:
         lesion_upload = LesionUpload.query.get(lesion_code)
-        # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
         if not lesion_upload:
+            current_app.logger.warn(f'Lesion does not exist in database with code {lesion_code}')
             return 'Lesion code does not exist. Please re-upload lesion.', 500
         lesion_data = du.get_nifti_data(lesion_upload.saved_file_name)
         
@@ -173,24 +194,15 @@ def lesion_analysis(lesion_code, threshold):
                 # recalculate density map
                 file_path_data = dbu.density_map_file_path_data(request_query)
                 if len(file_path_data) > 0:
+                    current_app.logger.info(f'Adding job {tract.code}')
                     cache.add_job(cache_key, tract.code)
                     data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
                     tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-                    current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract.code)
                     cache.job_complete(cache_key, tract.code, tract_file_path)
+                    current_app.logger.info(f'Job {tract.code} complete')
                 else:
+                    current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
                     return 'No subjects returned for the current query', 404
-            
-            
-#             if not cached_data or not cu.check_valid_filepaths_in_cache(cached_data, tract.code):
-#                 tract_code = tract.code
-#                 tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-#                 current_app.logger.info('Caching temp file path of averaged density map for tract ' + tract_code)
-#                 cached_data = cu.add_to_cache_dict(cached_data, {tract_code:tract_file_path})
-#                 current_app.cache.set(cache_key, cached_data)
-#             else:
-#                 tract_file_path = cached_data[tract.code]
-                
             
 #             # perform weighted overlap: lesion * tract
 #             tract_data = du.get_nifti_data(tract_file_path)
@@ -257,9 +269,12 @@ def lesion_analysis(lesion_code, threshold):
 def lesion_tract_disconnect(lesion_code, tract_code):
     # get the request query
     request_query = jquery_unparam(request.query_string.decode('utf-8'))
-    #subject_ids_dataset_path = dbu.subject_id_dataset_file_path(request_query)
+    
+    current_app.logger.info(f'Running lesion tract disconnect for lesion {lesion_code}, tract {tract_code} and query {json.dumps(request_query, indent=4)}')
+    
     file_path_data = dbu.density_map_file_path_data(request_query)
     if not len(file_path_data):
+        current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
         return 'No subjects in dataset query', 400
     
     data_dir = current_app.config['DATA_FILE_PATH']
@@ -268,11 +283,19 @@ def lesion_tract_disconnect(lesion_code, tract_code):
         lesion_file_name = f'{data_dir}/{du.EXAMPLE_LESION_FILE_NAME}'
     else:
         lesion_upload = LesionUpload.query.get(lesion_code)
+        
+        if not lesion_upload:
+            current_app.logger.warn(f'Lesion does not exist in database with code {lesion_code}')
+            return 'Lesion code does not exist. Please re-upload lesion.', 500
+        
         lesion_file_name = lesion_upload.saved_file_name
-    # if lesion code doesn't exist in db, return error saying 'please re-upload lesion' or something
-    lesion_data = du.get_nifti_data(lesion_file_name)
+        lesion_data = du.get_nifti_data(lesion_file_name)
     
-    tract = Tract.query.get(tract_code)
+    # validate tract code
+    tract = dbu.get_tract(tract_code) 
+    if not tract:
+        current_app.logger.warn(f'Nonexistent tract code {tract_code}, returning 400...')
+        return f'The requested tract {tract_code} does not exist', 400
     
     num_streamlines_per_subject = []
     disconnected_streamlines_per_subject = []
