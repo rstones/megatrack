@@ -134,6 +134,11 @@ class JobCache(object):
             if job and job.get('status') == 'COMPLETE':
                 return job.get('result')
             
+    def remove_job(self, key, job_key):
+        jobs = self.cache.get(key)
+        if jobs:
+            jobs.pop(job_key, None)
+                
 
     def poll_cache(self, key, job_key, timeout, wait):
         start = datetime.datetime.now()

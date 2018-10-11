@@ -116,12 +116,38 @@ class JobCacheTestCase(unittest.TestCase):
         assert status == 'IN_PROGRESS'
         
         # test when job doesn't exist (but some jobs do exist for key)
-        #self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
         status = job_cache.job_status(self.TEST_KEY, self.JOB2_KEY)
         assert status is None
         
         # test when no jobs exist for key
         cache.flush()
         status = job_cache.job_status(self.TEST_KEY, self.JOB2_KEY)
-        #self.assertRaises(KeyError, job_cache.job_status, self.TEST_KEY, self.JOB2_KEY)
         assert status is None
+        
+    def test_remove_job(self):
+        cache = CacheMock()
+        job_cache = JobCache(cache)
+        
+        # test when job exists
+        cache.set(self.TEST_KEY, {
+            self.JOB1_KEY: {
+                'status': 'IN_PROGRESS',
+                'result': ''
+            }
+        })
+        job_cache.remove_job(self.TEST_KEY, self.JOB1_KEY)
+        assert cache.get(self.TEST_KEY).get(self.JOB1_KEY) is None
+        
+        # test when job doesn't exist (some jobs do exist for key)
+        cache.set(self.TEST_KEY, {
+            self.JOB1_KEY: {
+                'status': 'IN_PROGRESS',
+                'result': ''
+            }
+        })
+        job_cache.remove_job(self.TEST_KEY, self.JOB2_KEY)
+        assert cache.get(self.TEST_KEY).get(self.JOB1_KEY) is not None
+        
+        # test when no jobs exist for key
+        cache.flush()
+        job_cache.remove_job(self.TEST_KEY, self.JOB1_KEY)
