@@ -78,7 +78,17 @@
 }
 
 #run-analysis-popup-prob-threshold-slider-wrapper {
+    width: 380px;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: 12px;
+}
+
+#run-analysis-popup-prob-threshold-slider-handle {
+    width: 1.9em;
+    text-align: center;
+    top: -.25em;
+    line-height: 1.2em;
 }
 
 #run-analysis-popup-ok {

@@ -219,8 +219,8 @@ mgtrk.LesionMapping = (function() {
         
         var runAnalysisPopupContent = function(popupContentId) {
             $(`#${popupContentId}`).append(`<div id="run-analysis-popup-text">
-                                                Select the minimum probability threshold for calculating the overlap
-                                                 score during lesion analysis.
+                                                Select the lower probability threshold for determining the overlap
+                                                between the tract probability maps and the uploaded lesion.
                                             </div>
                                             <div class="clear"></div>
                                             <div id="run-analysis-popup-prob-threshold-slider-wrapper">
