@@ -63,7 +63,7 @@ mgtrk.LesionTractTabs = (function() {
                                         <div id="overlap-score-row">
                                             <div class="overlap-score-label">Overlap score: </div> ${state.overlapScore.toFixed(2)} 
                                         </div>
-                                        <div id="overlap-score-help" class="help-icon clickable"></div>
+                                        <div class="overlap-score-help help-icon clickable"></div>
                                         <div class="clear"></div>
                                         <div id="${state.code}-run-disconnect-button" class="run-disconnect-button button clickable">Calculate tract disconnection</div>
                                     </div>
@@ -195,7 +195,7 @@ mgtrk.LesionTractTabs = (function() {
                 infoPopup.open(state);
             });
             
-            $('#overlap-score-help').on('click', function(event) {
+            $('.overlap-score-help').on('click', function(event) {
                 overlapScorePopup.open();
             });
             
