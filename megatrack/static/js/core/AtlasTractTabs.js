@@ -51,11 +51,11 @@ mgtrk.AtlasTractTabs = (function() {
                                 </div>
                                 <div class="tab-content-tract-metrics">
                                     <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Probability map analysis</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Probability map<br>analysis</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-prob-metrics"></div>
                                     </div>
                                     <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
-                                        <span class="metrics-label">Demographic analysis</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
+                                        <span class="metrics-label">Demographic<br>analysis</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
                                         <div id="${state.code}-pop-metrics"></div>
                                     </div>
                                 </div>
