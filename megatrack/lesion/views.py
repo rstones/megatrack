@@ -289,7 +289,8 @@ def lesion_tract_disconnect(lesion_code, tract_code):
             return 'Lesion code does not exist. Please re-upload lesion.', 500
         
         lesion_file_name = lesion_upload.saved_file_name
-        lesion_data = du.get_nifti_data(lesion_file_name)
+        
+    lesion_data = du.get_nifti_data(lesion_file_name)
     
     # validate tract code
     tract = dbu.get_tract(tract_code) 
