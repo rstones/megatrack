@@ -1,6 +1,6 @@
 import unittest
 from megatrack.utils.cache_utils import JobCache
-from megatrack.test.cache_mock import CacheMock
+from megatrack.test.cache_mock import CacheMock, LockMock
 
 class JobCacheTestCase(unittest.TestCase):
     
@@ -10,7 +10,8 @@ class JobCacheTestCase(unittest.TestCase):
     
     def test_add_job(self):
         cache = CacheMock()
-        job_cache = JobCache(cache)
+        lock = LockMock()
+        job_cache = JobCache(cache, lock)
         
         # test when no jobs in cache for key
         job_cache.add_job(self.TEST_KEY, self.JOB1_KEY)
@@ -29,8 +30,8 @@ class JobCacheTestCase(unittest.TestCase):
     
     def test_job_complete(self):
         cache = CacheMock()
-        job_cache = JobCache(cache
-                             )
+        lock = LockMock()
+        job_cache = JobCache(cache, lock)
         # test when job exists and is in progress
         cache.set(self.TEST_KEY, {
             self.JOB1_KEY: {
@@ -64,7 +65,8 @@ class JobCacheTestCase(unittest.TestCase):
     
     def test_job_failed(self):
         cache = CacheMock()
-        job_cache = JobCache(cache)
+        lock = LockMock()
+        job_cache = JobCache(cache, lock)
         
         # test when job exists and is in progress
         cache.set(self.TEST_KEY, {
@@ -103,7 +105,8 @@ class JobCacheTestCase(unittest.TestCase):
     
     def test_job_status(self):
         cache = CacheMock()
-        job_cache = JobCache(cache)
+        lock = LockMock()
+        job_cache = JobCache(cache, lock)
         
         # test when job exists
         cache.set(self.TEST_KEY, {
@@ -126,7 +129,8 @@ class JobCacheTestCase(unittest.TestCase):
         
     def test_remove_job(self):
         cache = CacheMock()
-        job_cache = JobCache(cache)
+        lock = LockMock()
+        job_cache = JobCache(cache, lock)
         
         # test when job exists
         cache.set(self.TEST_KEY, {

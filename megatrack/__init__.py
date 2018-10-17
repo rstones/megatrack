@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from .alchemy_encoder import AlchemyEncoder
 from werkzeug.contrib.cache import RedisCache
+from redis.lock import Lock
 from flask_bcrypt import Bcrypt
 from flask_assets import Environment, Bundle
 
@@ -12,6 +13,7 @@ application.json_encoder = AlchemyEncoder
 application.cache = RedisCache(application.config['REDIS_HOST'],
                                application.config['REDIS_PORT'], \
                                default_timeout=application.config['CACHE_TIMEOUT'])
+application.cache_lock = Lock(application.cache._client, 'mgtrk_worker_lock', timeout=1)
 
 # set up authentication
 bcrypt = Bcrypt(application)

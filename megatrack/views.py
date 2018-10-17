@@ -109,7 +109,7 @@ def query_report():
 @megatrack.route('/generate_mean_maps')
 def generate_mean_maps():
     # instantiate JobCache
-    cache = JobCache(current_app.cache)
+    cache = JobCache(current_app.cache, current_app.cache_lock)
     
     # construct cache key
     query_string_decoded = request.query_string.decode('utf-8')
@@ -151,7 +151,7 @@ def generate_mean_maps():
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
     
-    cache = JobCache(current_app.cache)
+    cache = JobCache(current_app.cache, current_app.cache_lock)
     
     # construct cache key
     query_string_decoded = request.query_string.decode('utf-8')
@@ -221,7 +221,7 @@ def get_tract(tract_code):
 def get_dynamic_tract_info(tract_code, threshold):
     current_app.logger.info(f'Getting dynamic tract info for tract {tract_code} and threshold {threshold}.')
     
-    cache = JobCache(current_app.cache)
+    cache = JobCache(current_app.cache, current_app.cache_lock)
     
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)

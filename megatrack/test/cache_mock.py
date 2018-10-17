@@ -1,8 +1,8 @@
 
 class CacheMock(object):
-    '''A mock of a memcached cache for unit testing. Exposes get and set methods which should act like 
-    the real cache in a very simplified way.
-    '''
+    """A mock of a redis cache for unit testing. Exposes get and set methods
+    which should act like the real cache in a very simplified way.
+    """
     
     def __init__(self):
         self.__cache = {}
@@ -21,3 +21,17 @@ class CacheMock(object):
         
     def get_cache(self):
         return self.__cache
+    
+
+    
+class LockMock(object):
+    """Mock of a lock for a redis cache for testing. Assumes lock is always
+    acquired and released successfully since tests currently run in single
+    process environment.
+    """
+    
+    def acquire(self):
+        return True
+    
+    def release(self):
+        return True

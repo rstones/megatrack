@@ -21,7 +21,7 @@ from megatrack.views import megatrack
 from megatrack.lesion.views import lesion
 from megatrack import views
 from megatrack.utils import data_utils as du
-from megatrack.test.cache_mock import CacheMock
+from megatrack.test.cache_mock import CacheMock, LockMock
 from megatrack.test.monkey_patch import monkey_patch
 from megatrack.test import mock_data as md
         
@@ -32,6 +32,7 @@ class MegatrackTestCase(TestCase):
         app.config.from_object('config.TestConfig')
         app.json_encoder = AlchemyEncoder
         app.cache = CacheMock()
+        app.cache_lock = LockMock()
         
         # configure assets to get templating to work
         assets = Environment(app)
