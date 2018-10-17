@@ -1,8 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-#from .models import db, AlchemyEncoder
 from .alchemy_encoder import AlchemyEncoder
-from werkzeug.contrib.cache import MemcachedCache, RedisCache
+from werkzeug.contrib.cache import RedisCache
 from flask_bcrypt import Bcrypt
 from flask_assets import Environment, Bundle
 
