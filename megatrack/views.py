@@ -122,20 +122,15 @@ def generate_mean_maps():
         current_app.logger.info(f'Could not parse param string {json.dumps(request_query, indent=4)}')
         return 'Could not parse query param string.', 400
     
-    # check if mean_maps job exists and what status it has
-    status = cache.job_status(cache_key, 'mean_maps')
+    status = cache.add_job_locked(cache_key, 'mean_maps')
     
-    if status and status in ['IN_PROGRESS', 'COMPLETE']:
-        # job exists, return
-        current_app.logger.info('mean_maps job in_progress or complete, returning...')
-        return 'Mean maps job in progress or complete', 204
-    else:
-        # job doesn't exist or has failed, calculate mean FA map
+    if status in ['PROCEED', 'FAILED', None]:
+        
         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
         
         if len(subject_ids_dataset_paths) > 0:
             current_app.logger.info(f'Adding mean_maps job for query {json.dumps(request_query, indent=4)}')
-            cache.add_job(cache_key, 'mean_maps')
+            cache.job_in_progress(cache_key, 'mean_maps')
             data_dir = current_app.config['DATA_FILE_PATH']
             mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
             mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
@@ -146,7 +141,40 @@ def generate_mean_maps():
             # no subjects returned in query
             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
             return 'No subjects returned in query', 204
-
+    
+    elif status in ['STAGED', 'IN_PROGRESS', 'COMPLETE']:
+        
+        current_app.logger.info('mean_maps job in_progress or complete, returning...')
+        return 'Mean maps job in progress or complete', 204
+    
+    else:
+        
+        return f'Unrecognised status {status} for job mean_maps with query {json.dumps(request_query, indent=4)}.', 500
+    
+#     # check if mean_maps job exists and what status it has
+#     status = cache.job_status(cache_key, 'mean_maps')
+#     
+#     if status and status in ['IN_PROGRESS', 'COMPLETE']:
+#         # job exists, return
+#         current_app.logger.info('mean_maps job in_progress or complete, returning...')
+#         return 'Mean maps job in progress or complete', 204
+#     else:
+#         # job doesn't exist or has failed, calculate mean FA map
+#         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+#         
+#         if len(subject_ids_dataset_paths) > 0:
+#             current_app.logger.info(f'Adding mean_maps job for query {json.dumps(request_query, indent=4)}')
+#             cache.add_job(cache_key, 'mean_maps')
+#             data_dir = current_app.config['DATA_FILE_PATH']
+#             mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+#             mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+#             cache.job_complete(cache_key, 'mean_maps', {'FA': mean_FA, 'MD': mean_MD})
+#             current_app.logger.info(f'mean_maps job complete for query {json.dumps(request_query, indent=4)}')
+#             return 'Mean maps created', 204
+#         else:
+#             # no subjects returned in query
+#             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+#             return 'No subjects returned in query', 204
     
 @megatrack.route('/tract/<tract_code>')
 def get_tract(tract_code):
@@ -173,34 +201,14 @@ def get_tract(tract_code):
         current_app.logger.warn(f'Nonexistent tract code {tract_code}, returning 400...')
         return f'The requested tract {tract_code} does not exist', 400
     
-    if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
-        current_app.logger.info(f'{tract_code} job in progress, waiting to complete...')
-        # poll cache waiting for complete status (max wait 15 secs before quitting)
-        timeout = 15
-        cache.poll_cache(cache_key, tract_code, timeout, 0.2)
-        
-        # set status to FAILED if not COMPLETE after 15 secs
-        if cache.job_status(cache_key, tract_code) != 'COMPLETE':
-            current_app.logger.warn(f'{tract_code} job failed to complete in {timeout} secs, setting job status to FAILED.')
-            cache.job_failed(cache_key, tract_code)
+    status = cache.add_job_locked(cache_key, tract_code)
     
-    if cache.job_status(cache_key, tract_code) == 'COMPLETE':
-        current_app.logger.info(f'{tract_code} job complete.')
-        # job has already been run, get file_path from cache
-        file_path = cache.job_result(cache_key, tract_code)
-        file_path = file_path_relative_to_root_path(file_path)
-        return send_file(file_path,
-                         as_attachment=True,
-                         attachment_filename=tract_code+'.nii.gz',
-                         conditional=True,
-                         add_etags=True)
+    if status in ['PROCEED', None]: # new job created or could not access cache
         
-    else:
-        # first time to run job or FAILED status
         file_path_data = dbu.density_map_file_path_data(request_query)
         if len(file_path_data) > 0:
             current_app.logger.info(f'Adding {tract_code} job for query {json.dumps(request_query, indent=4)}')
-            cache.add_job(cache_key, tract_code)
+            cache.job_in_progress(cache_key, tract_code)
             data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
             file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
             cache.job_complete(cache_key, tract_code, file_path)
@@ -213,7 +221,91 @@ def get_tract(tract_code):
                              add_etags=True)
         else:
             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
-            return "No subjects returned for the current query", 404    
+            return "No subjects returned for the current query", 404
+            
+    elif status in ['STAGED', 'IN_PROGRESS']: # another worker is running the job
+        
+        current_app.logger.info(f'{tract_code} job in progress, waiting to complete...')
+        # poll cache waiting for complete status (max wait 10 secs before quitting)
+        timeout = 10
+        cache.poll_cache(cache_key, tract_code, timeout, 0.2)
+        
+        # set status to FAILED if not COMPLETE after 10 secs
+        if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+            file_path = cache.job_result(cache_key, tract_code)
+            file_path = file_path_relative_to_root_path(file_path)
+            return send_file(file_path,
+                             as_attachment=True,
+                             attachment_filename=tract_code+'.nii.gz',
+                             conditional=True,
+                             add_etags=True)
+        else:
+            current_app.logger.warn(f'{tract_code} job did not complete in {timeout} secs, setting job status to FAILED.')
+            cache.job_failed(cache_key, tract_code)
+            return f'Job {tract_code} timed out for query {json.dumps(request_query, indent=4)}.', 500
+    
+    elif status == 'COMPLETE': # job has already been completed
+        
+        current_app.logger.info(f'{tract_code} job complete.')
+        # job has already been run, get file_path from cache
+        file_path = cache.job_result(cache_key, tract_code)
+        file_path = file_path_relative_to_root_path(file_path)
+        return send_file(file_path,
+                         as_attachment=True,
+                         attachment_filename=tract_code+'.nii.gz',
+                         conditional=True,
+                         add_etags=True)
+        
+    elif status == 'FAILED': # job was attempted but failed
+        
+        return f'Job {tract_code} failed for query {json.dumps(request_query, indent=4)}.', 500
+    
+    else:
+        
+        return f'Unrecognised status {status} for job {tract_code} with query {json.dumps(request_query, indent=4)}.', 500
+        
+    
+#     if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
+#         current_app.logger.info(f'{tract_code} job in progress, waiting to complete...')
+#         # poll cache waiting for complete status (max wait 15 secs before quitting)
+#         timeout = 15
+#         cache.poll_cache(cache_key, tract_code, timeout, 0.2)
+#         
+#         # set status to FAILED if not COMPLETE after 15 secs
+#         if cache.job_status(cache_key, tract_code) != 'COMPLETE':
+#             current_app.logger.warn(f'{tract_code} job failed to complete in {timeout} secs, setting job status to FAILED.')
+#             cache.job_failed(cache_key, tract_code)
+#     
+#     if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+#         current_app.logger.info(f'{tract_code} job complete.')
+#         # job has already been run, get file_path from cache
+#         file_path = cache.job_result(cache_key, tract_code)
+#         file_path = file_path_relative_to_root_path(file_path)
+#         return send_file(file_path,
+#                          as_attachment=True,
+#                          attachment_filename=tract_code+'.nii.gz',
+#                          conditional=True,
+#                          add_etags=True)
+#         
+#     else:
+#         # first time to run job or FAILED status
+#         file_path_data = dbu.density_map_file_path_data(request_query)
+#         if len(file_path_data) > 0:
+#             current_app.logger.info(f'Adding {tract_code} job for query {json.dumps(request_query, indent=4)}')
+#             cache.add_job(cache_key, tract_code)
+#             data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
+#             file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+#             cache.job_complete(cache_key, tract_code, file_path)
+#             current_app.logger.info(f'{tract_code} job complete for query {json.dumps(request_query, indent=4)}')
+#             file_path = file_path_relative_to_root_path(file_path)
+#             return send_file(file_path,
+#                              as_attachment=True,
+#                              attachment_filename=tract_code+'.nii.gz',
+#                              conditional=True,
+#                              add_etags=True)
+#         else:
+#             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+#             return "No subjects returned for the current query", 404    
 
 
 @jsonapi
@@ -251,7 +343,7 @@ def get_dynamic_tract_info(tract_code, threshold):
         current_app.logger.info(f'mean_maps job in progress waiting for job to finish...')
         # poll cache until COMPLETE
         # set status to failed if waiting 30 secs
-        timeout = 30
+        timeout = 20
         cache.poll_cache(cache_key, 'mean_maps', timeout, 0.2)
         
         if cache.job_status(cache_key, 'mean_maps') != 'COMPLETE':
@@ -285,8 +377,8 @@ def get_dynamic_tract_info(tract_code, threshold):
     if cache.job_status(cache_key, tract_code) == 'IN_PROGRESS':
         current_app.logger.info(f'{tract_code} job in progress, waiting for job to finish...')
         # poll cache until COMPLETE
-        # set status to failed if waiting over 15 secs
-        cache.poll_cache(cache_key, tract_code, 15, 0.2)
+        # set status to failed if waiting over 10 secs
+        cache.poll_cache(cache_key, tract_code, 10, 0.2)
         if cache.job_status(cache_key, tract_code) != 'COMPLETE':
             cache.job_failed(cache_key, tract_code)
     

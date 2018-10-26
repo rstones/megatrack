@@ -181,7 +181,7 @@ def lesion_analysis(lesion_code, threshold):
     def check_lesion_tract_overlaps(tracts):
         
         #cached_data = current_app.cache.get(cache_key)
-        cache = JobCache(current_app.cache)
+        cache = JobCache(current_app.cache, current_app.cache_lock)
         
         for tract in tracts:
             # average density maps for this tract based on current query

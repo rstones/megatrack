@@ -561,7 +561,7 @@ class MegatrackTestCase(TestCase):
         
         resp = self.tract_test_response(md.t1_code, md.brc_atlas_males_query)
         
-        self.assert200(resp)            
+        self.assert200(resp)   
         assert md.t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
         assert current_app.cache.get(md.brc_atlas_males_query) # assert cache populated
         

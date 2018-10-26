@@ -13,7 +13,10 @@ application.json_encoder = AlchemyEncoder
 application.cache = RedisCache(application.config['REDIS_HOST'],
                                application.config['REDIS_PORT'], \
                                default_timeout=application.config['CACHE_TIMEOUT'])
-application.cache_lock = Lock(application.cache._client, 'mgtrk_worker_lock', timeout=1)
+application.cache_lock = Lock(application.cache._client,
+                              'mgtrk_worker_lock',
+                              timeout=0.2,
+                              blocking_timeout=0.2)
 
 # set up authentication
 bcrypt = Bcrypt(application)
