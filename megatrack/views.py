@@ -125,17 +125,27 @@ def generate_mean_maps():
     status = cache.add_job_locked(cache_key, 'mean_maps')
     
     if status in ['PROCEED', 'FAILED', None]:
-        
+        current_app.logger.info(f'Job status is {status}')
         subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
         
         if len(subject_ids_dataset_paths) > 0:
-            current_app.logger.info(f'Adding mean_maps job for query {json.dumps(request_query, indent=4)}')
-            cache.job_in_progress(cache_key, 'mean_maps')
+            
+            if status:
+                current_app.logger.info(f'Adding mean_maps job for query {json.dumps(request_query, indent=4)}')
+                cache.job_in_progress(cache_key, 'mean_maps')
+            else:
+                current_app.logger.info(f'generating mean maps for query {json.dumps(request_query, indent=4)}')
+                
             data_dir = current_app.config['DATA_FILE_PATH']
             mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
             mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
-            cache.job_complete(cache_key, 'mean_maps', {'FA': mean_FA, 'MD': mean_MD})
-            current_app.logger.info(f'mean_maps job complete for query {json.dumps(request_query, indent=4)}')
+            
+            if status:
+                cache.job_complete(cache_key, 'mean_maps', {'FA': mean_FA, 'MD': mean_MD})
+                current_app.logger.info(f'mean_maps job complete for query {json.dumps(request_query, indent=4)}')
+            else:
+                current_app.logger.info(f'Finished generating mean maps for query {json.dumps(request_query, indent=4)}')
+                
             return 'Mean maps created', 204
         else:
             # no subjects returned in query
@@ -204,15 +214,26 @@ def get_tract(tract_code):
     status = cache.add_job_locked(cache_key, tract_code)
     
     if status in ['PROCEED', None]: # new job created or could not access cache
-        
+        current_app.logger.info(f'Job status is {status}')
         file_path_data = dbu.density_map_file_path_data(request_query)
+        
         if len(file_path_data) > 0:
-            current_app.logger.info(f'Adding {tract_code} job for query {json.dumps(request_query, indent=4)}')
-            cache.job_in_progress(cache_key, tract_code)
+            
+            if status:
+                current_app.logger.info(f'Adding {tract_code} job for query {json.dumps(request_query, indent=4)}')
+                cache.job_in_progress(cache_key, tract_code)
+            else:
+                current_app.logger.info(f'Calculating probability map for tract {tract_code} and query {json.dumps(request_query, indent=4)}')
+                
             data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
             file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
-            cache.job_complete(cache_key, tract_code, file_path)
-            current_app.logger.info(f'{tract_code} job complete for query {json.dumps(request_query, indent=4)}')
+            
+            if status:
+                cache.job_complete(cache_key, tract_code, file_path)
+                current_app.logger.info(f'{tract_code} job complete for query {json.dumps(request_query, indent=4)}')
+            else:
+                current_app.logger.info(f'Completed probabilty map for tract {tract_code} and query {json.dumps(request_query, indent=4)}')
+                
             file_path = file_path_relative_to_root_path(file_path)
             return send_file(file_path,
                              as_attachment=True,
