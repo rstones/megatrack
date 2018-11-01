@@ -87,27 +87,36 @@ def query_report():
     What data is to be sent back to client? Total no. subjects selected, no. per dataset, per gender, per handedness etc?
     Send a json object {"dataset": {"BRC_ATLAS": 10, "OTHER_DATASET": 9}, "gender": {"Male": 7, "Female":12}} to start with
     '''
-    cache = JobCache(current_app.cache, current_app.cache_lock)
-    
     current_app.logger.info('Getting query report...')
     query_string_decoded = request.query_string.decode('utf-8')
-    cache_key = cu.construct_cache_key(query_string_decoded)
+    request_query = jquery_unparam(query_string_decoded)
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not parse param string {json.dumps(request_query, indent=4)}.')
+        return 'Could not parse query param string.', 400
+    query_report = dbu.subjects_per_dataset(request_query)
+    return jsonify(query_report)
     
-    cached_data = cache.get(cache_key)
-    if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
-        current_app.logger.info('No cached data so getting it from database...')
-        request_query = jquery_unparam(query_string_decoded)
-                
-        if not check_request_query(request_query):
-            current_app.logger.info(f'Could not parse param string {json.dumps(request_query, indent=4)}.')
-            return 'Could not parse query param string.', 400
-        
-        query_report = dbu.subjects_per_dataset(request_query)
-        
-        cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
-        cache.set(cache_key, cached_data)
-    
-    return jsonify(cached_data['query_report'])
+#     cache = JobCache(current_app.cache, current_app.cache_lock)
+#     
+#     current_app.logger.info('Getting query report...')
+#     query_string_decoded = request.query_string.decode('utf-8')
+#     cache_key = cu.construct_cache_key(query_string_decoded)
+#     
+#     cached_data = cache.get(cache_key)
+#     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
+#         current_app.logger.info('No cached data so getting it from database...')
+#         request_query = jquery_unparam(query_string_decoded)
+#                 
+#         if not check_request_query(request_query):
+#             current_app.logger.info(f'Could not parse param string {json.dumps(request_query, indent=4)}.')
+#             return 'Could not parse query param string.', 400
+#         
+#         query_report = dbu.subjects_per_dataset(request_query)
+#         
+#         cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
+#         cache.set(cache_key, cached_data)
+#     
+#     return jsonify(cached_data['query_report'])
 
 @megatrack.route('/generate_mean_maps')
 def generate_mean_maps():
@@ -125,6 +134,7 @@ def generate_mean_maps():
         current_app.logger.info(f'Could not parse param string {json.dumps(request_query, indent=4)}')
         return 'Could not parse query param string.', 400
     
+    current_app.logger.info('Attempting to add job mean_maps')
     status = cache.add_job_locked(cache_key, 'mean_maps')
     
     if status in ['PROCEED', 'FAILED', None]:
