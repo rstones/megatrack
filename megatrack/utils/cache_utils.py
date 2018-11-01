@@ -61,33 +61,29 @@ class JobCache(object):
         self._cache = cache
         self._lock = lock
         
-#     def get(self, key):
-#         '''Get a value from the cache after acquiring a lock.
-#         
-#         Return False if lock cannot be acquired or the value does not exist in'''
-#         value = False
-#         if self._lock.acquire():
-#             try:
-#                 value = self._cache.get(key)
-#             finally:
-#                 self._lock.release()
-#                 
-#         return value
-# #         else:
-# #             return None # need to think more about what to do here
-#     
-#     def set(self, key, value):
-#         '''Set a key-value pair in the cache after acquiring a lock'''
-#         result = False
-#         if self._lock.acquire():
-#             try:
-#                 result = self._cache.set(key, value)
-#             finally:
-#                 self._lock.release()
-#                 
-#         return result
-# #         else:
-# #             return False # need to think more about what to do here
+    def get(self, key):
+        '''Get a value from the cache after acquiring a lock.
+         
+        Return None if lock cannot be acquired or the value does not exist in cache'''
+        value = None
+        if self._lock.acquire():
+            try:
+                value = self._cache.get(key)
+            finally:
+                self._lock.release()
+                 
+        return value
+     
+    def set(self, key, value):
+        '''Set a key-value pair in the cache after acquiring a lock'''
+        result = None
+        if self._lock.acquire():
+            try:
+                result = self._cache.set(key, value)
+            finally:
+                self._lock.release()
+                 
+        return result
 
     def add_job_locked(self, key, job_key):
         '''Adds a job to the cache with status STAGED (if it doesn't already exist)

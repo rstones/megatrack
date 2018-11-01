@@ -87,10 +87,13 @@ def query_report():
     What data is to be sent back to client? Total no. subjects selected, no. per dataset, per gender, per handedness etc?
     Send a json object {"dataset": {"BRC_ATLAS": 10, "OTHER_DATASET": 9}, "gender": {"Male": 7, "Female":12}} to start with
     '''
+    cache = JobCache(current_app.cache, current_app.cache_lock)
+    
     current_app.logger.info('Getting query report...')
     query_string_decoded = request.query_string.decode('utf-8')
     cache_key = cu.construct_cache_key(query_string_decoded)
-    cached_data = current_app.cache.get(cache_key)
+    
+    cached_data = cache.get(cache_key)
     if not cached_data or not cu.check_items_in_cache(cached_data, 'query_report', 'subject_file_paths'):
         current_app.logger.info('No cached data so getting it from database...')
         request_query = jquery_unparam(query_string_decoded)
@@ -102,7 +105,7 @@ def query_report():
         query_report = dbu.subjects_per_dataset(request_query)
         
         cached_data = cu.add_to_cache_dict(cached_data, {'query_report':query_report})
-        current_app.cache.set(cache_key, cached_data)
+        cache.set(cache_key, cached_data)
     
     return jsonify(cached_data['query_report'])
 
