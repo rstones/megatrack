@@ -141,6 +141,7 @@ def generate_mean_maps():
         else:
             # no subjects returned in query
             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+            cache.remove_job(cache_key, 'mean_maps')
             return 'No subjects returned in query', 204
     
     elif status in ['STAGED', 'IN_PROGRESS', 'COMPLETE']:
