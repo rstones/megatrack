@@ -204,7 +204,7 @@ class JobCache(object):
                 jobs = self._cache.get(key)
                 if jobs:
                     job = jobs.get(job_key)
-                    if job and job['status'] == self.IN_PROGRESS:
+                    if job and job['status'] in [self.STAGED, self.IN_PROGRESS]:
                         job['status'] = self.FAILED
                         job['error_message'] = err_msg
                         jobs[job_key] = job
