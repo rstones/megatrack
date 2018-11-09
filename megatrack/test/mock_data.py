@@ -90,6 +90,12 @@ s4_ravens_iq_raw = 55
 s4_file_path = 'TESTDATASETB004_MNI_'
 s4_mmse = None
 
+
+#### Subject tract metrics ####
+
+
+
+
 #### Neuroimaging data ####
 
 affine = np.eye(4)

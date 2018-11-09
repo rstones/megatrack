@@ -14,7 +14,7 @@ from werkzeug.datastructures import FileStorage, Headers
 from flask_assets import Environment, Bundle
 from werkzeug.wrappers import Response
 
-from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject
+from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject, SubjectTractMetrics
 from megatrack.lesion.models import LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
@@ -276,8 +276,6 @@ class MegatrackTestCase(TestCase):
         
         db.session.commit()
         
-        assert not current_app.cache.get(md.brc_atlas_females_query) # cache should be empty before request
-        
         # initial request
         resp = self.client.get(f'/query_report?{md.brc_atlas_females_query}')
         data = json.loads(resp.get_data())
@@ -287,19 +285,6 @@ class MegatrackTestCase(TestCase):
         assert len(data['dataset'].keys()) == 1
         assert list(data['dataset'].keys())[0] == md.d1_code
         assert int(data['dataset'][md.d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
-        
-        assert current_app.cache.get(md.brc_atlas_females_query) # data now cached after request
-        
-        # make another request, should get same result but getting data from the cache
-        resp = self.client.get(f'/query_report?{md.brc_atlas_females_query}')
-        data = json.loads(resp.get_data())
-        
-        assert isinstance(data, dict)
-        assert isinstance(data['dataset'], dict)
-        assert len(data['dataset'].keys()) == 1
-        assert list(data['dataset'].keys())[0] == md.d1_code
-        assert int(data['dataset'][md.d1_code]) == 1 # query string is for females in BRC_ATLAS dataset
-        assert current_app.cache.get(md.brc_atlas_females_query) # data now cached after request
         
     def test_query_report_no_subjects(self):
         # add only male subjects to database
@@ -653,7 +638,7 @@ class MegatrackTestCase(TestCase):
                     resp = self.client.get(f'tract/{md.t1_code}?{md.brc_atlas_males_query}&file_type=.nii.gz')
                     
         self.assert200(resp)
-        assert md.  t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
+        assert md.t1_code in file_path_to_test and 'nii.gz' in file_path_to_test
 
     def test_get_dynamic_tract_info_no_subjects(self):
         ''' Test 404 returned when no subjects in query. '''
@@ -732,6 +717,93 @@ class MegatrackTestCase(TestCase):
         
         resp = self.client.get(f'/get_tract_info/{md.t1_code}?{md.brc_atlas_males_query}')
         self.assert404(resp)
+        
+    def test_download_tract(self):
+        
+        # need to mock tract probability map + mean maps
+        # mock data in db
+        # monkey_patch nib.load, nib.save (for json file, may as well cache it for
+        #     downloads with same query but different tract)
+        # monkey patch Flask.send_file? (will attempt to create zip file in memory though
+        #     so hopefully won't need to do this)
+        
+        self.insert_tract_test_data()
+        
+        # insert subject_tract_metrics
+        s1t1m = SubjectTractMetrics(md.s1_subject_id,
+                                  md.m1_code,
+                                  md.t1_code,
+                                  0.5,
+                                  0.05,
+                                  0.5,
+                                  0.05,
+                                  3.)
+        db.session.add(s1t1m)
+        
+        s3t1m = SubjectTractMetrics(md.s3_subject_id,
+                                  md.m1_code,
+                                  md.t1_code,
+                                  0.5,
+                                  0.05,
+                                  0.5,
+                                  0.05,
+                                  3.)
+        db.session.add(s3t1m)
+        
+        db.session.commit()
+        
+        # mock cached file paths and added completed jobs to the cache
+        prob_map_file_path = f'{md.t1_code}_some_time.nii.gz'
+        MD_file_path = 'MD_some_time.nii.gz'
+        FA_file_path = 'FA_some_time.nii.gz'
+        current_app.cache.set(md.brc_atlas_males_query, {
+                                            md.t1_code: {
+                                                'status': 'COMPLETE',
+                                                'result': prob_map_file_path
+                                            },
+                                            'mean_maps': {
+                                                'status': 'COMPLETE',
+                                                'result': {
+                                                    'MD': MD_file_path,
+                                                    'FA': FA_file_path
+                                                }
+                                            }
+                                        })
+        
+        def nib_load_patch(file_path):
+            if file_path == prob_map_file_path:
+                return md.s1_t1
+            elif file_path == MD_file_path:
+                return md.s1_MD
+            elif file_path == FA_file_path:
+                return md.sd_FA
+            else:
+                raise ValueError(f'Unexpected file path {file_path} passed to nib_load_patch!')
+        
+        def nib_save_patch(img, file_path):
+            # pretend to do something with the nifti img
+            pass
+        
+        with monkey_patch(du.nib, 'load', nib_load_patch), \
+                monkey_patch(du.nib, 'save', nib_save_patch):
+            resp = self.client.get(f'/download/tract/{md.t1_code}?{md.brc_atlas_males_query}')
+            self.assert200(resp)
+            
+            # now unzip the file and check the query, subject data, metrics in the
+            # json file
+            # check the nifti file names in the zip archive 
+            
+    def test_download_tract_invalid_tract(self):
+        pass
+    
+    def test_download_tract_invalid_query(self):
+        pass
+    
+    def test_download_tract_tract_not_in_cache(self):
+        pass
+    
+    def test_download_tract_mean_maps_not_in_cache(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()

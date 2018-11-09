@@ -15,6 +15,7 @@ class CacheMock(object):
     
     def set(self, key, value, **kwargs):
         self.__cache[key] = value
+        return True
     
     def flush(self):
         self.__cache = {}

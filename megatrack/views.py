@@ -1,6 +1,8 @@
 import json
 import datetime
 import time
+import io
+import zipfile
 
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
@@ -182,6 +184,7 @@ def get_tract(tract_code):
     status = cache.add_job_locked(cache_key, tract_code)
     
     if status in ['PROCEED', None]: # new job created or could not access cache
+        
         current_app.logger.info(f'Job status is {status}')
         file_path_data = dbu.density_map_file_path_data(request_query)
         
@@ -201,7 +204,7 @@ def get_tract(tract_code):
                 current_app.logger.info(f'{tract_code} job complete for query {json.dumps(request_query, indent=4)}')
             else:
                 current_app.logger.info(f'Completed probabilty map for tract {tract_code} and query {json.dumps(request_query, indent=4)}')
-                
+            
             file_path = file_path_relative_to_root_path(file_path)
             return send_file(file_path,
                              as_attachment=True,
@@ -305,7 +308,7 @@ def get_dynamic_tract_info(tract_code, threshold):
         else:
             # no subjects returned in query
             current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
-            return 'No subjects returned in query', 204
+            return 'No subjects returned in query', 404
     
     elif mean_maps_status in ['STAGED', 'IN_PROGRESS']:
         
@@ -428,6 +431,169 @@ def get_static_tract_info(tract_code):
     else:
         current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
         return 'No subjects returned for the current query', 404
+    
+@megatrack.route('/download/tract/<tract_code>')
+def download_tract(tract_code):
+    current_app.logger.info(f'Downloading tract info with code {tract_code}')
+    
+    cache = JobCache(current_app.cache, current_app.cache_lock)
+    
+    query_string_decoded = request.query_string.decode('utf-8')
+    cache_key = cu.construct_cache_key(query_string_decoded)
+    
+    # validate request query and tract_code
+    request_query = jquery_unparam(query_string_decoded)
+    if not check_request_query(request_query):
+        current_app.logger.info(f'Could not properly parse param string {query_string_decoded} in /generate_mean_maps, returning 400...')
+        return 'Could not parse query param string.', 400
+    
+    # validate tract code
+    tract = dbu.get_tract(tract_code)
+    if not tract:
+        current_app.logger.info(f'Tract with code {tract_code} does not exist, returning 404...')
+        return 'The requested tract ' + tract_code + ' does not exist', 404
+    
+    # check tract prob map and mean maps are in cache
+    # if not in there, re-calculate them
+    # else get file paths from the cache
+    mean_maps_status = cache.add_job_locked(cache_key, 'mean_maps')
+    
+    if mean_maps_status in ['PROCEED', 'FAILED', None]:
+        # job ready to go or cache could not be accessed
+        current_app.logger.info(f'mean_maps job status is {mean_maps_status}. Generating mean_maps for query {json.dumps(request_query, indent=4)}')
+        subject_ids_dataset_paths = dbu.subject_id_dataset_file_path(request_query)
+        
+        if len(subject_ids_dataset_paths) > 0:
+            
+            if mean_maps_status: cache.job_in_progress(cache_key, 'mean_maps')
+                
+            data_dir = current_app.config['DATA_FILE_PATH']
+            mean_FA = du.subject_averaged_FA(subject_ids_dataset_paths, data_dir)
+            mean_MD = du.subject_averaged_MD(subject_ids_dataset_paths, data_dir)
+            
+            if mean_maps_status: cache.job_complete(cache_key, 'mean_maps', {'FA': mean_FA, 'MD': mean_MD})
+                
+        else:
+            # no subjects returned in query
+            current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+            return 'No subjects returned in query', 404
+    
+    elif mean_maps_status in ['STAGED', 'IN_PROGRESS']:
+        
+        current_app.logger.info(f'mean_maps job in progress waiting for job to finish...')
+        # poll cache until COMPLETE
+        # set status to failed if waiting 20 secs
+        timeout = 20
+        cache.poll_cache(cache_key, 'mean_maps', timeout, 0.2)
+        
+        if cache.job_status(cache_key, 'mean_maps') == 'COMPLETE':
+            current_app.logger.info('mean_maps job complete')
+            # get FA and MD maps from cache
+            mean_maps = cache.job_result(cache_key, 'mean_maps')
+            FA_file_path = mean_maps.get('FA')
+            MD_file_path = mean_maps.get('MD')
+        else:
+            current_app.logger.warn(f'mean_maps job failed to complete in {timeout} secs, setting job status to FAILED and returning...')
+            cache.job_failed(cache_key, 'mean_maps')
+            return 'mean_maps job FAILED', 500
+    
+    elif mean_maps_status == 'COMPLETE':
+        current_app.logger.info('mean_maps job complete')
+        # get FA and MD maps from cache
+        mean_maps = cache.job_result(cache_key, 'mean_maps')
+        FA_file_path = mean_maps.get('FA')
+        MD_file_path = mean_maps.get('MD')
+        
+    # check if tract probability map has been cached or needs to be recreated
+    tract_status = cache.add_job_locked(cache_key, tract_code)
+    
+    if tract_status in ['PROCEED', 'FAILED', None]: # new job created or could not access cache
+        current_app.logger.info(f'{tract_code} job status is {tract_status}, generating new probability map...')
+        file_path_data = dbu.density_map_file_path_data(request_query)
+        
+        if len(file_path_data) > 0:
+            
+            if tract_status:
+                current_app.logger.info(f'Adding {tract_code} job for query {json.dumps(request_query, indent=4)}')
+                cache.job_in_progress(cache_key, tract_code)
+            else:
+                current_app.logger.info(f'Calculating probability map for tract {tract_code} and query {json.dumps(request_query, indent=4)}')
+                
+            data_dir = current_app.config['DATA_FILE_PATH'] # file path to data folder
+            tract_file_path = du.generate_average_density_map(data_dir, file_path_data, tract, 'MNI')
+            
+            if tract_status:
+                cache.job_complete(cache_key, tract_code, tract_file_path)
+                current_app.logger.info(f'{tract_code} job complete for query {json.dumps(request_query, indent=4)}')
+            else:
+                current_app.logger.info(f'Completed probabilty map for tract {tract_code} and query {json.dumps(request_query, indent=4)}')
+            
+        else:
+            current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+            return "No subjects returned for the current query", 404
+            
+    elif tract_status in ['STAGED', 'IN_PROGRESS']: # another worker is running the job
+        
+        current_app.logger.info(f'{tract_code} job in progress, waiting to complete...')
+        # poll cache waiting for complete status (max wait 10 secs before quitting)
+        timeout = 10
+        cache.poll_cache(cache_key, tract_code, timeout, 0.2)
+        
+        # set status to FAILED if not COMPLETE after 10 secs
+        if cache.job_status(cache_key, tract_code) == 'COMPLETE':
+            tract_file_path = cache.job_result(cache_key, tract_code)
+        else:
+            current_app.logger.warn(f'{tract_code} job did not complete in {timeout} secs, setting job status to FAILED.')
+            cache.job_failed(cache_key, tract_code)
+            return f'Job {tract_code} timed out for query {json.dumps(request_query, indent=4)}.', 500
+    
+    elif tract_status == 'COMPLETE': # job has already been completed
+        
+        current_app.logger.info(f'{tract_code} job complete.')
+        # job has already been run, get file_path from cache
+        tract_file_path = cache.job_result(cache_key, tract_code)
+    
+    
+    # get subjects and demographic tract metrics from db
+    subjects = dbu.subjects_to_download(request_query)
+    subject_tract_metrics = dbu.subject_tract_metrics(request_query, tract.code)
+    if len(subject_tract_metrics) > 0:
+        averaged_metrics = np.mean(subject_tract_metrics, axis=0)
+    
+        results = {}
+        results['volume'] = averaged_metrics[0]
+        results['meanFA'] = averaged_metrics[1]
+        results['meanMD'] = averaged_metrics[2]
+        results['stdFA'] = averaged_metrics[3]
+        results['stdMD'] = averaged_metrics[4]
+        results['name'] = tract.name
+        results['description'] = tract.description
+    else:
+        current_app.logger.info(f'No subjects returned for query {json.dumps(request_query, indent=4)}')
+        return 'No subjects returned for the current query', 404
+    
+    data_dict = {
+        'query': request_query,
+        'subjects': subjects,
+        'demographic_data': subject_tract_metrics
+    }
+    
+    # construct json file with query, subjects, metrics in
+    data_json = io.BytesIO(bytes(json.dumps(data_dict), 'utf-8'))
+    # construct zip file containing: json file, tract prob map, mean maps (in memory)
+    output = io.BytesIO()
+    output_zip = zipfile.ZipFile(output, 'w')
+    output_zip.write(data_json, arcname='data.json')
+    output_zip.write(file_path_relative_to_root_path(tract_file_path), arcname=f'{tract_code}.nii.gz')
+    output_zip.write(file_path_relative_to_root_path(MD_file_path), arcname='MD.nii.gz')
+    output_zip.write(file_path_relative_to_root_path(FA_file_path), arcname='FA.nii.gz')
+    
+    # send file in request
+    return send_file(output_zip,
+                     as_attachment=True,
+                     attachment_filename=f'mgtrk_{tract_code}.zip',
+                     conditional=True,
+                     add_etags=True)
 
 @megatrack.route('/get_trk/<tract_code>')
 def get_trk(tract_code):

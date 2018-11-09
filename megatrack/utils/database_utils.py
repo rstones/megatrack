@@ -117,6 +117,19 @@ def density_map_file_path_data(request_query):
         data += np.append(sbjct_data, method_column, axis=1).tolist()
     return data
 
+def subjects_to_download(request_query):
+    subjects = []
+    for key in request_query:
+        dataset_filter = construct_subject_query_filter(request_query[key]['constraints'])
+        dataset_filter.append(Subject.dataset_code == key)
+        subjects.append(Subject.query.with_entities(
+                                                Subject.gender,
+                                                Subject.age,
+                                                Subject.edinburgh_handedness_raw,
+                                                Subject.ravens_iq_raw
+                                            ).filter(dataset_filter).all())
+    return subjects
+
 def subject_tract_metrics(request_query, tract_code):
     '''Get the subject tract metrics for the subjects returned from the given query and the given tract code.'''
     subject_ids_methods = []
