@@ -14,7 +14,7 @@ from werkzeug.datastructures import FileStorage, Headers
 from flask_assets import Environment, Bundle
 from werkzeug.wrappers import Response
 
-from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject, SubjectTractMetrics
+from megatrack.models import db, Tract, Dataset, DatasetTracts, Subject, SubjectTractMetrics, CorticalLabel
 from megatrack.lesion.models import LesionUpload
 from megatrack.alchemy_encoder import AlchemyEncoder
 from megatrack.views import megatrack
@@ -804,6 +804,44 @@ class MegatrackTestCase(TestCase):
     
     def test_download_tract_mean_maps_not_in_cache(self):
         pass
+    
+    def test_get_cortical_map(self):
+        cl1 = CorticalLabel('HCP', 'frontal lobe', 1, '0x00ff00')
+        db.session.add(cl1)
+        cl2 = CorticalLabel('HCP', 'parietal lobe', 2, '0xff0000')
+        db.session.add(cl2)
+        cl3 = CorticalLabel('HCP', 'occipital lobe', 3, '0x0000ff')
+        db.session.add(cl3)
+        cl4 = CorticalLabel('Brodman', 'occipital lobe', 1, '0xdd0f3e')
+        db.session.add(cl4)
+        db.session.commit()
+        
+        resp = self.client.get('/get_cortical_map/test')
+        self.assert404(resp)
+        assert b'No atlas with name' in resp.get_data()
+    
+    def test_get_cortical_labels(self):
+        cl1 = CorticalLabel('HCP', 'frontal lobe', 1, '0x00ff00')
+        db.session.add(cl1)
+        cl2 = CorticalLabel('HCP', 'parietal lobe', 2, '0xff0000')
+        db.session.add(cl2)
+        cl3 = CorticalLabel('HCP', 'occipital lobe', 3, '0x0000ff')
+        db.session.add(cl3)
+        cl4 = CorticalLabel('Brodman', 'occipital lobe', 1, '0xdd0f3e')
+        db.session.add(cl4)
+        db.session.commit()
+        
+        resp = self.client.get('/get_cortical_labels/HCP')
+        self.assert200(resp)
+        data = json.loads(resp.get_data())
+        assert len(data) == 3
+        assert ['frontal lobe', 1, '0x00ff00'] in data
+        assert ['parietal lobe', 2, '0xff0000'] in data
+        assert ['occipital lobe', 3, '0x0000ff'] in data
+        
+        resp = self.client.get('/get_cortical_labels/test')
+        self.assert404(resp)
+        
 
 if __name__ == '__main__':
     unittest.main()

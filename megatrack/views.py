@@ -12,7 +12,7 @@ from nibabel.nifti1 import Nifti1Image
 from jquery_unparam import jquery_unparam
 
 from megatrack import bcrypt, db
-from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts
+from megatrack.models import Tract, Subject, Dataset, SubjectTractMetrics, DatasetTracts, CorticalLabel
 import megatrack.utils.cache_utils as cu
 from megatrack.utils.cache_utils import JobCache
 import megatrack.utils.data_utils as du
@@ -605,6 +605,37 @@ def get_trk(tract_code):
 def get_cortex():
     data_dir = current_app.config['DATA_FILE_PATH']
     return send_file('../'+data_dir+'/cortex6mb.stl', as_attachment=True, attachment_filename='cortex.stl', conditional=True, add_etags=True)
+
+@megatrack.route('/get_cortical_map/<atlas_name>')
+def get_cortical_map(atlas_name):
+    ''' return the nifti file for the specified cortical atlas '''
+    current_app.logger.info('Getting cortical map....')
+    query = CorticalLabel.query.with_entities(CorticalLabel.atlas_name).distinct().all()
+    available_atlases = [i[0] for i in query] # flatten the list of tuples
+    if atlas_name in available_atlases:
+        data_dir = current_app.config['DATA_FILE_PATH']
+        return send_file(
+                    f'../{data_dir}/cortical_maps/{atlas_name}.nii.gz',
+                    as_attachment=True,
+                    attachment_filename=f'{atlas_name}.nii.gz',
+                    conditional=True,
+                    add_etags=True
+                    )
+    else:
+        return f'No atlas with name {atlas_name}', 404
+
+@megatrack.route('/get_cortical_labels/<atlas_name>')
+def get_cortical_labels(atlas_name):
+    ''' return a json object with the value:label:colour mappings for the specified cortical atlas '''
+    labels = CorticalLabel.query.with_entities(
+                                            CorticalLabel.region_name,
+                                            CorticalLabel.label_value,
+                                            CorticalLabel.color
+                                            ).filter(CorticalLabel.atlas_name == atlas_name).all()
+    if labels:
+        return jsonify(labels)
+    else:
+        return f'No atlas labels with name {atlas_name}', 404
 
 @megatrack.route('/_test_viewer')
 def _test_viewer():
