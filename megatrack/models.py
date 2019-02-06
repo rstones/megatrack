@@ -1,9 +1,11 @@
 import json
 from json.decoder import JSONDecodeError
+import re
 
 from sqlalchemy.orm import validates
 
 from megatrack import db
+import code
 
 class Subject(db.Model):
     '''
@@ -181,4 +183,27 @@ class Method(db.Model):
     def __repr__(self):
         return '<Method %r>' % (self.code + ' ' + self.name)
     
+    
+class CorticalLabel(db.Model):
+    atlas_name = db.Column(db.String(20), primary_key=True)
+    region_name = db.Column(db.String(100), primary_key=True)
+    label_value = db.Column(db.Integer, nullable=False)
+    color = db.Column(db.String(7), nullable=False)
+    
+    def __init__(self, atlas_name, region_name, label_value, color):
+        self.atlas_name = atlas_name
+        self.region_name = region_name
+        self.label_value = label_value
+        self.color = color
+        
+    def __repr__(self):
+        return '<CorticalLabel %r>' % (self.atlas_name + ' ' + self.region_name)
+    
+    @validates('color')
+    def validate_color(self, key, color):
+        ''' color should be a C-style hex string like 0x00ff00 '''
+        if not re.match(r'^0[xX][0-9a-fA-F]{6}$', color):
+            raise ValueError('cortical_label.color must be stored as a 6 digit hexadecimal string prepended with 0x')
+        return color
+        
     
