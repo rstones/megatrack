@@ -20,6 +20,7 @@ RUN chmod +x boot.sh
 RUN mkdir logs
 
 ENV FLASK_APP megatrack/__init__.py
+ENV PYTHONPATH /mgtk
 
 EXPOSE 5000
 # pass dev_mode = "false" to entrypoint
