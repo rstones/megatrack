@@ -615,9 +615,9 @@ def get_cortical_map(atlas_name):
     if atlas_name in available_atlases:
         data_dir = current_app.config['DATA_FILE_PATH']
         return send_file(
-                    f'../{data_dir}/cortical_maps/{atlas_name}.nii.gz',
+                    f'../{data_dir}/cortical_maps/{atlas_name}_2mm.nii.gz',
                     as_attachment=True,
-                    attachment_filename=f'{atlas_name}.nii.gz',
+                    attachment_filename=f'{atlas_name}_2mm.nii.gz',
                     conditional=True,
                     add_etags=True
                     )
