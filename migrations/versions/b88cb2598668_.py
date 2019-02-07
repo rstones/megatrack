@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('atlas_name', sa.String(length=20), nullable=False),
     sa.Column('region_name', sa.String(length=100), nullable=False),
     sa.Column('label_value', sa.Integer(), nullable=False),
-    sa.Column('color', sa.String(length=7), nullable=False),
+    sa.Column('color', sa.String(length=8), nullable=False),
     sa.PrimaryKeyConstraint('atlas_name', 'region_name')
     )
     # ### end Alembic commands ###

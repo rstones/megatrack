@@ -188,7 +188,7 @@ class CorticalLabel(db.Model):
     atlas_name = db.Column(db.String(20), primary_key=True)
     region_name = db.Column(db.String(100), primary_key=True)
     label_value = db.Column(db.Integer, nullable=False)
-    color = db.Column(db.String(7), nullable=False)
+    color = db.Column(db.String(8), nullable=False)
     
     def __init__(self, atlas_name, region_name, label_value, color):
         self.atlas_name = atlas_name
