@@ -10,6 +10,7 @@ mgtrk.View = (function() {
      * @param {Object} view     Contains properties required to instantiate a View object.
      */
     View.initBasicView = (view) => {
+        view._parent = view._parent || {};
         view.renderWidth = view.dim[0];
         view.renderHeight = view.dim[1];
         view.viewWidth = view.renderWidth + 80;
@@ -151,7 +152,8 @@ mgtrk.View = (function() {
         $('#'+view.plane+'-view').append('<canvas id="'+view.plane+'-crosshairs" class="overlay"></canvas>');
             
         view.initSlicingOverlay = function() {
-            const canvas = $('#'+view.plane+'-crosshairs').get(0);
+            const $canvas = $('#'+view.plane+'-crosshairs');
+            const canvas = $canvas.get(0); // the DOM node underlying the canvas jQuery object
             //var viewContainer = $('#'+view.plane+'-crosshairs').parent().get(0);
             canvas.width = view.renderWidth;
             canvas.height = view.renderHeight;
@@ -161,6 +163,90 @@ mgtrk.View = (function() {
                 $('#viewer').trigger('view:click', [view.plane, x, y, canvas.width, canvas.height]);
             };
             view.drawCrosshairs();
+            
+            // test out using mousemove event to get cortical region info
+            // need to unbind this when cortical regions are not being displayed
+            view.prevRegion = 0;
+            console.log(view.volume);
+            $canvas.mousemove(function(event) {
+                let x = event.pageX - $('#'+view.plane+'-crosshairs').offset().left;
+                let y = event.pageY - $('#'+view.plane+'-crosshairs').offset().top;
+                
+                x = view.vReverse ? canvas.width - x : x;
+                y = view.hReverse ? canvas.height - y : y;
+                
+                // x and y are coords between zero and data array dimension
+                x = Math.round(view.volume.dimensions[view.vDimIdx] * (x / canvas.width));
+                y = Math.round(view.volume.dimensions[view.hDimIdx] * (y / canvas.height));
+                
+                /*
+                    To get IJK coords:
+                    - convert screen coords to RAS coords
+                    - transform RAS coords to IJK space 
+                
+                    RAS coords are in a (180mm, 216mm ,180mm) dimensional space
+                    we are using 2mm voxel size so our data array dimensions are (90,108,90)
+                    RAS coords should increase from L -> R, P -> A, I -> S
+                    so the origin (-90,-126,-72) is the bottom left corner of the volume
+                    this should correspond with the origin (0,0,0) in IJK space?
+                */
+                const RASOrigin = view.volume._RASOrigin;
+                let RASCoords = 0;
+                switch (view.idx) {
+                    case 'indexX':
+                        // multiply x/y by 2 to move to RAS and offset by the RAS origin
+                        RASCoords = goog.vec.Vec4.createFloat32FromValues(
+                                                            2*view.volume[view.idx] + RASOrigin[0],
+                                                            2*x + RASOrigin[1],
+                                                            2*y + RASOrigin[2],
+                                                            1);
+                        break;
+                    case 'indexY':
+                        RASCoords = goog.vec.Vec4.createFloat32FromValues(
+                                                            2*x + RASOrigin[0],
+                                                            2*view.volume[view.idx] + RASOrigin[1],
+                                                            2*y + RASOrigin[2],
+                                                            1);
+                        break;
+                    case 'indexZ':
+                        RASCoords = goog.vec.Vec4.createFloat32FromValues(
+                                                            2*x + RASOrigin[0],
+                                                            2*y + RASOrigin[1],
+                                                            2*view.volume[view.idx] + RASOrigin[2],
+                                                            1);
+                        break;
+                }
+                
+                // transform RAS coords to IJK volume indices
+                // we see the RAS origin maps to IJK (0,0,0) as expected
+                let IJKCoords = goog.vec.Vec4.createFloat32();
+                goog.vec.Mat4.multVec4(view.volume._RASToIJK, RASCoords, IJKCoords);
+                const regionLabel = view.volume.labelmap[0]
+                                            ._IJKVolume[Math.round(IJKCoords[2])]
+                                                       [Math.round(IJKCoords[1])]
+                                                       [Math.round(IJKCoords[0])];
+                                                       
+                console.log('RAS Coords: ' + RASCoords);
+                console.log('IJK Coords: ' + IJKCoords);
+                
+                if (regionLabel !== 0 && regionLabel != view.prevRegion) {
+                    if (view._parent && view._parent.corticalOverlayMapping) {
+                        console.log('Highlighting region ' + regionLabel);
+                        const renderers = view._parent;
+                        renderers.corticalOverlayMapping[regionLabel][3] = 255;
+                        // also need to reset the previous highlighted region 
+                        renderers.corticalOverlayMapping[view.prevRegion][3] = view.prevRegion !== 0 ? 150 : 0;
+                        renderers.resetSlicesForColormapChange();
+                        view.prevRegion = regionLabel;
+                    }
+                } else if (regionLabel === 0 && view.prevRegion !== 0) {
+                    const renderers = view._parent;
+                    renderers.corticalOverlayMapping[view.prevRegion][3] = 150;
+                    renderers.resetSlicesForColormapChange();
+                    view.prevRegion = regionLabel;
+                }
+                
+            });
         };
         
         view.drawCrosshairs = function() {

@@ -32,6 +32,8 @@ mgtrk.Renderers = (function() {
         renderers.initSetup = true;
         renderers.views = {};
         
+        renderers.corticalOverlayMapping = {};
+        
         renderers.findVolumeLabelmapIndex = function(code) {
             const labelmaps = renderers.volume.labelmap;
             let idx = 0;
@@ -183,6 +185,49 @@ mgtrk.Renderers = (function() {
             return true;
         };
         
+        renderers.addCorticalRegions = function() {
+            
+            $.ajax({
+                url: `${rootPath}/get_cortical_labels/HCP`,
+                dataType: 'json',
+                success: function(data) {
+                    renderers.addingNewTract = true;
+                    $(document).trigger('view:disable');
+                    // construct object
+                    const mapping = {};
+                    mapping[0] = [0, 0, 0, 0];
+                    for (let i = 0; i < data.length; i++) {
+                        let region = data[i];
+                        mapping[parseInt(region[1])] = [
+                                                            parseInt(region[2].slice(2,4), 16),
+                                                            parseInt(region[2].slice(4,6), 16),
+                                                            parseInt(region[2].slice(6,8), 16),
+                                                            150
+                                                        ];
+                    }
+                    for (let i = data.length+1; i <= 255; i++) {
+                        mapping[i] = [0, 0, 0, 0];
+                    }
+                    renderers.corticalOverlayMapping = mapping;
+                    console.log(mapping);
+                    
+                    var map = new X.labelmap(renderers.volume);
+                    map.code = 'HCP'; // can't remember what we need this for now!
+                    map.file = `${rootPath}/get_cortical_map/HCP?file_type=.nii.gz`;
+                    map.colormap = function(normpixval) {
+                        // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
+                        // then scaled to between 0 and 1 in X.renderer2D.render_ to get normpixval
+                        // undo that here by scaling to between 0 and number of cortical regions
+                        let idx = Math.ceil(normpixval*data.length);
+                        return renderers.corticalOverlayMapping[idx];
+                    };
+                    renderers.volume.labelmap.splice(0, 0, map);
+                    renderers.resetSlicesForDirtyFiles();
+                }
+            });
+            return true;
+        };
+        
         renderers.updateLabelmapFile = function(tractCode, newQuery) {
             renderers.addingNewTract = false;
             for (let i=0; i<renderers.volume.labelmap.length; i++) {
@@ -233,6 +278,7 @@ mgtrk.Renderers = (function() {
         
         // init stuff
         renderers.views.sagittal = viewInit({
+                                                _parent: renderers,
                                                 plane: viewKeys[0],
                                                 volume: renderers.volume,
                                                 container: $('#sagittal-panel'),
@@ -249,6 +295,7 @@ mgtrk.Renderers = (function() {
             if (renderers.initSetup) {
 
                 renderers.views.coronal = viewInit({
+                                                        _parent: renderers,
                                                         plane: viewKeys[1],
                                                         volume: renderers.volume,
                                                         container: $('#coronal-panel'),
@@ -263,6 +310,7 @@ mgtrk.Renderers = (function() {
                 renderers.views.coronal.renderer.render();
 
                 renderers.views.axial = viewInit({
+                                                    _parent: renderers,
                                                     plane: viewKeys[2],
                                                     volume: renderers.volume,
                                                     container: $('#axial-panel'),
@@ -288,6 +336,11 @@ mgtrk.Renderers = (function() {
                 }
     
                 renderers.initSetup = false;
+                
+                setTimeout(function() {
+                    renderers.addCorticalRegions();
+                }, 5000);
+                
             } else {
                 // reset renderers after reloading labelmap
                 renderers.views.coronal.renderer.update(renderers.volume);

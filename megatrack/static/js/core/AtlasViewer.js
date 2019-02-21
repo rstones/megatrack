@@ -16,6 +16,7 @@ var mgtrk = mgtrk || {};
  */
 mgtrk.initAtlasView = (options) => {
     const view = {
+        _parent: options._parent,
         plane: options.plane,
         volume: options.volume,
         container: options.container,
