@@ -195,21 +195,23 @@ mgtrk.Renderers = (function() {
                     $(document).trigger('view:disable');
                     // construct object
                     const mapping = {};
-                    mapping[0] = [0, 0, 0, 0];
+                    mapping[0] = {color: [0, 0, 0, 0], label: ''};
                     for (let i = 0; i < data.length; i++) {
                         let region = data[i];
-                        mapping[parseInt(region[1])] = [
-                                                            parseInt(region[2].slice(2,4), 16),
-                                                            parseInt(region[2].slice(4,6), 16),
-                                                            parseInt(region[2].slice(6,8), 16),
-                                                            150
-                                                        ];
+                        mapping[parseInt(region[1])] = {
+                                                        color: [
+                                                                    parseInt(region[2].slice(2,4), 16),
+                                                                    parseInt(region[2].slice(4,6), 16),
+                                                                    parseInt(region[2].slice(6,8), 16),
+                                                                    150
+                                                                ],
+                                                        label: region[0]
+                                                        };
                     }
                     for (let i = data.length+1; i <= 255; i++) {
-                        mapping[i] = [0, 0, 0, 0];
+                        mapping[i] = {color: [0, 0, 0, 0], label: ''};
                     }
                     renderers.corticalOverlayMapping = mapping;
-                    console.log(mapping);
                     
                     var map = new X.labelmap(renderers.volume);
                     map.code = 'HCP'; // can't remember what we need this for now!
@@ -219,7 +221,7 @@ mgtrk.Renderers = (function() {
                         // then scaled to between 0 and 1 in X.renderer2D.render_ to get normpixval
                         // undo that here by scaling to between 0 and number of cortical regions
                         let idx = Math.ceil(normpixval*data.length);
-                        return renderers.corticalOverlayMapping[idx];
+                        return renderers.corticalOverlayMapping[idx].color;
                     };
                     renderers.volume.labelmap.splice(0, 0, map);
                     renderers.resetSlicesForDirtyFiles();

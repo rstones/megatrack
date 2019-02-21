@@ -167,7 +167,7 @@ mgtrk.View = (function() {
             // test out using mousemove event to get cortical region info
             // need to unbind this when cortical regions are not being displayed
             view.prevRegion = 0;
-            console.log(view.volume);
+            const $corticalLabelTooltip = $('#cortical-label-tooltip');
             $canvas.mousemove(function(event) {
                 let x = event.pageX - $('#'+view.plane+'-crosshairs').offset().left;
                 let y = event.pageY - $('#'+view.plane+'-crosshairs').offset().top;
@@ -231,19 +231,25 @@ mgtrk.View = (function() {
                 
                 if (regionLabel !== 0 && regionLabel != view.prevRegion) {
                     if (view._parent && view._parent.corticalOverlayMapping) {
-                        console.log('Highlighting region ' + regionLabel);
                         const renderers = view._parent;
-                        renderers.corticalOverlayMapping[regionLabel][3] = 255;
+                        renderers.corticalOverlayMapping[regionLabel].color[3] = 255;
                         // also need to reset the previous highlighted region 
-                        renderers.corticalOverlayMapping[view.prevRegion][3] = view.prevRegion !== 0 ? 150 : 0;
+                        renderers.corticalOverlayMapping[view.prevRegion].color[3] = view.prevRegion !== 0 ? 150 : 0;
                         renderers.resetSlicesForColormapChange();
                         view.prevRegion = regionLabel;
+                        
+                        // show tooltip, alter contents and position
+                        $corticalLabelTooltip.html(renderers.corticalOverlayMapping[regionLabel].label);
+                        $corticalLabelTooltip.css('left', `${event.pageX + 20}px`);
+                        $corticalLabelTooltip.css('top', `${event.pageY - 20}px`);
+                        $corticalLabelTooltip.show();
                     }
                 } else if (regionLabel === 0 && view.prevRegion !== 0) {
                     const renderers = view._parent;
-                    renderers.corticalOverlayMapping[view.prevRegion][3] = 150;
+                    renderers.corticalOverlayMapping[view.prevRegion].color[3] = 150;
                     renderers.resetSlicesForColormapChange();
                     view.prevRegion = regionLabel;
+                    $corticalLabelTooltip.hide();
                 }
                 
             });
