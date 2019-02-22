@@ -185,10 +185,10 @@ mgtrk.Renderers = (function() {
             return true;
         };
         
-        renderers.addCorticalRegions = function() {
+        renderers.displayCorticalAtlas = function(atlasName, replaceCurrent) {
             
             $.ajax({
-                url: `${rootPath}/get_cortical_labels/HCP`,
+                url: `${rootPath}/get_cortical_labels/${atlasName}`,
                 dataType: 'json',
                 success: function(data) {
                     renderers.addingNewTract = true;
@@ -215,7 +215,7 @@ mgtrk.Renderers = (function() {
                     
                     var map = new X.labelmap(renderers.volume);
                     map.code = 'HCP'; // can't remember what we need this for now!
-                    map.file = `${rootPath}/get_cortical_map/HCP?file_type=.nii.gz`;
+                    map.file = `${rootPath}/get_cortical_map/${atlasName}?file_type=.nii.gz`;
                     map.colormap = function(normpixval) {
                         // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
                         // then scaled to between 0 and 1 in X.renderer2D.render_ to get normpixval
@@ -223,7 +223,8 @@ mgtrk.Renderers = (function() {
                         let idx = Math.ceil(normpixval*data.length);
                         return renderers.corticalOverlayMapping[idx].color;
                     };
-                    renderers.volume.labelmap.splice(0, 0, map);
+                    // add the cortical map first in labelmap array or replace the current one
+                    renderers.volume.labelmap.splice(0, replaceCurrent ? 1 : 0, map);
                     renderers.resetSlicesForDirtyFiles();
                 }
             });

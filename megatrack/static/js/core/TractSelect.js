@@ -23,6 +23,8 @@ mgtrk.TractSelect = (function() {
         tractSelect.availableTracts = {};
         tractSelect.selectedTracts = {};
         
+        tractSelect.corticalAtlasVisible = false;
+        
         const probabilisticMetricsDescription = 'Metrics for the averaged density map as displayed in the viewer';
         const populationMetricsDescription = 'Averaged metrics of the individual subjects';
         
@@ -53,8 +55,8 @@ mgtrk.TractSelect = (function() {
             }
         });
           
-        const tabs = mgtrk.AtlasTabs.init(tractSelect, {});
-        $(`#${tractSelect.tabsContainerId}`).hide();
+        const tabs = mgtrk.AtlasTabs.init(tractSelect, {'cortical': {tabType: 'cortical', name: 'Cortical Maps'}});
+        //$(`#${tractSelect.tabsContainerId}`).hide();
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
@@ -107,7 +109,7 @@ mgtrk.TractSelect = (function() {
             
             tractSelect.selectedTracts = {};
             
-            tabs.removeAll();
+            tabs.removeTabType('tract');
             
             $('#add-tract-select option[value!=default]').each(function(idx) {
                 var tractCode = $(this).val();
@@ -116,7 +118,7 @@ mgtrk.TractSelect = (function() {
             
             $('#add-tract-select').prop('disabled', true);
             $('#tract-disabled-msg-text').show();
-            $(`#${tractSelect.tabsContainerId}`).hide();
+            //$(`#${tractSelect.tabsContainerId}`).hide();
         });
         
         $(document).on('query:zero', function(event) {

@@ -88,6 +88,17 @@ mgtrk.Tabs = (function() {
             tabs.rightScrollDisabled = true;
         };
         
+        tabs.removeTabType = (tabType) => {
+            if (tabs.cache) {
+                const cacheKeys = Object.keys(tabs.cache);
+                for (let i=0; i<cacheKeys.length; i++) {
+                    if (tabs.cache[cacheKeys[i]].tabType === tabType) {
+                        tabs.removeTab(cacheKeys[i]);
+                    }
+                }
+            }
+        };
+        
         tabs.selectTab = (id) => {
             const tabContents = tabs.cache[id];
             // display the tab contents, show required content view and hide
@@ -198,6 +209,26 @@ mgtrk.Tabs = (function() {
             $.each(Object.keys(tabs.cache).slice(tabs.leftMostTab, tabs.leftMostTab+tabs.maxNumTabsVisible), function(idx, value) {
                 $(`#${value}-tab-header`).show();
             });
+        };
+        
+        tabs.addRemoveIconToTabHeader = (state, wrapperId) => {
+            $(`#${wrapperId}`).append(`<div id="${state.code}-tab-remove" class="clickable tab-header-remove-icon"></div>`);
+            $(`#${state.code}-tab-remove`).on('click', function(event) {
+                // remove tract from renderer
+                // fire remove-tract event
+                
+                if ($(this).attr('disabled')) {
+                    return;
+                }
+                                    
+                var tabKeys = Object.keys(tabs.cache);
+                if (state.code === tabs.selectedTabId && tabKeys.length > 1) {
+                    var idxOfTractToRemove = tabKeys.indexOf(state.code);
+                    var idxToSelect = idxOfTractToRemove < tabKeys.length - 1 ? idxOfTractToRemove+1 : idxOfTractToRemove - 1;
+                    tabs.selectTab(tabKeys[idxToSelect]);
+                }
+                tabs.removeTab(state.code);
+             });
         };
         
         // insert DOM elements for general header and contents section

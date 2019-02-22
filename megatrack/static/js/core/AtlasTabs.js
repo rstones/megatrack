@@ -19,7 +19,7 @@ mgtrk.AtlasTabs = (function() {
         const tractTemplates = tractTab.templates(true);
         
         const corticalTab = mgtrk.CorticalTab.init(_parent, atlasTabs);
-        const corticalTemplates = mgtrk.CorticalTab.templates(false);
+        const corticalTemplates = corticalTab.templates(false);
         
         const templates = {
             'tract': {

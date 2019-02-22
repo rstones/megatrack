@@ -163,9 +163,16 @@ mgtrk.View = (function() {
                 $('#viewer').trigger('view:click', [view.plane, x, y, canvas.width, canvas.height]);
             };
             view.drawCrosshairs();
+        };
+        
+        view.unbindSlicingOverlayMouseMove = function() {
+            $('#'+view.plane+'-crosshairs').off('mousemove');
+        };
+        
+        view.bindSlicingOverlayMouseMove = function() {
+            const $canvas = $('#'+view.plane+'-crosshairs');
+            const canvas = $canvas.get(0); // the DOM node underlying the canvas jQuery object
             
-            // test out using mousemove event to get cortical region info
-            // need to unbind this when cortical regions are not being displayed
             view.prevRegion = 0;
             const $corticalLabelTooltip = $('#cortical-label-tooltip');
             $canvas.mousemove(function(event) {

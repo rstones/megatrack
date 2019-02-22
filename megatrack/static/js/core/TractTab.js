@@ -305,23 +305,7 @@ mgtrk.TractTab = (function() {
                                                         <div class="tab-header-tract-name" title="${state.name}">${state.name}</div>`);
                                                         
                 if (removeIcons) {
-                    $(`#${wrapperId}`).append(`<div id="${state.code}-tab-remove" class="clickable tab-header-remove-icon"></div>`);
-                    $(`#${state.code}-tab-remove`).on('click', function(event) {
-                        // remove tract from renderer
-                        // fire remove-tract event
-                        
-                        if ($(this).attr('disabled')) {
-                            return;
-                        }
-                                            
-                        var tractIds = Object.keys(tabsObject.cache);
-                        if (state.code === tabsObject.selectedTabId && tractIds.length > 1) {
-                            var idxOfTractToRemove = tractIds.indexOf(state.code);
-                            var idxToSelect = idxOfTractToRemove < tractIds.length - 1 ? idxOfTractToRemove+1 : idxOfTractToRemove - 1;
-                            tabsObject.selectTab(tractIds[idxToSelect]);
-                        }
-                        tabsObject.removeTab(state.code);
-                     });
+                    tabsObject.addRemoveIconToTabHeader(state, wrapperId);
                 }
                 
                 // add init color to header color swatch
