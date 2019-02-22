@@ -18,7 +18,7 @@ mgtrk.TractSelect = (function() {
         tractSelect._parent = _parent;
         tractSelect.rootPath = _parent.rootPath;
         
-        tractSelect.tractTabsContainerId = 'tract-tabs-container';
+        tractSelect.tabsContainerId = 'tabs-container';
         
         tractSelect.availableTracts = {};
         tractSelect.selectedTracts = {};
@@ -36,7 +36,7 @@ mgtrk.TractSelect = (function() {
                                         </div>
                                         <div class="clear"></div>
                                         <hr>
-                                        <div id="${tractSelect.tractTabsContainerId}"></div>
+                                        <div id="${tractSelect.tabsContainerId}"></div>
                                     </div>`);
                                     
         $('#zero-query-msg-text').hide();
@@ -53,8 +53,8 @@ mgtrk.TractSelect = (function() {
             }
         });
           
-        const tractTabs = mgtrk.AtlasTractTabs.init(tractSelect, {});
-        $(`#${tractSelect.tractTabsContainerId}`).hide();
+        const tabs = mgtrk.AtlasTabs.init(tractSelect, {});
+        $(`#${tractSelect.tabsContainerId}`).hide();
         
         $(document).on('tabs:remove', function(event, tractCode) {
              $('#add-tract-select option[value='+tractCode+']').prop('disabled', false);
@@ -89,11 +89,11 @@ mgtrk.TractSelect = (function() {
             _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, 0, settings, _parent.currentQuery);
             _parent.renderers.resetSlicesForDirtyFiles();
             
-            if ($(`#${tractSelect.tractTabsContainerId}`).is(':hidden')) {
-                $(`#${tractSelect.tractTabsContainerId}`).show();
+            if ($(`#${tractSelect.tabsContainerId}`).is(':hidden')) {
+                $(`#${tractSelect.tabsContainerId}`).show();
             }
-            tractTabs.addTab(settings);
-            tractTabs.selectTab(settings.code);           
+            tabs.addTab(settings.code, 'tract', settings);
+            tabs.selectTab(settings.code);           
         });
         
         $(document).on('dataset:change', function(event, datasetCode) {
@@ -107,7 +107,7 @@ mgtrk.TractSelect = (function() {
             
             tractSelect.selectedTracts = {};
             
-            tractTabs.removeAll();
+            tabs.removeAll();
             
             $('#add-tract-select option[value!=default]').each(function(idx) {
                 var tractCode = $(this).val();
@@ -116,20 +116,20 @@ mgtrk.TractSelect = (function() {
             
             $('#add-tract-select').prop('disabled', true);
             $('#tract-disabled-msg-text').show();
-            $(`#${tractSelect.tractTabsContainerId}`).hide();
+            $(`#${tractSelect.tabsContainerId}`).hide();
         });
         
         $(document).on('query:zero', function(event) {
             // set labelmap opacity to zero
-            const tabsCacheKeys = Object.keys(tractTabs.cache);
+            const tabsCacheKeys = Object.keys(tabs.cache);
             for (let i=0; i<tabsCacheKeys.length; i++) {
-                const state = tractTabs.cache[tabsCacheKeys[i]];
+                const state = tabs.cache[tabsCacheKeys[i]];
                 state.opacity = 0;
                 $(document).trigger('colormap:change', [state]);
             }
             
             // disable tract tabs
-            tractTabs.disable();
+            tabs.disable();
             
             // disable tract select
             $('#add-tract-select').prop('disabled', true);
@@ -143,15 +143,15 @@ mgtrk.TractSelect = (function() {
             // check if stuff is disabled first
         
              // set labelmap opacity to 100%
-            const tabsCacheKeys = Object.keys(tractTabs.cache);
+            const tabsCacheKeys = Object.keys(tabs.cache);
             for (let i=0; i<tabsCacheKeys.length; i++) {
-                const state = tractTabs.cache[tabsCacheKeys[i]];
+                const state = tabs.cache[tabsCacheKeys[i]];
                 state.opacity = 1;
                 $(document).trigger('colormap:change', [state]);
             }
             
             // enable tract tabs
-            tractTabs.enable();
+            tabs.enable();
             
         });
         
@@ -183,7 +183,7 @@ mgtrk.TractSelect = (function() {
                         tracts[tractCode].datasets[dataset].indexOf(method) === -1) {
                     // if the tract is selected remove from viewer and tabs
                     if (Object.keys(tractSelect.selectedTracts).indexOf(tractCode) >= 0) {
-                        tractTabs.removeTab(tractCode);
+                        tabs.removeTab(tractCode);
                         _parent.renderers.removeLabelmapFromVolume(tractCode);
                         delete tractSelect.selectedTracts[tractCode];
                     }

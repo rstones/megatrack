@@ -144,6 +144,11 @@ mgtrk.Tabs = (function() {
             }
         };
         
+        tabs.addTab = (id, tabType, state) => {
+            state.tabType = tabType;
+            tabs._addTab(id, tabs.templates[tabType].header, tabs.templates[tabType].content, state);
+        };
+        
         tabs.disableScroll = (direction, disable) => {
             tabs[`${direction}ScrollDisabled`] = disable;
             if (disable) {
@@ -247,11 +252,11 @@ mgtrk.Tabs = (function() {
             $('#tabs-right-scroll').trigger('click');
         });
         
-        // insert the template for each header and corresponding contents
+        // insert the template for each header and corresponding contents in initState
         const tabsCacheKeys = Object.keys(tabs.cache);
         for (let i=0; i<tabsCacheKeys.length; i++) {
             const state = tabs.cache[tabsCacheKeys[i]];
-            tabs._addTab(tabsCacheKeys[i], templates.header, templates.content, state);
+            tabs.addTab(tabsCacheKeys[i], state.tabType, state);
         }
         
         // make first tab on the list visible
