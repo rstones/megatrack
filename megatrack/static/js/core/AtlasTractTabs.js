@@ -218,21 +218,6 @@ mgtrk.AtlasTractTabs = (function() {
                                                                 of each voxel with probability above the threshold. The weights are the
                                                                 probabilities at each voxel.
                                                                 `);
-//                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA)
-//                                                                 are calculated as follows:
-//                                                                 <ul>
-//                                                                     <li>We obtain a tract probability map from binarised density maps
-//                                                                      of individual subjects in a certain demographic.</li>
-//                                                                     <li>The individual MD and FA maps for the subjects in a demographic
-//                                                                      are averaged.</li>
-//                                                                     <li>We use the thresholded tract population map (taking only voxels above
-//                                                                      a given probability) as a mask for the averaged MD (FA) map.</li>
-//                                                                      <li>A weighted mean of the unmasked averaged MD (FA) map voxels is then 
-//                                                                      taken. The tract population voxels are used as the weights.</li>
-//                                                                      <li>The volume of the tract is calculated by counting the number of
-//                                                                      voxels in the thresholded tract population map.</li>
-//                                                                      <li>All maps are in MNI space.</li>
-//                                                                 </ul>`);
                 };
                 metricsHelpPopup.open(updatePopupContent);
             });
@@ -253,19 +238,6 @@ mgtrk.AtlasTractTabs = (function() {
                                                                 <br><br>
                                                                 The tract MD and FA are weighted averages of the MD / FA values of each voxel
                                                                 occupied by the tract. The weights are the streamline densities at each voxel.`);
-//                     $('#metrics-help-popup-description').html(`The volume (vol), mean diffusivity (MD) and fractional anisotropy (FA)
-//                                                                 are calculated as follows:
-//                                                                 <ul>
-//                                                                     <li>The volumes of the individual subject tract density maps are averaged
-//                                                                      to get the mean volume.</li>
-//                                                                     <li>For individual subjects the tract density map is used as a mask for
-//                                                                      MD (FA) map.</li>
-//                                                                     <li>A weighted average of the unmasked MD (FA) voxels is carried out
-//                                                                      using tract voxel densities as weights.</li>
-//                                                                     <li>The individual subject MD (FA) results are then averaged among the 
-//                                                                     subjects in the query.</li>
-//                                                                     <li>All maps are in native space.</li>
-//                                                                 </ul>`);
                 };
                 metricsHelpPopup.open(updatePopupContent);
             });
