@@ -339,10 +339,6 @@ mgtrk.Renderers = (function() {
     
                 renderers.initSetup = false;
                 
-                setTimeout(function() {
-                    renderers.addCorticalRegions();
-                }, 5000);
-                
             } else {
                 // reset renderers after reloading labelmap
                 renderers.views.coronal.renderer.update(renderers.volume);
