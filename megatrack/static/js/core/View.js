@@ -225,9 +225,6 @@ mgtrk.View = (function() {
                                             ._IJKVolume[Math.round(IJKCoords[2])]
                                                        [Math.round(IJKCoords[1])]
                                                        [Math.round(IJKCoords[0])];
-                                                       
-                console.log('RAS Coords: ' + RASCoords);
-                console.log('IJK Coords: ' + IJKCoords);
                 
                 if (regionLabel !== 0 && regionLabel != view.prevRegion) {
                     if (view._parent && view._parent.corticalOverlayMapping) {
