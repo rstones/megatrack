@@ -139,6 +139,19 @@ mgtrk.Renderers = (function() {
             }  
         };
         
+        renderers.removeAllTracts = function() {
+            // this is assuming there is only 1 cortical map visible and which is
+            // first in the labelmap array
+            if (renderers.volume.labelmap[0].code != 'cortical') {
+                renderers.removeAllLabelmaps();
+            } else {
+                const numLabelmaps = renderers.volume.labelmap.length;
+                for (let k = 1; k < numLabelmaps; k++) {
+                    renderers.removeLabelmapFromVolumeNew(1);
+                }
+            }
+        };
+        
         renderers.addLabelmapToVolume = function(tractCode, newQuery) {
             renderers.addingNewTract = true;
             $(document).trigger('view:disable');
@@ -181,7 +194,9 @@ mgtrk.Renderers = (function() {
                 map.file = rootPath + '/'+mapType+'/'+code+'?file_type=.nii.gz';
             }
             map.colormap = _parent.colormaps.generateXTKColormap(settings.colormap);
-            renderers.volume.labelmap.splice(idx, 0, map);
+            const labelmaps = renderers.volume.labelmap;
+            // add labelmap at position idx or at end of array
+            labelmaps.splice(idx !== null ? idx : labelmaps.length, 0, map);
             return true;
         };
         
@@ -203,7 +218,7 @@ mgtrk.Renderers = (function() {
                                                                     parseInt(region[2].slice(2,4), 16),
                                                                     parseInt(region[2].slice(4,6), 16),
                                                                     parseInt(region[2].slice(6,8), 16),
-                                                                    150
+                                                                    120
                                                                 ],
                                                         label: region[0]
                                                         };
@@ -214,7 +229,7 @@ mgtrk.Renderers = (function() {
                     renderers.corticalOverlayMapping = mapping;
                     
                     var map = new X.labelmap(renderers.volume);
-                    map.code = 'HCP'; // can't remember what we need this for now!
+                    map.code = 'cortical'; // can't remember what we need this for now!
                     map.file = `${rootPath}/get_cortical_map/${atlasName}?file_type=.nii.gz`;
                     map.colormap = function(normpixval) {
                         // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2

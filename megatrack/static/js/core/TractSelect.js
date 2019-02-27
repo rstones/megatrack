@@ -88,7 +88,7 @@ mgtrk.TractSelect = (function() {
                                 currentQuery: _parent.currentQuery,
                                 description: tractSelect.availableTracts[tractCode].description
                             };
-            _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, 0, settings, _parent.currentQuery);
+            _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, null, settings, _parent.currentQuery);
             _parent.renderers.resetSlicesForDirtyFiles();
             
             if ($(`#${tractSelect.tabsContainerId}`).is(':hidden')) {
@@ -105,7 +105,7 @@ mgtrk.TractSelect = (function() {
              * Remove tabs from AtlasTractTabs
              * Disable tract select
              */
-            _parent.renderers.removeAllLabelmaps();
+            _parent.renderers.removeAllTracts();
             
             tractSelect.selectedTracts = {};
             
