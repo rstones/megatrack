@@ -282,7 +282,15 @@ mgtrk.Renderers = (function() {
                 } else {
                     renderers.parsingEventCount = 1;
                 }
-                if (renderers.parsingEventCount == renderers.volume.labelmap.length) {
+                
+                // count the number of tract labelmaps we need to wait for updating
+                let numTracts = 0;
+                for (let k = 0; k < renderers.volume.labelmap.length; k++) {
+                    if (!['lesion', 'cortical'].includes(renderers.volume.labelmap[k].code)) {
+                        numTracts++;
+                    }
+                }
+                if (renderers.parsingEventCount == numTracts) {
                     $(document).trigger('view:enable');
                     renderers.parsingEventCount = 0;
                 }
