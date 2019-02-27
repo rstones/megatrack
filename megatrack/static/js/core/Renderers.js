@@ -34,16 +34,17 @@ mgtrk.Renderers = (function() {
         
         renderers.corticalOverlayMapping = {};
         
+        /*
+         * Return -1 if labelmap with given code not found.
+         */
         renderers.findVolumeLabelmapIndex = function(code) {
             const labelmaps = renderers.volume.labelmap;
-            let idx = 0;
-            for (let i=0; i<labelmaps.length; i++) {
-                if (labelmaps[i].code === code) {
-                    idx = i;
-                    break;
+            for (let idx=0; idx<labelmaps.length; idx++) {
+                if (labelmaps[idx].code === code) {
+                    return idx;
                 }
             }
-            return idx;
+            return -1;
         };
         
         /*
