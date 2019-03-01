@@ -165,6 +165,36 @@ mgtrk.View = (function() {
             view.drawCrosshairs();
         };
         
+        /*
+         * Only bind mousemove events on the slicing overlay canvas the mouse
+         * is currently over
+         * And reset the overlay in case a mousemove state is still active 
+         * after mouseleave
+         */
+        view.bindSlicingOverlayMouseEvents = function() {
+        
+              $('#'+view.plane+'-crosshairs').mouseenter(function(event) {
+                    view.bindSlicingOverlayMouseMove();
+              });
+              
+              $('#'+view.plane+'-crosshairs').mouseleave(function(event) {
+                    view.unbindSlicingOverlayMouseMove();
+                    $('#cortical-label-tooltip').hide();
+                    const renderers = view._parent;
+                    renderers.corticalOverlayMapping[view.prevRegion].color[3] = 0;
+                    renderers.resetSlicesForColormapChange();
+                    view.prevRegion = 0;
+              });
+        };
+        
+        /*
+         * Unbind mouse[enter/leave] events from slicing overlay canvas
+         */
+        view.unbindSlicingOverlayMouseEvents = function() {
+              $('#'+view.plane+'-crosshairs').off('mouseenter');
+              $('#'+view.plane+'-crosshairs').off('mouseleave');
+        };
+        
         view.unbindSlicingOverlayMouseMove = function() {
             $('#'+view.plane+'-crosshairs').off('mousemove');
         };
@@ -228,7 +258,7 @@ mgtrk.View = (function() {
                 // we see the RAS origin maps to IJK (0,0,0) as expected
                 let IJKCoords = goog.vec.Vec4.createFloat32();
                 goog.vec.Mat4.multVec4(view.volume._RASToIJK, RASCoords, IJKCoords);
-                const regionLabel = view.volume.labelmap[0]
+                const regionLabel = view.volume.labelmap[1]
                                             ._IJKVolume[Math.round(IJKCoords[2])]
                                                        [Math.round(IJKCoords[1])]
                                                        [Math.round(IJKCoords[0])];
@@ -238,7 +268,7 @@ mgtrk.View = (function() {
                         const renderers = view._parent;
                         renderers.corticalOverlayMapping[regionLabel].color[3] = 255;
                         // also need to reset the previous highlighted region 
-                        renderers.corticalOverlayMapping[view.prevRegion].color[3] = view.prevRegion !== 0 ? 150 : 0;
+                        renderers.corticalOverlayMapping[view.prevRegion].color[3] = 0;
                         renderers.resetSlicesForColormapChange();
                         view.prevRegion = regionLabel;
                         
@@ -250,7 +280,7 @@ mgtrk.View = (function() {
                     }
                 } else if (regionLabel === 0 && view.prevRegion !== 0) {
                     const renderers = view._parent;
-                    renderers.corticalOverlayMapping[view.prevRegion].color[3] = 150;
+                    renderers.corticalOverlayMapping[view.prevRegion].color[3] = 0;
                     renderers.resetSlicesForColormapChange();
                     view.prevRegion = regionLabel;
                     $corticalLabelTooltip.hide();

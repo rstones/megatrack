@@ -143,11 +143,11 @@ mgtrk.Renderers = (function() {
         renderers.removeAllTracts = function() {
             // this is assuming there is only 1 cortical map visible and which is
             // first in the labelmap array
-            if (renderers.volume.labelmap[0].code != 'cortical') {
+            if (renderers.volume.labelmap[0].code != 'cortical_surface') {
                 renderers.removeAllLabelmaps();
             } else {
                 const numLabelmaps = renderers.volume.labelmap.length;
-                for (let k = 1; k < numLabelmaps; k++) {
+                for (let k = 2; k < numLabelmaps; k++) {
                     renderers.removeLabelmapFromVolumeNew(1);
                 }
             }
@@ -219,7 +219,7 @@ mgtrk.Renderers = (function() {
                                                                     parseInt(region[2].slice(2,4), 16),
                                                                     parseInt(region[2].slice(4,6), 16),
                                                                     parseInt(region[2].slice(6,8), 16),
-                                                                    120
+                                                                    0
                                                                 ],
                                                         label: region[0]
                                                         };
@@ -229,8 +229,23 @@ mgtrk.Renderers = (function() {
                     }
                     renderers.corticalOverlayMapping = mapping;
                     
-                    var map = new X.labelmap(renderers.volume);
-                    map.code = 'cortical'; // can't remember what we need this for now!
+                    const surfaceMap = new X.labelmap(renderers.volume);
+                    surfaceMap.code = 'cortical_surface'; // can't remember what we need this for now!
+                    surfaceMap.file = `${rootPath}/get_cortical_surface_map/${atlasName}?file_type=.nii.gz`;
+                    surfaceMap.colormap = function(normpixval) {
+                        // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
+                        // then scaled to between 0 and 1 in X.renderer2D.render_ to get normpixval
+                        // undo that here by scaling to between 0 and number of cortical regions
+                        let idx = Math.ceil(normpixval*data.length);
+                        let color = renderers.corticalOverlayMapping[idx].color;
+                        return [color[0], color[1], color[2], normpixval > 0 ? 180 : 0];
+                    };
+                    // add the cortical surface map first in labelmap array or replace the current one
+                    renderers.volume.labelmap.splice(0, replaceCurrent ? 1 : 0, surfaceMap);
+                    //renderers.resetSlicesForDirtyFiles();
+                    
+                    const map = new X.labelmap(renderers.volume)
+                    map.code = 'cortical';
                     map.file = `${rootPath}/get_cortical_map/${atlasName}?file_type=.nii.gz`;
                     map.colormap = function(normpixval) {
                         // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
@@ -239,8 +254,9 @@ mgtrk.Renderers = (function() {
                         let idx = Math.ceil(normpixval*data.length);
                         return renderers.corticalOverlayMapping[idx].color;
                     };
-                    // add the cortical map first in labelmap array or replace the current one
-                    renderers.volume.labelmap.splice(0, replaceCurrent ? 1 : 0, map);
+                    // add the cortical map second in the labelmap array
+                    renderers.volume.labelmap.splice(1, replaceCurrent ? 1 : 0, map);
+                    
                     renderers.resetSlicesForDirtyFiles();
                 }
             });
@@ -286,7 +302,7 @@ mgtrk.Renderers = (function() {
                 // count the number of tract labelmaps we need to wait for updating
                 let numTracts = 0;
                 for (let k = 0; k < renderers.volume.labelmap.length; k++) {
-                    if (!['lesion', 'cortical'].includes(renderers.volume.labelmap[k].code)) {
+                    if (!['lesion', 'cortical', 'cortical_surface'].includes(renderers.volume.labelmap[k].code)) {
                         numTracts++;
                     }
                 }

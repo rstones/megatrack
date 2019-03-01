@@ -623,6 +623,24 @@ def get_cortical_map(atlas_name):
                     )
     else:
         return f'No atlas with name {atlas_name}', 404
+    
+@megatrack.route('/get_cortical_surface_map/<atlas_name>')
+def get_cortical_surface_map(atlas_name):
+    ''' return the nifti file for the specified cortical atlas '''
+    current_app.logger.info('Getting cortical surface map....')
+    query = CorticalLabel.query.with_entities(CorticalLabel.atlas_name).distinct().all()
+    available_atlases = [i[0] for i in query] # flatten the list of tuples
+    if atlas_name in available_atlases:
+        data_dir = current_app.config['DATA_FILE_PATH']
+        return send_file(
+                    f'../{data_dir}/cortical_maps/{atlas_name}_2mm_surface.nii.gz',
+                    as_attachment=True,
+                    attachment_filename=f'{atlas_name}_2mm_surface.nii.gz',
+                    conditional=True,
+                    add_etags=True
+                    )
+    else:
+        return f'No atlas with name {atlas_name}', 404
 
 @megatrack.route('/get_cortical_labels/<atlas_name>')
 def get_cortical_labels(atlas_name):

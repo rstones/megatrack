@@ -45,7 +45,7 @@ mgtrk.CorticalTab = (function() {
                         if (!_parent.corticalMapVisible) {
                             for (let view in renderers.views) {
                                 if (renderers.views.hasOwnProperty(view)) {
-                                    renderers.views[view].bindSlicingOverlayMouseMove();
+                                    renderers.views[view].bindSlicingOverlayMouseEvents();
                                 } 
                             }
                         }
@@ -55,7 +55,7 @@ mgtrk.CorticalTab = (function() {
                         renderers.removeLabelmapFromVolumeNew(0);
                         for (let view in renderers.views) {
                             if (renderers.views.hasOwnProperty(view)) {
-                                renderers.views[view].unbindSlicingOverlayMouseMove();
+                                renderers.views[view].unbindSlicingOverlayMouseEvents();
                             } 
                         }
                         _parent.corticalMapVisible = false;
