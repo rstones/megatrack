@@ -1,0 +1,11 @@
+#cortical-tab-contents {
+    padding: 10px;
+}
+
+.cortical-map-selection {
+    margin-bottom: 40px;
+}
+
+#cortical-map-fields > legend {
+    margin-bottom: 10px;
+}
