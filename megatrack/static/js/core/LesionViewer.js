@@ -73,14 +73,14 @@ mgtrk.LesionViewer = (function() {
                     break;
                 }
             }
+            // hack to take into account cortical map display
+            if (lesionViewer.lesionMapping.corticalMapVisible) {
+                idx += 2;
+            }
             return idx;
         };
         
         lesionViewer.clearTracts = function() {
-//             for (let i=lesionViewer.labelmaps.tracts.length; i--;) {
-//                 const idx = lesionViewer.findVolumeLabelmapIndex(lesionViewer.labelmaps.tracts[i].code);
-//                 lesionViewer.renderers.removeLabelmapFromVolumeNew(idx);
-//             }
             lesionViewer.labelmaps.tracts = [];
         };
         

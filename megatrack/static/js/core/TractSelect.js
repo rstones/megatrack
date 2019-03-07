@@ -23,8 +23,6 @@ mgtrk.TractSelect = (function() {
         tractSelect.availableTracts = {};
         tractSelect.selectedTracts = {};
         
-        tractSelect.corticalAtlasVisible = false;
-        
         const probabilisticMetricsDescription = 'Metrics for the averaged density map as displayed in the viewer';
         const populationMetricsDescription = 'Averaged metrics of the individual subjects';
         

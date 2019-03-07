@@ -119,22 +119,17 @@ mgtrk.LesionMapping = (function() {
             });
             
             lesionMapping.renderLesion = (lesionCode) => {
+                const settings = {
+                                   code: lesionCode,
+                                   colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
+                               };
+                
                 if (_parent.labelmaps.lesion[0]) { // update lesion map
-                    const settings = {
-                                       code: lesionCode,
-                                       colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
-                                   };
                     _parent.labelmaps.lesion[0] = settings;
-                    
                     const idx = _parent.findVolumeLabelmapIndex(lesionCode);
                     _parent.renderers.updateLabelmapFileNew('lesion', lesionCode, idx);
                 } else { // add the lesion map for the first time
-                    const settings = {
-                                       code: lesionCode,
-                                       colormap: _parent.colormaps.lesionColormap(0, 1, 0.7)
-                                   };
                     _parent.labelmaps.lesion[0] = settings;
-                    
                     const idx = _parent.findVolumeLabelmapIndex(lesionCode);
                     _parent.renderers.addLabelmapToVolumeNew('lesion', lesionCode, idx, settings);
                 }
