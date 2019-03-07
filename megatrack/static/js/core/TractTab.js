@@ -178,7 +178,7 @@ mgtrk.TractTab = (function() {
                         return;
                     }
                     event.preventDefault();
-                    window.location.href = `tract/${state.code}?${$.param(_parent._parent.currentQuery)}&file_type=.nii.gz`;
+                    window.location.href = `download/tract/${state.code}?${$.param(_parent._parent.currentQuery)}`;
                 });
                 
                 $(`#${state.code}-info-button`).on('click', function(event) {
