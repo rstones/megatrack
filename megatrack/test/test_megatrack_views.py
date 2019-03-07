@@ -4,6 +4,8 @@ Created on 7 Sep 2017
 @author: richard
 '''
 import unittest
+import zipfile
+import io
 
 import flask
 from flask import Flask, json, current_app
@@ -784,10 +786,21 @@ class MegatrackTestCase(TestCase):
             # pretend to do something with the nifti img
             pass
         
+        def zipfile_write_patch(self, file_path, arcname=''):
+            pass
+        
         with monkey_patch(du.nib, 'load', nib_load_patch), \
-                monkey_patch(du.nib, 'save', nib_save_patch):
+                monkey_patch(du.nib, 'save', nib_save_patch), \
+                    monkey_patch(zipfile.ZipFile, 'write', zipfile_write_patch):
             resp = self.client.get(f'/download/tract/{md.t1_code}?{md.brc_atlas_males_query}')
             self.assert200(resp)
+            
+            zipped_bytes = resp.get_data()
+            zipped_file = zipfile.ZipFile(io.BytesIO(zipped_bytes), 'r')
+            with zipped_file.open('data.json') as data_json:
+                data = json.loads(data_json.read())
+                assert len(data['subjects']) == 2
+                assert len(data['demographic_data']) == 2
             
             # now unzip the file and check the query, subject data, metrics in the
             # json file

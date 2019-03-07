@@ -122,12 +122,12 @@ def subjects_to_download(request_query):
     for key in request_query:
         dataset_filter = construct_subject_query_filter(request_query[key]['constraints'])
         dataset_filter.append(Subject.dataset_code == key)
-        subjects.append(Subject.query.with_entities(
+        subjects += Subject.query.with_entities(
                                                 Subject.gender,
                                                 Subject.age,
                                                 Subject.edinburgh_handedness_raw,
                                                 Subject.ravens_iq_raw
-                                            ).filter(dataset_filter).all())
+                                            ).filter(*dataset_filter).all()
     return subjects
 
 def subject_tract_metrics(request_query, tract_code):

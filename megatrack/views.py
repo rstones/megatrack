@@ -3,6 +3,7 @@ import datetime
 import time
 import io
 import zipfile
+import tempfile
 
 from flask import current_app, Blueprint, render_template, request, send_file, jsonify, make_response
 from flask_jsontools import jsonapi
@@ -575,25 +576,27 @@ def download_tract(tract_code):
     data_dict = {
         'query': request_query,
         'subjects': subjects,
-        'demographic_data': subject_tract_metrics
+        'demographic_data': subject_tract_metrics.tolist()
     }
+    data_json = bytes(json.dumps(data_dict), 'utf-8')
     
-    # construct json file with query, subjects, metrics in
-    data_json = io.BytesIO(bytes(json.dumps(data_dict), 'utf-8'))
-    # construct zip file containing: json file, tract prob map, mean maps (in memory)
-    output = io.BytesIO()
-    output_zip = zipfile.ZipFile(output, 'w')
-    output_zip.write(data_json, arcname='data.json')
-    output_zip.write(file_path_relative_to_root_path(tract_file_path), arcname=f'{tract_code}.nii.gz')
-    output_zip.write(file_path_relative_to_root_path(MD_file_path), arcname='MD.nii.gz')
-    output_zip.write(file_path_relative_to_root_path(FA_file_path), arcname='FA.nii.gz')
-    
-    # send file in request
-    return send_file(output_zip,
-                     as_attachment=True,
-                     attachment_filename=f'mgtrk_{tract_code}.zip',
-                     conditional=True,
-                     add_etags=True)
+    # use a temporary file to create zip file in memory
+    with tempfile.SpooledTemporaryFile() as tp:
+        
+        with zipfile.ZipFile(tp, 'w') as output_zip:
+            # write files to the zip archive
+            output_zip.writestr('data.json', data_json)
+            output_zip.write(tract_file_path, arcname=f'{tract_code}.nii.gz')
+            output_zip.write(MD_file_path, arcname='MD.nii.gz')
+            output_zip.write(FA_file_path, arcname='FA.nii.gz')
+            
+        tp.seek(0) # reset cursor to beginning of file
+        zipped_bytes = tp.read() # get the bytes
+        return send_file(io.BytesIO(zipped_bytes), # create a BytesIO object
+                         as_attachment=True,
+                         attachment_filename=f'mgtrk_{tract_code}.zip',
+                         conditional=True,
+                         add_etags=True)
 
 @megatrack.route('/get_trk/<tract_code>')
 def get_trk(tract_code):
