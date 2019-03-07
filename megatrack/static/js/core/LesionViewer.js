@@ -16,6 +16,7 @@ var mgtrk = mgtrk || {};
  */
 mgtrk.initLesionView = (options) => {
     const view = {
+        _parent: options._parent,
         plane: options.plane,
         volume: options.volume,
         container: options.container,
@@ -91,6 +92,7 @@ mgtrk.LesionViewer = (function() {
         viewContainer.append('<div id="sagittal-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="axial-panel" class="viewer-panel"></div>');
         viewContainer.append('<div id="lesion-viewer-title">MegaTrack Lesion Analysis</div>');
+        viewContainer.append('<div id="cortical-label-tooltip" style="display: none;"></div>');
         //$('#view-container div').addClass('viewer-panel');
         container.append('<div class="clear"></div>');
         container.append('<div id="'+lesionViewer.queryBuilderId+'"></div>');

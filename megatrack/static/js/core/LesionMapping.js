@@ -17,7 +17,7 @@ mgtrk.LesionMapping = (function() {
         
         const containerId = _parent.lesionAnalysisId;
         lesionMapping.tractTableContainerId = 'tract-table-wrapper';
-        lesionMapping.tractTabsContainerId = 'tract-tabs-container';
+        lesionMapping.tabsContainerId = 'tabs-container';
         
         _parent.colormaps.createLesionColormapClass(true);
         
@@ -36,13 +36,14 @@ mgtrk.LesionMapping = (function() {
                                         +'</div>'
                                         +'<div class="clear"></div>'
                                         +'<hr>'
-                                        +'<div id="'+lesionMapping.tractTabsContainerId+'"></div>'
+                                        +'<div id="'+lesionMapping.tabsContainerId+'"></div>'
                                         +'<div id="disconnect-info-wrapper"></div>'
                                         +'<div id="lesion-analysis-running"><div class="loading-gif lesion-analysis-running-loading-gif"></div></div>'
                                     +'</div>');
         
-        const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {});
-        $(`#${lesionMapping.tractTabsContainerId}`).hide();
+        //const tractTabs = mgtrk.LesionTractTabs.init(lesionMapping, {});
+        const tabs = mgtrk.LesionTabs.init(lesionMapping, {'cortical': {tabType: 'cortical', name: 'Cortical Maps'}});
+        //$(`#${lesionMapping.tabsContainerId}`).hide();
         
         // will store the disconnection data for each tract
         // needs emptying when query or lesion changes
@@ -266,9 +267,9 @@ mgtrk.LesionMapping = (function() {
                     //data: {lesionCode: lesionMapping.currentLesionCode},
                     success: function(data) {
                         $('#run-analysis-button > .loading-gif').remove();
-                        tractTabs.removeAll();
-                        if ($(`#${lesionMapping.tractTabsContainerId}`).is(':hidden')) {
-                            $(`#${lesionMapping.tractTabsContainerId}`).show();
+                        tabs.removeTabType('tract');
+                        if ($(`#${lesionMapping.tabsContainerId}`).is(':hidden')) {
+                            $(`#${lesionMapping.tabsContainerId}`).show();
                         }
                         const dataLen = data.length;
                         for (let i=0; i<dataLen; i++) {
@@ -293,10 +294,10 @@ mgtrk.LesionMapping = (function() {
                             const idx = _parent.findVolumeLabelmapIndex(tractCode);
                              _parent.renderers.addLabelmapToVolumeNew('tract', tractCode, idx, settings, currentQuery);
                              
-                             tractTabs.addTab(settings);
+                             tabs.addTab(settings.code, 'tract', settings);
                         }
                         
-                        tractTabs.selectTab(data[0].tractCode);
+                        tabs.selectTab(data[0].tractCode);
                         _parent.renderers.resetSlicesForDirtyFiles();
                     },
                     error: function(xhr) {
@@ -316,13 +317,13 @@ mgtrk.LesionMapping = (function() {
         });
         
         $(document).on('dataset:change', function(event, datasetCode) {
-            tractTabs.removeAll(); // Tabs.removeTab will fire a tabs:remove event which we use to clear renderer
-            $(`#${lesionMapping.tractTabsContainerId}`).hide();
+            tabs.removeTabType('tract'); // Tabs.removeTab will fire a tabs:remove event which we use to clear renderer
+            //$(`#${lesionMapping.tabsContainerId}`).hide();
         });
         
         $(document).on('query:update', function(event, newQuery) {
-            tractTabs.removeAll();
-            $(`#${lesionMapping.tractTabsContainerId}`).hide();
+            tabs.removeTabType('tract');
+            //$(`#${lesionMapping.tabsContainerId}`).hide();
         });
         
         $(document).on('tabs:remove', function(event, tractCode) {
