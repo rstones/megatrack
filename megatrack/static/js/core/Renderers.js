@@ -143,12 +143,14 @@ mgtrk.Renderers = (function() {
         renderers.removeAllTracts = function() {
             // this is assuming there is only 1 cortical map visible and which is
             // first in the labelmap array
-            if (renderers.volume.labelmap[0].code != 'cortical_surface') {
-                renderers.removeAllLabelmaps();
-            } else {
-                const numLabelmaps = renderers.volume.labelmap.length;
-                for (let k = 2; k < numLabelmaps; k++) {
-                    renderers.removeLabelmapFromVolumeNew(1);
+            if (renderers.volume.labelmap.length) {
+                if (renderers.volume.labelmap[0].code != 'cortical_surface') {
+                    renderers.removeAllLabelmaps();
+                } else {
+                    const numLabelmaps = renderers.volume.labelmap.length;
+                    for (let k = 2; k < numLabelmaps; k++) {
+                        renderers.removeLabelmapFromVolumeNew(1);
+                    }
                 }
             }
         };
