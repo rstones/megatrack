@@ -802,10 +802,6 @@ class MegatrackTestCase(TestCase):
                 assert len(data['subjects']) == 2
                 assert len(data['demographic_data']) == 2
             
-            # now unzip the file and check the query, subject data, metrics in the
-            # json file
-            # check the nifti file names in the zip archive 
-            
     def test_download_tract_invalid_tract(self):
         pass
     
