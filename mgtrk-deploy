@@ -169,16 +169,26 @@ with Connection(
         host=config['host'],
         user=config['user'],
         connect_kwargs={'password': config['password']}
-        ) as c:
+        )
 
-    c.run(f"cd {config['working_dir']} && git fetch && git checkout {branch_name}")
 
-    c.run(f"cd {config['working_dir']} && source megatrackvenv/bin/activate")
+pull_cmd = f"cd {config['working_dir']}"
+pull_cmd += ' && git fetch'
+pull_cmd += f' && git checkout {branch_name}'
+pull_cmd += ' && git pull'
 
-    c.run(f"cd {config['working_dir']} && export APP_CONFIG=../.test-cfg")
+print(pull_cmd)
 
-    c.run(f"cd {config['working_dir']} && nose2")
+pull_result = c.run(pull_cmd)
 
+test_cmd = f"cd {config['working_dir']}"
+test_cmd += ' && source megatrackvenv/bin/activate'
+test_cmd += ' && export APP_CONFIG=../.test-cfg'
+test_cmd += ' && nose2'
+
+print(test_cmd)
+
+test_result = c.run(test_cmd)
 
 # write deployment logs to a file stored in version control?
 # can use to rollback to master from latest version if needed
