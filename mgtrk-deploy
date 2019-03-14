@@ -152,10 +152,11 @@ except UnexpectedExit:
 
 # change back to current_branch
 try:
-    print(f'Reverting to branch {current_branch}...')
-    checkout_result = run(f'git checkout {current_branch}', hide=True)
+    print(f'Reverting to branch {starting_branch}...')
+    checkout_result = run(f'git checkout {starting_branch}', hide=True)
 except UnexpectedExit:
-    print(f'Could not revert to branch {current_branch}. Now on branch {branch_name}.')
+    print(f'Could not revert to branch {starting_branch}. Now on branch {branch_name}.')
+    checkout_exit(starting_branch)
 
 
 # ssh to env server
