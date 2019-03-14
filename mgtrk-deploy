@@ -116,12 +116,14 @@ try:
     # warn about uncommited changes
     # warn about changes to submodules (but ignore them for now)
     # suggest commiting changes and make sure up to date with remote
-
+    print(submodule_paths)
     if output:
         # parse, warn about uncommited changes
         output = output.split('\n')
+        print(output)
         for change in output:
             filepath = change[3:]
+            print(filepath)
             if filepath in submodule_paths:
                 continue
             else:
