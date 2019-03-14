@@ -48,3 +48,6 @@ megatrack/static/.webassets-cache/
 .env
 nginx/
 mysqldb/
+
+# deploy config files
+.mgtrk-deploy-cfg*
