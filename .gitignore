@@ -51,3 +51,6 @@ mysqldb/
 
 # deploy config files
 .mgtrk-deploy-cfg*
+
+# deploy script
+mgtrk-deploy

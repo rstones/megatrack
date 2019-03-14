@@ -65,6 +65,12 @@ except KeyError as ke:
     exit()
 
 
+
+def checkout_exit(branch):
+    run(f'git checkout {branch}', hide=True)
+    exit()
+
+
 # make sure we are in the correct repo ie. megatrack
 try:
     remote_url = run('git remote get-url origin', hide=True).stdout.strip()
@@ -73,7 +79,7 @@ try:
         print(f'This repo isn\'t linked to the correct remote! Current remote is {remote_url}')
         exit()
 
-    current_branch = run('git rev-parse --abbrev-ref HEAD', hide=True).stdout
+    starting_branch = run('git rev-parse --abbrev-ref HEAD', hide=True).stdout
 
 except UnexpectedExit:
     print('Error getting remote url and current branch. Check git is installed and you are running this deploy script from a git repo.')
@@ -102,9 +108,9 @@ try:
                 submodule_paths.append(key_value[1].strip())
 
 except IOError as ioe:
+    # revert to starting branch
     print('Error...')
-    exit()
-
+    checkout_exit(starting_branch)
 
 
 # get status, check all changes commited
@@ -116,23 +122,25 @@ try:
     # warn about uncommited changes
     # warn about changes to submodules (but ignore them for now)
     # suggest commiting changes and make sure up to date with remote
-
+    print(submodule_paths)
     if output:
         # parse, warn about uncommited changes
         output = output.split('\n')
         for change in output:
+            print(change)
             filepath = change[3:]
+            print(filepath)
             if filepath in submodule_paths:
                 continue
             else:
-                print('There are uncommited changes in this branch. Fix this before continuing.')
-                exit()
+                print(f'There are uncommited changes in branch {branch_name}. Fix this before continuing.')
+                checkout_exit(starting_branch)
     else:
         pass
 
 except UnexpectedExit:
     # error getting status, exit?
-    pass
+    checkout_exit(starting_branch)
 
 # check branch is up-to-date with remote
 # suggest make sure up to date with remote before continuing
@@ -141,11 +149,11 @@ try:
 
     if 'Your branch is up-to-date with' not in uptodate_result:
         print(f'Branch {branch_name} is not up to date with remote. Fix this before continuing...')
-        exit()
+        checkout_exit(starting_branch)
         
 except UnexpectedExit:
     # error getting up to date status, exit
-    pass
+    checkout_exit(starting_branch)
 
 # change back to current_branch
 try:
