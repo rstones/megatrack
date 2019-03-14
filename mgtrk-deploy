@@ -128,7 +128,7 @@ try:
         for change in output:
             filepath = change[3:]
             print(filepath)
-            if filepath and filepath in submodule_paths:
+            if not filepath or filepath in submodule_paths:
                 continue
             else:
                 print('There are uncommited changes in this branch. Fix this before continuing.')
