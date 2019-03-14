@@ -165,19 +165,19 @@ except UnexpectedExit:
 # run tests, exit on test failure
 # docker-compose up -d --build (boot.sh can upgrade db on container startup)
 
-c = Connection(
+with Connection(
         host=config['host'],
         user=config['user'],
         connect_kwargs={'password': config['password']}
-        )
+        ) as c:
 
-c.run(f"cd {config['working_dir']} && git fetch && git checkout {branch_name}")
+    c.run(f"cd {config['working_dir']} && git fetch && git checkout {branch_name}")
 
-c.run(f"cd {config['working_dir']} && source megatrackvenv/bin/activate")
+    c.run(f"cd {config['working_dir']} && source megatrackvenv/bin/activate")
 
-c.run(f"cd {config['working_dir']} && export APP_CONFIG=../.test-cfg")
+    c.run(f"cd {config['working_dir']} && export APP_CONFIG=../.test-cfg")
 
-c.run(f"cd {config['working_dir']} && nose2")
+    c.run(f"cd {config['working_dir']} && nose2")
 
 
 # write deployment logs to a file stored in version control?
