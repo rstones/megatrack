@@ -168,7 +168,7 @@ except UnexpectedExit:
 c = Connection(
         host=config['host'],
         user=config['user'],
-        connect_kwargs={password: config['password']}
+        connect_kwargs={'password': config['password']}
         )
 
 c.run(f"cd {config['working_dir']} && git fetch && git checkout {branch_name}")
