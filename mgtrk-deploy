@@ -165,7 +165,7 @@ except UnexpectedExit:
 # run tests, exit on test failure
 # docker-compose up -d --build (boot.sh can upgrade db on container startup)
 
-Connection(
+c = Connection(
         host=config['host'],
         user=config['user'],
         connect_kwargs={'password': config['password']}
