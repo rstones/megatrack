@@ -2,14 +2,15 @@
 
 dev_mode=$1
 
-#while true; do
+while true; do
 #    flask db upgrade
-#    if [[ "$?" == "0" ]]; then
-#        break
-#    fi
-#    echo Upgrade command failed, retrying in 5 secs...
-#    sleep 5
-#done
+    python megatrack/manage.py db upgrade
+    if [[ "$?" == "0" ]]; then
+        break
+    fi
+    echo Upgrade command failed, retrying in 5 secs...
+    sleep 5
+done
 
 if [ $dev_mode == "true" ]
 then
