@@ -190,7 +190,9 @@ print(test_cmd)
 
 test_result = c.run(test_cmd)
 
-# write deployment logs to a file stored in version control?
+# write deployment logs to log/ directory
+
+# or write deployment logs to a file stored in version control?
 # can use to rollback to master from latest version if needed
 # or can use to merge successful branch deploy into master
 # can warn about branches not yet merged to master at start of next deploy?
