@@ -10,6 +10,7 @@ Usage:
 import argparse
 from invoke import run, UnexpectedExit
 from fabric import Connection, Config
+from fabric.context_managers import cd
 
 # get branch name and env from command line args
 parser = argparse.ArgumentParser(description="Deploy megatrack atlas to staging and production environments. Requires config files .mgtrk-deploy.staging and .mgtrk-deploy.prod.")
@@ -173,30 +174,29 @@ c = Connection(
         )
 
 
-pull_cmd = f"cd {config['working_dir']}"
-pull_cmd += ' && git fetch'
-pull_cmd += f' && git checkout {branch_name}'
-pull_cmd += ' && git pull'
 
-print(pull_cmd)
+with cd(config['working_dir']):
+    pull_cmd = 'git fetch'
+    pull_cmd += f' && git checkout {branch_name}'
+    pull_cmd += ' && git pull'
 
-pull_result = c.run(pull_cmd)
+    print(pull_cmd)
 
-test_cmd = f"cd {config['working_dir']}"
-test_cmd += ' && source megatrackvenv/bin/activate'
-test_cmd += ' && export APP_CONFIG=../.test-cfg'
-test_cmd += ' && nose2'
+    pull_result = c.run(pull_cmd)
 
-print(test_cmd)
+    test_cmd = 'source megatrackvenv/bin/activate'
+    test_cmd += ' && export APP_CONFIG=../.test-cfg'
+    test_cmd += ' && nose2'
 
-try:
-    test_result = c.run(test_cmd)
-except UnexpectedExit:
-    print('Tests failed! But ignoring for now...')
+    print(test_cmd)
 
-docker_cmd = f"cd {config['working_dir']}"
-docker_cmd += ' && docker-compose up -d --build'
-docker_result = c.sudo(docker_cmd)
+    try:
+        test_result = c.run(test_cmd)
+    except UnexpectedExit:
+        print('Tests failed! But ignoring for now...')
+
+    docker_cmd = 'docker-compose up -d --build'
+    docker_result = c.sudo(docker_cmd)
 
 # write deployment logs to log/ directory
 
