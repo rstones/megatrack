@@ -10,7 +10,6 @@ Usage:
 import argparse
 from invoke import run, UnexpectedExit
 from fabric import Connection, Config
-from fabric.api import cd
 
 # get branch name and env from command line args
 parser = argparse.ArgumentParser(description="Deploy megatrack atlas to staging and production environments. Requires config files .mgtrk-deploy.staging and .mgtrk-deploy.prod.")
@@ -175,7 +174,7 @@ c = Connection(
 
 
 
-with cd(config['working_dir']):
+with c.cd(config['working_dir']):
     pull_cmd = 'git fetch'
     pull_cmd += f' && git checkout {branch_name}'
     pull_cmd += ' && git pull'
