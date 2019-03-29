@@ -205,5 +205,17 @@ class CorticalLabel(db.Model):
         if not re.match(r'^0[xX][0-9a-fA-F]{6}$', color):
             raise ValueError('cortical_label.color must be stored as a 6 digit hexadecimal string prepended with 0x')
         return color
-        
-    
+
+
+class TestTable(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    some_column = db.Column(db.String(10), nullable=True)
+
+    def __init__(self, id, some_column):
+        self.id = id
+        self.some_column = some_column
+
+    def __repr__(self):
+        return '<TestTable>'
+
+

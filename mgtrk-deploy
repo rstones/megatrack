@@ -190,7 +190,13 @@ print(test_cmd)
 
 test_result = c.run(test_cmd)
 
+
+
 # write deployment logs to log/ directory
+
+
+# use git-annex to manage data directory and push/pull data around between envs
+
 
 # or write deployment logs to a file stored in version control?
 # can use to rollback to master from latest version if needed
