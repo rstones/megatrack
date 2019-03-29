@@ -197,7 +197,7 @@ with c.cd(config['working_dir']):
     list_result = c.run('ls')
     print(list_result.stdout)
 
-    docker_cmd = 'docker-compose up -d --build'
+    docker_cmd = 'docker-compose up' # -d --build
     docker_result = c.sudo(docker_cmd)
 
 # write deployment logs to log/ directory
