@@ -8,7 +8,7 @@ Usage:
 '''
 
 import argparse
-from invoke import run, UnexpectedExit
+from invoke import run, UnexpectedExit, Responder
 from fabric import Connection, Config
 
 # get branch name and env from command line args
@@ -168,8 +168,7 @@ except UnexpectedExit:
 c = Connection(
         host=config['host'],
         user=config['user'],
-        connect_kwargs={'password': config['password']},
-        config=Config(overrides={'sudo': {'password': config['password']}})
+        connect_kwargs={'password': config['password']}
         )
 
 
@@ -198,7 +197,14 @@ with c.cd(config['working_dir']):
     print(list_result.stdout)
 
     docker_cmd = 'sudo docker-compose up -d --build'
-    docker_result = c.run(docker_cmd)
+    docker_result = c.run(docker_cmd,
+                          pty=True,
+                          watchers=[
+                              Responder(
+                                  pattern=r'\[sudo\] password:',
+                                  password=config['password']
+                                  )
+                              ])
 
 # write deployment logs to log/ directory
 
