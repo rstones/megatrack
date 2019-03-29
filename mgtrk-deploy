@@ -193,8 +193,9 @@ try:
 except UnexpectedExit:
     print('Tests failed! But ignoring for now...')
 
-
-docker_result = c.run(f'docker-compose up -d --build')
+docker_cmd = f"cd {config['working_dir']}"
+docker_cmd += ' && docker-compose up -d --build'
+docker_result = c.run(docker_cmd)
 
 # write deployment logs to log/ directory
 
