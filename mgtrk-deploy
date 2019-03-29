@@ -202,7 +202,7 @@ with c.cd(config['working_dir']):
                           watchers=[
                               Responder(
                                   pattern=r'\[sudo\] password:',
-                                  password=config['password']
+                                  response=config['password']
                                   )
                               ])
 
