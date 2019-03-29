@@ -9,7 +9,7 @@ Usage:
 
 import argparse
 from invoke import run, UnexpectedExit
-from fabric import Connection
+from fabric import Connection, Config
 
 # get branch name and env from command line args
 parser = argparse.ArgumentParser(description="Deploy megatrack atlas to staging and production environments. Requires config files .mgtrk-deploy.staging and .mgtrk-deploy.prod.")
@@ -168,7 +168,8 @@ except UnexpectedExit:
 c = Connection(
         host=config['host'],
         user=config['user'],
-        connect_kwargs={'password': config['password']}
+        connect_kwargs={'password': config['password']},
+        config=Config(overrides={'sudo': {'password': config['password']}})
         )
 
 
@@ -195,7 +196,7 @@ except UnexpectedExit:
 
 docker_cmd = f"cd {config['working_dir']}"
 docker_cmd += ' && docker-compose up -d --build'
-docker_result = c.run(docker_cmd)
+docker_result = c.sudo(docker_cmd)
 
 # write deployment logs to log/ directory
 
