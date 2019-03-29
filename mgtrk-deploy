@@ -190,7 +190,11 @@ print(test_cmd)
 
 test_result = c.run(test_cmd)
 
+print(test_result.exited)
+print(test_result.ok)
 
+
+#docker_result = c.run(f'docker-compose up -d --build')
 
 # write deployment logs to log/ directory
 
