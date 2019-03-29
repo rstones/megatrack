@@ -197,8 +197,8 @@ with c.cd(config['working_dir']):
     list_result = c.run('ls')
     print(list_result.stdout)
 
-    docker_cmd = ' pwd && docker-compose up' # -d --build
-    docker_result = c.sudo(docker_cmd)
+    docker_cmd = 'sudo docker-compose up -d --build'
+    docker_result = c.run(docker_cmd)
 
 # write deployment logs to log/ directory
 
