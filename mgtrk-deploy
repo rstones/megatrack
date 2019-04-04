@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-'''
-Usage:
-
-./mgtrk-deploy <branch-name> <env>
-
-'''
-
 import argparse
 from invoke import run, UnexpectedExit, Responder
 from fabric import Connection, Config
@@ -28,10 +21,11 @@ env = args.env
 
 config_fn = f'.mgtrk-deploy-cfg.{env}'
 
+# check existence of config file for the env specified
+# and parse config key-value pairs
+# should use python lib: ConfigParser here
 try:
-    # check existence of config file for the env specified
-    # and parse config key-value pairs
-    with open(config_fn) as f:
+        with open(config_fn) as f:
         config = {}
         for line in f.readlines():
             line = line.strip()
@@ -44,11 +38,9 @@ try:
                 continue
         
 except IOError as ioe:
-    # the file doesn't exist? exit
     print(f'Couldn\'t find config file {config_fn} in current directory: {str(ioe)}')
     exit()
 except ValueError as ve:
-    # config file format is wrong, exit
     print(f'Config file format is wrong: {str(ve)}')
     exit()
 
@@ -60,12 +52,12 @@ try:
     config['password']
     config['working_dir']
 except KeyError as ke:
-    # missing required config from .mgtrk-deploy.<env>
     print(f'Required arg missing from config file: {str(ke)}')
     exit()
 
 
 def checkout_exit(branch):
+    ''' Checkout branch and exit the script. '''
     run(f'git checkout {branch}', hide=True)
     exit()
 
@@ -84,8 +76,6 @@ except UnexpectedExit:
     exit()
 
 
-# make sure all changes are committed and everything up to date with remote
-
 # checkout required branch
 try:
     checkout_result = run(f'git checkout {branch_name}', hide=True)
@@ -95,7 +85,6 @@ except UnexpectedExit:
 
 
 # get the git submodules associated with this repo
-
 try:
     submodule_paths = []
     with open('.gitmodules') as f:
@@ -110,18 +99,13 @@ except IOError as ioe:
     checkout_exit(starting_branch)
 
 
-
 # get status, check all changes commited
 try:
     status_result = run('git status --porcelain', hide=True)
     output = status_result.stdout
 
-    # parse output if any
-    # warn about uncommited changes
-    # warn about changes to submodules (but ignore them for now)
-    # suggest commiting changes and make sure up to date with remote
     if output:
-        # parse, warn about uncommited changes
+        # warn about uncommited changes, ignoring submodules
         output = output.split('\n')
         for change in output:
             filepath = change[3:]
@@ -134,7 +118,6 @@ try:
         pass
 
 except UnexpectedExit:
-    # error getting status, exit?
     checkout_exit(starting_branch)
 
 # check branch is up-to-date with remote
@@ -147,7 +130,6 @@ try:
         checkout_exit(starting_branch)
         
 except UnexpectedExit:
-    # error getting up to date status, exit
     checkout_exit(starting_branch)
 
 # change back to current_branch
@@ -159,11 +141,7 @@ except UnexpectedExit:
     checkout_exit(starting_branch)
 
 
-# ssh to env server
-# cd to directory specified in config
-# git pull branch-name from remote
-# run tests, exit on test failure
-# docker-compose up -d --build (boot.sh can upgrade db on container startup)
+# deploy on remote environment...
 
 c = Connection(
         host=config['host'],
@@ -171,22 +149,16 @@ c = Connection(
         connect_kwargs={'password': config['password']}
         )
 
-
-
 with c.cd(config['working_dir']):
     pull_cmd = 'git fetch'
     pull_cmd += f' && git checkout {branch_name}'
     pull_cmd += ' && git pull'
-
-    print(pull_cmd)
 
     pull_result = c.run(pull_cmd)
 
     test_cmd = 'source megatrackvenv/bin/activate'
     test_cmd += ' && export APP_CONFIG=../.test-cfg'
     test_cmd += ' && nose2'
-
-    print(test_cmd)
 
     try:
         test_result = c.run(test_cmd)
@@ -207,12 +179,6 @@ with c.cd(config['working_dir']):
                               ])
 
 # write deployment logs to log/ directory
-
-
 # use git-annex to manage data directory and push/pull data around between envs
 
 
-# or write deployment logs to a file stored in version control?
-# can use to rollback to master from latest version if needed
-# or can use to merge successful branch deploy into master
-# can warn about branches not yet merged to master at start of next deploy?
