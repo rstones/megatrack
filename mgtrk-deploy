@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
+import datetime
+import sys
+
 from invoke import run, UnexpectedExit, Responder
 from fabric import Connection, Config
 
@@ -21,11 +25,39 @@ env = args.env
 
 config_fn = f'.mgtrk-deploy-cfg.{env}'
 
+
+# configure logging
+
+#logging.basicConfig(
+#        level=logging.DEBUG,
+#        handlers=[
+#            logging.FileHandler(
+#            ),
+#            logging.StreamHandler(sys.stdout)
+#        ])
+#
+
+logger = logging.getLogger('mgtrk-deploy')
+logger.setLevel('DEBUG')
+
+fileHandler = logging.FileHandler(f'log/deploy_{branch_name}_{env}_{str(datetime.datetime.now()).replace(" ", "-")}.log')
+fileHandler.setFormatter(
+            logging.Formatter('%(asctime)s %(levelname)s : %(message)s')
+        )
+fileHandler.setLevel('DEBUG')
+logger.addHandler(fileHandler)
+
+streamHandler = logging.StreamHandler(sys.stdout)
+streamHandler.setLevel('INFO')
+logger.addHandler(streamHandler)
+
+logger.info(f'Starting deploy from branch {branch_name} to remote environment {env}')
+
 # check existence of config file for the env specified
 # and parse config key-value pairs
 # should use python lib: ConfigParser here
 try:
-        with open(config_fn) as f:
+    with open(config_fn) as f:
         config = {}
         for line in f.readlines():
             line = line.strip()
@@ -38,10 +70,10 @@ try:
                 continue
         
 except IOError as ioe:
-    print(f'Couldn\'t find config file {config_fn} in current directory: {str(ioe)}')
+    logger.error(ioe)
     exit()
 except ValueError as ve:
-    print(f'Config file format is wrong: {str(ve)}')
+    logger.error(ve)
     exit()
 
 
@@ -52,7 +84,7 @@ try:
     config['password']
     config['working_dir']
 except KeyError as ke:
-    print(f'Required arg missing from config file: {str(ke)}')
+    logger.error(f'Required arg missing from config file: {str(ke)}')
     exit()
 
 
@@ -66,13 +98,13 @@ try:
     remote_url = run('git remote get-url origin', hide=True).stdout.strip()
 
     if remote_url != 'git@github.com:rstones/megatrack.git':
-        print(f'This repo isn\'t linked to the correct remote! Current remote is {remote_url}')
+        logger.error(f'This repo isn\'t linked to the correct remote! Current remote is {remote_url}')
         exit()
 
     starting_branch = run('git rev-parse --abbrev-ref HEAD', hide=True).stdout
 
 except UnexpectedExit:
-    print('Error getting remote url and current branch. Check git is installed and you are running this deploy script from a git repo.')
+    logger.error('Error getting remote url and current branch. Check git is installed and you are running this deploy script from a git repo.')
     exit()
 
 
@@ -80,7 +112,7 @@ except UnexpectedExit:
 try:
     checkout_result = run(f'git checkout {branch_name}', hide=True)
 except UnexpectedExit:
-    print(f'Error checking out branch {branch_name}. Exiting...')
+    logger.error(f'Error checking out branch {branch_name}. Exiting...')
     exit()
 
 
@@ -95,7 +127,7 @@ try:
                 submodule_paths.append(key_value[1].strip())
 
 except IOError as ioe:
-    print('Error...')
+    logger.error(f'Error getting git submodules for current repo: {str(ioe)}')
     checkout_exit(starting_branch)
 
 
@@ -112,7 +144,7 @@ try:
             if not filepath or filepath in submodule_paths:
                 continue
             else:
-                print('There are uncommited changes in this branch. Fix this before continuing.')
+                logger.warn('There are uncommited changes in this branch. Fix this before continuing.')
                 checkout_exit(starting_branch)
     else:
         pass
@@ -126,7 +158,7 @@ try:
     uptodate_result = run('git status -uno', hide=True).stdout
 
     if 'Your branch is up-to-date with' not in uptodate_result:
-        print(f'Branch {branch_name} is not up to date with remote. Fix this before continuing...')
+        logger.warn(f'Branch {branch_name} is not up to date with remote. Fix this before continuing...')
         checkout_exit(starting_branch)
         
 except UnexpectedExit:
@@ -134,14 +166,16 @@ except UnexpectedExit:
 
 # change back to current_branch
 try:
-    print(f'Reverting to branch {starting_branch}...')
+    logger.info(f'Reverting to branch {starting_branch}...')
     checkout_result = run(f'git checkout {starting_branch}', hide=True)
 except UnexpectedExit:
-    print(f'Could not revert to branch {starting_branch}. Now on branch {branch_name}.')
+    logger.error(f'Could not revert to branch {starting_branch}. Now on branch {branch_name}.')
     checkout_exit(starting_branch)
 
 
 # deploy on remote environment...
+
+logger.info('git repository is fine...connecting to remote environment...')
 
 c = Connection(
         host=config['host'],
@@ -154,22 +188,31 @@ with c.cd(config['working_dir']):
     pull_cmd += f' && git checkout {branch_name}'
     pull_cmd += ' && git pull'
 
-    pull_result = c.run(pull_cmd)
+    logger.info('Pulling branch changes to remote environment...')
+
+    try:
+        pull_result = c.run(pull_cmd)
+    except UnexpectedExit:
+        logger.error('Updating remote with environment with git changes failed')
+        exit()
 
     test_cmd = 'source megatrackvenv/bin/activate'
     test_cmd += ' && export APP_CONFIG=../.test-cfg'
     test_cmd += ' && nose2'
 
+    logger.info('Running tests on remote environment...')
     try:
         test_result = c.run(test_cmd)
     except UnexpectedExit:
-        print('Tests failed! But ignoring for now...')
+        logger.error('Tests failed! But ignoring for now...')
+        #exit()
+    logger.info('Tests passed!')
 
-    list_result = c.run('ls')
-    print(list_result.stdout)
+    logger.info('Building and deploying docker containers...')
 
     docker_cmd = 'sudo docker-compose up -d --build'
-    docker_result = c.run(docker_cmd,
+    try:
+        docker_result = c.run(docker_cmd,
                           pty=True,
                           watchers=[
                               Responder(
@@ -177,6 +220,11 @@ with c.cd(config['working_dir']):
                                   response=config['password']
                                   )
                               ])
+    except UnexpectedExit:
+        logger.error('docker deployment failed!')
+        exit()
+
+logger.info('Deployment finished. Success!')
 
 # write deployment logs to log/ directory
 # use git-annex to manage data directory and push/pull data around between envs
