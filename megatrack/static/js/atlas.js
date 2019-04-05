@@ -4,7 +4,7 @@ $(document).ready(function() {
     mgtrk.viewer = mgtrk.AtlasViewer.init({
                                             containerId: 'viewer',
                                             rootPath: '/megatrack',
-                                            queryBuilderId: 'query-panel',
+                                            objectSelectId: 'query-panel',
                                             tractSelectId: 'tract-panel'
                                         });
 });
