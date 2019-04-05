@@ -53,7 +53,7 @@ mgtrk.AtlasViewer = (function() {
         let atlasViewer = {
             containerId: options.containerId,
             rootPath: options.rootPath,
-            queryBuilderId: options.queryBuilderId,
+            objectSelectId: options.objectSelectId,
             tractSelectId: options.tractSelectId
         };
         
@@ -68,14 +68,14 @@ mgtrk.AtlasViewer = (function() {
         viewContainer.append('<div id="cortical-label-tooltip" style="display: none;"></div>');
         //$('#view-container div').addClass('viewer-panel');
         container.append('<div class="clear"></div>');
-        container.append('<div id="'+atlasViewer.queryBuilderId+'"></div>');
+        container.append('<div id="'+atlasViewer.objectSelectId+'"></div>');
         container.append('<div id="'+atlasViewer.tractSelectId+'"></div>');
         
         // add colormap functionality and XTK renderers for views
         atlasViewer = Object.assign(atlasViewer, mgtrk.Colormaps.init(), mgtrk.Renderers.init(atlasViewer, mgtrk.initAtlasView));
         
         // now add tract select, query builder and remaining listeners which depend on viewer to be set up first
-        return Object.assign(atlasViewer, mgtrk.QueryBuilder.init(atlasViewer), mgtrk.TractSelect.init(atlasViewer));
+        return Object.assign(atlasViewer, mgtrk.ObjectSelect.init(atlasViewer), mgtrk.TractSelect.init(atlasViewer));
     };
     
     return AtlasViewer;
