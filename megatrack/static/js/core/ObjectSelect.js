@@ -7,13 +7,13 @@ mgtrk.ObjectSelect = (function() {
     ObjectSelect.init = (_parent) => {
         
         // have separate objects for Tract, Lesion, Cortical
-        const tractTab = mgtrk.TractSelectTab();
+        const tractTab = mgtrk.TractSelectTab.init();
         const tractTemplates = tractTab.templates(false);
         
-        const lesionTab = mgtrk.LesionSelectTab();
+        const lesionTab = mgtrk.LesionSelectTab.init();
         const lesionTemplates = lesionTab.templates(false);
         
-        const corticalTab = mgtrk.CorticalSelectTab();
+        const corticalTab = mgtrk.CorticalSelectTab.init();
         const corticalTemplates = corticalTab.templates(false);
         
         const templates = {
@@ -29,6 +29,10 @@ mgtrk.ObjectSelect = (function() {
                 header: corticalTemplates.header,
                 content: corticalTemplates.content
             }
+        };
+        
+        const options = {
+            headerClass: 'object-select-tab-header'
         };
         
         // insert Tabs object with Tract, Lesion, Cortical tabs
@@ -49,7 +53,7 @@ mgtrk.ObjectSelect = (function() {
             }
         };
         
-        const objectSelect = Object.assign(objectSelect, mgtrk.Tabs.init(_parent, templates, initState));
+        const objectSelect = mgtrk.Tabs.init(_parent, templates, initState, options);
         
         return objectSelect;
     };

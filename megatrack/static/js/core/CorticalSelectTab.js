@@ -11,12 +11,12 @@ mgtrk.CorticalSelectTab = (function() {
         corticalSelectTab.templates = (removeIcons) => {
             
             const contentTemplate = function(state, wrapperId, contentsId) {
-                
+                $(`#${contentsId}`).append(`<div id="${wrapperId}">Cortical testing...</div>`);
             };
               
             
             const headerTemplate = function(state, wrapperId) {
-                
+                $(`#${wrapperId}`).append('Cortical');
             };
             
             return {

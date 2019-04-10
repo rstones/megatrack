@@ -9,7 +9,7 @@ mgtrk.Tabs = (function() {
      * @param {Object} contents             Contains inital tab headers and contents.
      * @param {Function} tabSelectHandler   Called when a tab is selected. Will be passed the tab id.
      */
-    Tabs.init = (_parent, templates, initState) => {
+    Tabs.init = (_parent, templates, initState, options) => {
         const tabs = {};
         
         /*
@@ -20,6 +20,8 @@ mgtrk.Tabs = (function() {
             }
         */
         tabs.cache = initState || {};
+        
+        tabs.options = options || {};
         
         tabs.maxNumTabsVisible = 0;
         tabs.leftMostTab = 0;
@@ -118,7 +120,8 @@ mgtrk.Tabs = (function() {
         
         tabs._addTab = (id, insertHeader, insertContent, state) => {
             // add elements to DOM (tab header)
-            $('#tabs-header').append(`<div id="${id}-tab-header" class="tab-header clickable"></div>`);
+            const customHeaderClass = tabs.options.headerClass || '';
+            $('#tabs-header').append(`<div id="${id}-tab-header" class="${customHeaderClass} tab-header clickable"></div>`);
             insertHeader(state, `${id}-tab-header`);
             // have an event handler for clicks on the tab to display the contents
             $(`#${id}-tab-header`).on('click', function(event) {

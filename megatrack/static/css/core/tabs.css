@@ -1,3 +1,17 @@
+#tabs-wrapper {
+    display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6 */
+    display: -moz-box; /* OLD - Firefox 19- (buggy but mostly works) */
+    display: -ms-flexbox; /* TWEENER - IE 10 */
+    display: -webkit-flex; /* NEW - Chrome */
+    display: flex; /* NEW, Spec - Opera 12.1, Firefox 20+ */
+    -ms-flex-direction: column;
+    -moz-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    height: 100%;
+}
+
+
 #tabs-header {
     height: 30px;
     border-bottom: 1px solid lightgrey;
@@ -5,7 +19,7 @@
 
 .tab-header {
     height: 22px;
-    width: 200px;
+    /*width: 200px;*/
     border-top: 1px solid lightgrey;
     border-left: 1px solid lightgrey;
     border-right: 1px solid lightgrey;
@@ -45,6 +59,7 @@
     border-right: 1px solid lightgrey;
     border-bottom: 1px solid lightgrey;
     border-radius: 0 0 5px 5px;
+    flex: 1;
 }
 
 .tabs-scroll {

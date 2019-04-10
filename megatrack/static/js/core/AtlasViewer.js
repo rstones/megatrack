@@ -75,7 +75,7 @@ mgtrk.AtlasViewer = (function() {
         atlasViewer = Object.assign(atlasViewer, mgtrk.Colormaps.init(), mgtrk.Renderers.init(atlasViewer, mgtrk.initAtlasView));
         
         // now add tract select, query builder and remaining listeners which depend on viewer to be set up first
-        return Object.assign(atlasViewer, mgtrk.ObjectSelect.init(atlasViewer), mgtrk.TractSelect.init(atlasViewer));
+        return Object.assign(atlasViewer, mgtrk.ObjectSelect.init(atlasViewer), {});
     };
     
     return AtlasViewer;
