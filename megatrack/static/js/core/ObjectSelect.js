@@ -7,7 +7,7 @@ mgtrk.ObjectSelect = (function() {
     ObjectSelect.init = (_parent) => {
         
         // have separate objects for Tract, Lesion, Cortical
-        const tractTab = mgtrk.TractSelectTab.init();
+        const tractTab = mgtrk.TractSelectTab.init(_parent);
         const tractTemplates = tractTab.templates(false);
         
         const lesionTab = mgtrk.LesionSelectTab.init();

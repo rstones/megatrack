@@ -222,10 +222,10 @@
     height: 8px;
 }
 
-.dataset-select-container {
+/*.dataset-select-container {
     width: 30%;
     float: left;
-}
+}*/
 
 #add-dataset-select {
     width: 100%;
@@ -244,14 +244,14 @@
     background: rgb(225,225,225);
 }
 
-#dataset-select {
+/*#dataset-select {
     position: absolute;
     top: 0px;
     left: 0px;
     box-shadow: 2px 2px 2px lightgrey;
     border-radius: 5px;
     z-index: 3;
-}
+}*/
 
 #update-query-button {
     border-radius: 5px;

@@ -84,11 +84,11 @@
     border-radius: 5px;
 }
 
-.tract-select-container {
+/*.tract-select-container {
     width: 250px;
     float: left;
     margin-bottom: 7px;
-}
+}*/
 
 #add-tract-select {
     width: 100%;    
@@ -261,19 +261,19 @@
     width: 0%;
 }
 
-#tract-select-container {
+/*#tract-select-container {
     float: left;
     cursor: pointer;
-}
+}*/
 
-#tract-select {
+/*#tract-select {
     position: absolute;
     top: 0px;
     left: 0px;
     box-shadow: 2px 2px 2px lightgrey;
     border-radius: 5px;
     z-index: 3;
-}
+}*/
 
 #tract-prob-range-slider-wrapper {
     margin-top: 10px;

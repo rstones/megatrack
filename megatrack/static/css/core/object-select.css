@@ -5,7 +5,40 @@
 
 
 .tract-select-tab {
+    position: relative;
     height: 100%;
     box-sizing: border-box;
     padding: 10px;
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.dataset-select-container {
+    width: 100%;
+}
+
+#dataset-select {
+    width: 49%;
+}
+
+#add-constraint-select {
+    width: 49%;
+}
+
+.tract-select-container {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+    padding: inherit;
+}
+
+#tract-select {
+    width: 49%;
+}
+
+#add-tract-query-button {
+    width: 49%;
+    display: inline-block;
 }

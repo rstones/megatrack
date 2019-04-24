@@ -103,6 +103,7 @@ select {
 	height: 28px;
 	background: url("../../images/select-caret.png") 96% / 10px no-repeat white;
 	padding-left: 3px;
+	border-radius: 5px;
 }
 
 .select-small {
