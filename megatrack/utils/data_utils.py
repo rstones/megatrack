@@ -50,20 +50,20 @@ def generate_average_density_map(data_dir, file_path_data, tract, space):
     Then saves averaged density map in data/temp folder so it can be sent in 
     a response later.
     '''
-    data = np.zeros((len(file_path_data), 91, 109, 91), dtype=np.int16)
+    data = np.zeros((len(file_path_data), 91, 109, 91), dtype=np.float32)
     for i in range(len(file_path_data)):
         subject_id = file_path_data[i][0]
         dataset_dir = file_path_data[i][1]
         method = file_path_data[i][2]
         data[i] = nib.load(file_path(data_dir, dataset_dir, tract.file_path, method, subject_id, space, tract.code, 'nii.gz')).get_data()
     
-    data[np.nonzero(data)] = 255 # 'binarize' to 255 before averaging
+    data[np.nonzero(data)] = 1 # binarize before averaging
     mean = np.mean(data, axis=0)
     
     # add the template affine and header to the averaged nii to ensure correct alignment in XTK library
     # maybe cache the template affine and header on startup so we don't need to do this load here?
     template = nib.load(data_dir+'/'+TEMPLATE_FILE_NAME)
-    new_img = Nifti1Image(mean.astype(np.int16), template.affine, template.header)
+    new_img = Nifti1Image(mean.astype(np.float32), template.affine, template.header)
     temp_file_path = temp_file(data_dir, tract.code , '.nii.gz')
     nib.save(new_img, temp_file_path)
     return temp_file_path
