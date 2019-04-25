@@ -283,7 +283,7 @@ def get_dynamic_tract_info(tract_code, threshold):
     
     # validate threshold
     try:
-        threshold = int(threshold) * (255. / 100) # scale threshold to 0 - 255 since density map is stored in this range
+        threshold = int(threshold) * 0.01 # scale threshold to 0 - 1 since density map is stored in this range
     except ValueError:
         current_app.logger.info('Invalid threshold value applied, returning 404...')
         return f'Invalid threshold value {threshold} sent to server.', 404
