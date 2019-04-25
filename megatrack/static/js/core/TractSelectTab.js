@@ -8,7 +8,8 @@ mgtrk.TractSelectTab = (function() {
     
         const tractSelectTab = {
             data: {},
-            availableTracts: {}
+            availableTracts: {},
+            currentDatasetMethod: []
         };
         
         tractSelectTab.templates = (removeIcons) => {
@@ -34,7 +35,7 @@ mgtrk.TractSelectTab = (function() {
                                                 </div>
                                                 <div class="tract-select-container">
                                                     <select id="tract-select" disabled>
-                                                        <option value="default" disabled selected>Add tract...</option>
+                                                        <option value="default" disabled selected>Select tract...</option>
                                                     </select>
                                                     <div id="add-tract-query-button" class="button-disabled">
                                                         <span id="add-tract-query-button-text">Add</span>
@@ -83,6 +84,7 @@ mgtrk.TractSelectTab = (function() {
                 
                 $('#dataset-select').change(function(event) {
                     const targetVal = JSON.parse(event.currentTarget.value);
+                    tractSelectTab.currentDatasetMethod = targetVal;
                     const datasetCode = targetVal[0];
                     const methodCode = targetVal[1];
                     
@@ -102,11 +104,25 @@ mgtrk.TractSelectTab = (function() {
                     $addConstSelect.prop('disabled', false);
                     
                     // clear the constraints table
-                    $('#constraints-table > tbody').remove();
+                    $('#constraints-table > tbody').children().remove();
                     
                     // disable tract select and Add button
                     $('#tract-select').prop('disabled', true);
                     $('#add-tract-query-button').prop('disabled', true);
+                    
+                    // disable/enable allowed tracts for selected dataset in the tract select
+                    $('#tract-select > option').each(function(idx, el) {
+                        const tractCode = $(this).attr('id');
+                        const tract = tractSelectTab.availableTracts[tractCode];
+                        if (!tract) { return; }
+                        if (!tract.datasets[datasetCode]) {
+                            $(this).prop('disabled', true);
+                        } else if (tract.datasets[datasetCode] && tract.datasets[datasetCode].indexOf(methodCode) == -1) {
+                            $(this).prop('disabled', true);
+                        } else {
+                            $(this).prop('disabled', false);
+                        }
+                    });
                 });
                 
                 $('#add-constraint-select').change(function(event) {
@@ -116,12 +132,13 @@ mgtrk.TractSelectTab = (function() {
                     const datasetCode = datasetSelectVal[0];
                     const methodCode = datasetSelectVal[1];
                     
-                    const constraints = tractSelectTab.data[datasetCode].queryParams;
+                    const constraints = tractSelectTab.data[datasetCode].queryParams[constraintCode];
                     
                     // add constraint to constraints table
-                    $('#constraints-table').append(
-                        `<tr id="${constraintCode}-constraint" class="query-constraint-row">
-                            <td id="query-name" class="query-constraint-table-cell">${constraints[constraintCode].label}</td>
+                    $('#constraints-table > tbody').append(
+                        `<tr id="${constraintCode}-constraint" class="query-constraint-row"
+                                        data-constraint-code="${constraintCode}" data-constraint-type="${constraints.type}">
+                            <td id="query-name" class="query-constraint-table-cell">${constraints.label}</td>
                             <td id="query-control" class="query-constraint-table-cell"></td>
                             <td id="query-remove" class="query-constraint-table-cell"><div class="clickable remove-icon" title="Remove constraint"></div></td>
                          </tr>
@@ -140,19 +157,19 @@ mgtrk.TractSelectTab = (function() {
                     });
                     
                     const rangeConstraint = function() {
-                        var instance = this;
-                        var controlCell = $(`#${datasetCode}-${methodCode}-${queryConstraint.queryCode}-query > #query-control`);
+                        const instance = this;
+                        const controlCell = $(`#${constraintCode}-constraint > #query-control`);
                         controlCell.append('<div id="query-range-slider"></div>');
-                        queryConstraint.sliderDiv = $(`#${datasetCode}-${methodCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider`);
-                        queryConstraint.sliderDiv.append('<div id="query-range-min-handle" class="ui-slider-handle query-slider-handle"></div>');
-                        queryConstraint.sliderDiv.append('<div id="query-range-max-handle" class="ui-slider-handle query-slider-handle"></div>');
-                        var minHandle = $(`#${datasetCode}-${methodCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider > #query-range-min-handle`);
-                        var maxHandle = $(`#${datasetCode}-${methodCode}-${queryConstraint.queryCode}-query > #query-control > #query-range-slider > #query-range-max-handle`);
-                        queryConstraint.sliderDiv.slider({
+                        const $slider = $(`#${constraintCode}-constraint > #query-control > #query-range-slider`);
+                        $slider.append('<div id="query-range-min-handle" class="ui-slider-handle query-slider-handle"></div>');
+                        $slider.append('<div id="query-range-max-handle" class="ui-slider-handle query-slider-handle"></div>');
+                        const minHandle = $slider.find('#query-range-min-handle');
+                        const maxHandle = $slider.find('#query-range-max-handle');
+                        $slider.slider({
                             range: true,
-                            min: queryConstraint.queryParams.options.min,
-                            max: queryConstraint.queryParams.options.max,
-                            values: [queryConstraint.queryParams.options.initMin, queryConstraint.queryParams.options.initMax],
+                            min: constraints.options.min,
+                            max: constraints.options.max,
+                            values: [constraints.options.initMin, constraints.options.initMax],
                             create: function() {
                                 minHandle.text($(this).slider("values",0));
                                 maxHandle.text($(this).slider("values",1));
@@ -163,7 +180,10 @@ mgtrk.TractSelectTab = (function() {
                                 maxHandle.text(ui.values[1]);
                             },
                             stop: function(event, ui) {
-                                $('#update-query-button').trigger('constraint:change');
+                                // $('#update-query-button').trigger('constraint:change');
+                                /*
+                                    Trigger a constraint:change event on the appropriate element here?
+                                */
                             }
                         });
                     };
@@ -171,8 +191,8 @@ mgtrk.TractSelectTab = (function() {
                     const radioConstraint = function() {
                         //queryConstraint.queryRow = $('#'+queryConstraint.datasetCode+'-'+queryConstraint.queryCode+'-query');
                         $(`#${constraintCode}-constraint > #query-control`).append('<form>');
-                        const queryValues = constraints[constraintCode].options.values;
-                        const queryLabels = constraints[constraintCode].options.labels;
+                        const queryValues = constraints.options.values;
+                        const queryLabels = constraints.options.labels;
                         for (let i=0; i<queryValues.length; i++) {
                             $(`#${constraintCode}-constraint > #query-control > form`).append(
                                     `<input type="radio" class="query-constraint" 
@@ -184,8 +204,8 @@ mgtrk.TractSelectTab = (function() {
                     const checkboxConstraint = function() {
                         //queryConstraint.queryRow = $(`#${datasetCode}-${methodCode}-${queryConstraint.queryCode}-query`);
                         $(`#${constraintCode}-constraint > #query-control`).append('<form>');
-                        const queryValues = constraints[constraintCode].options.values;
-                        const queryLabels = constraints[constraintCode].options.labels;
+                        const queryValues = constraints.options.values;
+                        const queryLabels = constraints.options.labels;
                         for (let i=0; i<queryValues.length; i++) {
                             $(`#${constraintCode}-constraint > #query-control > form`).append(
                                     `<input type="checkbox" class="query-constraint"
@@ -195,7 +215,7 @@ mgtrk.TractSelectTab = (function() {
                     };
                     
                     // add functionality specific to constraint type
-                    switch (constraints[constraintCode].type) {
+                    switch (constraints.type) {
                         case "radio":
                             radioConstraint();
                             break;
@@ -219,14 +239,65 @@ mgtrk.TractSelectTab = (function() {
                 
                 $('#tract-select').change(function(event) {
                     // enable Add button
+                    $('#add-tract-query-button').removeClass('button-disabled');
+                    $('#add-tract-query-button').addClass('button');
                 });
                 
                 $('#add-tract-query-button').click(function(event) {
-                    // build the new query and send the request for a given tract
-                   
-                    // add new tract query to tract tabs panel
-                   
-                    // update renderers with returned tract 
+                    if (!$('#add-tract-query-button').hasClass('button-disabled')) {
+                        // build the new query and send the request for a given tract
+                        // loop over rows in #constraints-table
+                        // get query id and values depending on range, checkbox, radio
+                        const datasetCode = tractSelectTab.currentDatasetMethod[0];
+                        const methodCode = tractSelectTab.currentDatasetMethod[1];
+                        const newQuery = {};
+                        newQuery[datasetCode] = {
+                                'method': methodCode,
+                                'constraints': {}
+                        };
+                        
+                        const constraints = newQuery[datasetCode].constraints;
+                        
+                        $('#constraints-table > tbody > tr.query-constraint-row').each(function(idx, el) {
+                             // get constraint name and type
+                             const constraintCode = $(this).attr('data-constraint-code');
+                             const constraintType = $(this).attr('data-constraint-type');
+                             
+                             constraints[constraintCode] = {
+                                'type': constraintType
+                             };
+                             
+                             // switch on type 'range', 'radio', 'checkbox'
+                             // add object to constraints
+                             switch (constraintType) {
+                                 case "radio":
+                                    constraints[constraintCode].value = $(this).find(`input[name="${constraintCode}"]:checked`).val();
+                                    break;
+                                 case "checkbox":
+                                    const vals = [];
+                                    $(this).find(`input[name="${constraintCode}"]:checked`).each(function(idx, el) {
+                                        vals.push($(this).val());
+                                    });
+                                    
+                                    if (vals.length > 0) {
+                                        constraints[constraintCode].values = vals;
+                                    } else{
+                                        delete constraints[constraintCode];
+                                    }
+                                    
+                                    break;
+                                 case "range":
+                                    const $slider = $(this).find('#query-range-slider');
+                                    constraints[constraintCode].min = $slider.slider('values', 0);
+                                    constraints[constraintCode].max = $slider.slider('values', 1);
+                                    break;
+                             }
+                        });
+                        
+                        // add new tract query to tract tabs panel (trigger an event for this)
+                       
+                        // update renderers with returned tract (trigger an event for this)
+                    }
                 });
             };
               
