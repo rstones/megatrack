@@ -73,7 +73,9 @@
 
 
 #tract-panel {
-    width: 842px;
+    height: 250px;
+    width: 822px;
+    padding: 10px;
     float: left;
     /*padding-left: 10px;*/ 
     /*padding-right: 2px;*/

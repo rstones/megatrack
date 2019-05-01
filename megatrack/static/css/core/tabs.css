@@ -1,4 +1,4 @@
-#tabs-wrapper {
+.tabs-wrapper {
     display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6 */
     display: -moz-box; /* OLD - Firefox 19- (buggy but mostly works) */
     display: -ms-flexbox; /* TWEENER - IE 10 */
@@ -12,7 +12,7 @@
 }
 
 
-#tabs-header {
+.tab-headers-wrapper {
     height: 30px;
     border-bottom: 1px solid lightgrey;
 }
@@ -53,7 +53,7 @@
     background-color: white;
 }
 
-#tabs-contents {
+.tab-contents-wrapper {
     height: 170px;
     border-left: 1px solid lightgrey;
     border-right: 1px solid lightgrey;

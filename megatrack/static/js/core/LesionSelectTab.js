@@ -10,8 +10,8 @@ mgtrk.LesionSelectTab = (function() {
         
         lesionSelectTab.templates = (removeIcons) => {
             
-            const contentTemplate = function(state, wrapperId, contentsId) {
-                $(`#${contentsId}`).append(`<div id="${wrapperId}">Lesion testing...</div>`);
+            const contentTemplate = function(state, wrapperId, contentsEl) {
+                contentsEl.append(`<div id="${wrapperId}">Lesion testing...</div>`);
             };
               
             

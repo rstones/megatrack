@@ -14,8 +14,8 @@ mgtrk.TractSelectTab = (function() {
         
         tractSelectTab.templates = (removeIcons) => {
             
-            const contentTemplate = function(state, wrapperId, contentsId) {
-                $(`#${contentsId}`).append(`<div id="${wrapperId}" class="tract-select-tab">
+            const contentTemplate = function(state, wrapperId, contentsEl) {
+                contentsEl.append(`<div id="${wrapperId}" class="tract-select-tab">
                                                 <div class="dataset-query-builder-container">
                                                     <div class="dataset-select-container">
                                                         <select id="dataset-select">
@@ -295,8 +295,26 @@ mgtrk.TractSelectTab = (function() {
                         });
                         
                         // add new tract query to tract tabs panel (trigger an event for this)
-                       
                         // update renderers with returned tract (trigger an event for this)
+                        
+                        const tractCode = $('#tract-select').val();
+                        
+                        const tractQuery = {
+                            type: 'tract',
+                            code: tractCode,
+                            query: newQuery,
+                            settings: {
+                                name: tractSelectTab.availableTracts[tractCode].name,
+                                code: tractCode,
+                                currentQuery: newQuery,
+                                description: tractSelectTab.availableTracts[tractCode].description
+                            }
+                        };
+                        
+                        // pass tractQuery as list within in a list as we don't want to unpack into
+                        // separate args in the event handler function, just want a single arg which
+                        // is a list of tract queries
+                        $(`#${_parent.containerId}`).trigger('tract_query:add', [[tractQuery]]);
                     }
                 });
             };

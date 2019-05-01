@@ -9,7 +9,7 @@ mgtrk.Tabs = (function() {
      * @param {Object} contents             Contains inital tab headers and contents.
      * @param {Function} tabSelectHandler   Called when a tab is selected. Will be passed the tab id.
      */
-    Tabs.init = (_parent, templates, initState, options) => {
+    Tabs.init = (containerId, templates, initState, options) => {
         const tabs = {};
         
         /*
@@ -31,6 +31,8 @@ mgtrk.Tabs = (function() {
         
         tabs.selectedTabId = '';
         
+        tabs.containerId = containerId;
+        tabs.container = $(`#${tabs.containerId}`);
         tabs.templates = templates;
         
         tabs.removeTab = (id) => {
@@ -39,21 +41,21 @@ mgtrk.Tabs = (function() {
             delete tabs.cache[id];
             $(document).trigger('tabs:remove', [id]);
             if (tabs.scrollingActive) {
-                if (Object.keys(tabs.cache).length * $('.tab-header').outerWidth() + 2*$('.tabs-scroll').width() < $('#tabs-header').width()) {
+                if (Object.keys(tabs.cache).length * tabs.container.find('.tab-header').outerWidth() + 2*tabs.container.find('.tabs-scroll').width() < tabs.container.find('.tab-headers-wrapper').width()) {
                     // disable scrolling
                     tabs.scrollingActive = false;
                     // hide all scrolling paraphenalia
-                    $('#tabs-left-scroll').hide();
-                    $('#tabs-right-scroll').hide();
-                    $('#tabs-left-hint').hide();
-                    $('#tabs-right-hint').hide();
+                    tabs.container.find('.tabs-left-scroll').hide();
+                    tabs.container.find('.tabs-right-scroll').hide();
+                    tabs.container.find('.tabs-left-hint').hide();
+                    tabs.container.find('.tabs-right-hint').hide();
                     // hide tabs and reshow them all
-                    $('#tabs-header > .tab-header').hide();
+                    tabs.container.find('.tab-headers-wrapper > .tab-header').hide();
                     $.each(Object.keys(tabs.cache), function(idx, value) {
                         $(`#${Object.keys(tabs.cache)[idx]}-tab-header`).show();
                     });
                 } else {
-                    $('#tabs-header > .tab-header').hide();
+                    tabs.container.find('.tab-headers-wrapper > .tab-header').hide();
                     if (tabs.leftMostTab === 0) {
                         // tabs at far left
                         tabs.updateTabsDisplay();
@@ -82,8 +84,8 @@ mgtrk.Tabs = (function() {
                 }
             }
             // reset scroll controls
-            $('#tabs-left-scroll').hide();
-            $('#tabs-right-scroll').hide();
+            tabs.container.find('.tabs-left-scroll').hide();
+            tabs.container.find('.tabs-right-scroll').hide();
             tabs.maxNumTabsVisible = 0;
             tabs.leftMostTab = 0;
             tabs.leftScrollDisabled = true;
@@ -108,7 +110,7 @@ mgtrk.Tabs = (function() {
             $(`#${id}-tab-contents`).show();
             tabs.selectedTabId = id; 
             // change the tab header style to selected
-            $('.tab-header').removeClass('tab-header-selected');
+            tabs.container.find('.tab-header').removeClass('tab-header-selected');
             $(`#${id}-tab-header`).toggleClass('tab-header-selected');
             // add icons like remove or toggle to the header
             // do I only want them visible when tab is selected?
@@ -119,9 +121,12 @@ mgtrk.Tabs = (function() {
         };
         
         tabs._addTab = (id, insertHeader, insertContent, state) => {
+        
             // add elements to DOM (tab header)
             const customHeaderClass = tabs.options.headerClass || '';
-            $('#tabs-header').append(`<div id="${id}-tab-header" class="${customHeaderClass} tab-header clickable"></div>`);
+            tabs.container.find('.tab-headers-wrapper').append(
+                `<div id="${id}-tab-header" class="${customHeaderClass} tab-header clickable"></div>`
+            );
             insertHeader(state, `${id}-tab-header`);
             // have an event handler for clicks on the tab to display the contents
             $(`#${id}-tab-header`).on('click', function(event) {
@@ -131,7 +136,7 @@ mgtrk.Tabs = (function() {
                 tabs.selectTab(id);
             });
             // add content template to cache
-            insertContent(state, `${id}-tab-contents`, 'tabs-contents');
+            insertContent(state, `${id}-tab-contents`, tabs.container.find('.tab-contents-wrapper'));
             $(`#${id}-tab-contents`).hide();
             
             tabs.cache[id] = state;
@@ -141,17 +146,17 @@ mgtrk.Tabs = (function() {
                 tabs.tabsAtFarRight();
                 tabs.leftMostTab = Object.keys(tabs.cache).length - tabs.maxNumTabsVisible;
                 tabs.updateTabsDisplay();
-            } else if (Object.keys(tabs.cache).length * $('.tab-header').outerWidth() + 2*$('.tabs-scroll').width() > $('#tabs-header').width()) {
+            } else if (Object.keys(tabs.cache).length * tabs.container.find('.tab-header').outerWidth() + 2*tabs.container.find('.tabs-scroll').width() > tabs.container.find('.tab-headers-wrapper').width()) {
                 tabs.scrollingActive = true;
                 // display scroll buttons
-                $('#tabs-left-scroll').show();
+                tabs.container.find('.tabs-left-scroll').show();
                 tabs.disableScroll('left', false);
-                $('#tabs-right-scroll').show();
+                tabs.container.find('.tabs-right-scroll').show();
                 tabs.disableScroll('right', true);
                 // calculate max number of tabs to show
-                tabs.maxNumTabsVisible = Math.floor(($('#tabs-header').width() - 2*$('.tabs-scroll').width()) / $(`#${id}-tab-header`).outerWidth());
+                tabs.maxNumTabsVisible = Math.floor((tabs.container.find('.tab-headers-wrapper').width() - 2*tabs.container.find('.tabs-scroll').width()) / $(`#${id}-tab-header`).outerWidth());
                 // calculate space left over to display hint tab header sections
-                tabs.hintSpace = $('#tabs-header').width() - tabs.maxNumTabsVisible*$('.tab-header').outerWidth() - 2*$('.tabs-scroll').width();
+                tabs.hintSpace = tabs.container.find('.tab-headers-wrapper').width() - tabs.maxNumTabsVisible*tabs.container.find('.tab-header').outerWidth() - 2*tabs.container.find('.tabs-scroll').width();
                 tabs.tabsAtFarRight();
                 tabs.leftMostTab = Object.keys(tabs.cache).length - tabs.maxNumTabsVisible;
                 tabs.updateTabsDisplay();
@@ -166,11 +171,11 @@ mgtrk.Tabs = (function() {
         tabs.disableScroll = (direction, disable) => {
             tabs[`${direction}ScrollDisabled`] = disable;
             if (disable) {
-                $(`#tabs-${direction}-scroll`).addClass('tabs-scroll-disabled');
-                $(`#tabs-${direction}-scroll`).removeClass('clickable');
+                tabs.container.find(`.tabs-${direction}-scroll`).addClass('tabs-scroll-disabled');
+                tabs.container.find(`.tabs-${direction}-scroll`).removeClass('clickable');
             } else {
-                $(`#tabs-${direction}-scroll`).removeClass('tabs-scroll-disabled');
-                $(`#tabs-${direction}-scroll`).addClass('clickable');
+                tabs.container.find(`.tabs-${direction}-scroll`).removeClass('tabs-scroll-disabled');
+                tabs.container.find(`.tabs-${direction}-scroll`).addClass('clickable');
             }
         };
         
@@ -179,9 +184,9 @@ mgtrk.Tabs = (function() {
          */
         tabs.tabsAtFarRight = () => {
             tabs.disableScroll('right', true);
-            $('#tabs-right-hint').hide();
-            $('#tabs-left-hint').outerWidth(tabs.hintSpace);
-            $('#tabs-left-hint').show();
+            tabs.container.find('.tabs-right-hint').hide();
+            tabs.container.find('.tabs-left-hint').outerWidth(tabs.hintSpace);
+            tabs.container.find('.tabs-left-hint').show();
         };
         
         /*
@@ -189,26 +194,26 @@ mgtrk.Tabs = (function() {
          */
         tabs.tabsAtFarLeft = () => {
             tabs.disableScroll('left', true);
-            $('#tabs-left-hint').hide();
-            $('#tabs-right-hint').outerWidth(tabs.hintSpace);
-            $('#tabs-right-hint').show();
+            tabs.container.find('.tabs-left-hint').hide();
+            tabs.container.find('.tabs-right-hint').outerWidth(tabs.hintSpace);
+            tabs.container.find('.tabs-right-hint').show();
         };
         
         /*
          * Display scrolling paraphenalia for tabs somewhere in middle of scrolling range
          */
         tabs.tabsInMiddle = () => {
-            $('#tabs-left-hint').outerWidth(tabs.hintSpace / 2);
-            $('#tabs-left-hint').show();
-            $('#tabs-right-hint').outerWidth(tabs.hintSpace / 2);
-            $('#tabs-right-hint').show();
+            tabs.container.find('.tabs-left-hint').outerWidth(tabs.hintSpace / 2);
+            tabs.container.find('.tabs-left-hint').show();
+            tabs.container.find('.tabs-right-hint').outerWidth(tabs.hintSpace / 2);
+            tabs.container.find('.tabs-right-hint').show();
         };
         
         /*
          * Display newly visible tabs after scrolling has occured
          */
         tabs.updateTabsDisplay = () => {
-            $('#tabs-header > .tab-header').hide();
+            tabs.container.find('.tab-headers-wrapper > .tab-header').hide();
             $.each(Object.keys(tabs.cache).slice(tabs.leftMostTab, tabs.leftMostTab+tabs.maxNumTabsVisible), function(idx, value) {
                 $(`#${value}-tab-header`).show();
             });
@@ -235,22 +240,22 @@ mgtrk.Tabs = (function() {
         };
         
         // insert DOM elements for general header and contents section
-        $(`#${_parent.tabsContainerId}`).append(`<div id="tabs-wrapper">
-                                                    <div id="tabs-header">
-                                                        <div id="tabs-left-scroll" class="tabs-scroll clickable"> < </div>
-                                                        <div id="tabs-left-hint" class="tabs-hint clickable"></div>
-                                                        <div id="tabs-right-scroll" class="tabs-scroll clickable"> > </div>
-                                                        <div id="tabs-right-hint" class="tabs-hint clickable"></div>
-                                                    </div>
-                                                    <div id="tabs-contents"></div>
-                                                 </div>`);
+        tabs.container.append(`<div id="${tabs.containerId}-tabs" class="tabs-wrapper">
+                                <div class="tab-headers-wrapper">
+                                    <div class="tabs-left-scroll tabs-scroll clickable"> < </div>
+                                    <div class="tabs-left-hint tabs-hint clickable"></div>
+                                    <div class="tabs-right-scroll tabs-scroll clickable"> > </div>
+                                    <div class="tabs-right-hint tabs-hint clickable"></div>
+                                </div>
+                                <div class="tab-contents-wrapper"></div>
+                             </div>`);
         
-        $('#tabs-left-scroll').hide();
-        $('#tabs-right-scroll').hide();
-        $('#tabs-left-hint').hide();
-        $('#tabs-right-hint').hide();
+        tabs.container.find('.tabs-left-scroll').hide();
+        tabs.container.find('.tabs-right-scroll').hide();
+        tabs.container.find('.tabs-left-hint').hide();
+        tabs.container.find('.tabs-right-hint').hide();
         
-        $('#tabs-left-scroll').on('click', function(event) {
+        tabs.container.find('.tabs-left-scroll').on('click', function(event) {
             if (!tabs.leftScrollDisabled) {
                 tabs.disableScroll('right', false);
                 tabs.leftMostTab--;
@@ -263,12 +268,12 @@ mgtrk.Tabs = (function() {
             }
         });
         
-        $('#tabs-left-hint').on('click', function(event) {
+        tabs.container.find('.tabs-left-hint').on('click', function(event) {
             tabs.selectTab(Object.keys(tabs.cache)[tabs.leftMostTab-1]);
-            $('#tabs-left-scroll').trigger('click');
+            tabs.container.find('#tabs-left-scroll').trigger('click');
         });
         
-        $('#tabs-right-scroll').on('click', function(event) {
+        tabs.container.find('.tabs-right-scroll').on('click', function(event) {
             if (!tabs.rightScrollDisabled) {
                 tabs.disableScroll('left', false);
                 tabs.leftMostTab++;
@@ -281,9 +286,9 @@ mgtrk.Tabs = (function() {
             }
         });
         
-        $('#tabs-right-hint').on('click', function(event) {
+        tabs.container.find('.tabs-right-hint').on('click', function(event) {
             tabs.selectTab(Object.keys(tabs.cache)[tabs.leftMostTab+3]);
-            $('#tabs-right-scroll').trigger('click');
+            tabs.container.find('.tabs-right-scroll').trigger('click');
         });
         
         // insert the template for each header and corresponding contents in initState

@@ -10,8 +10,8 @@ mgtrk.CorticalSelectTab = (function() {
         
         corticalSelectTab.templates = (removeIcons) => {
             
-            const contentTemplate = function(state, wrapperId, contentsId) {
-                $(`#${contentsId}`).append(`<div id="${wrapperId}">Cortical testing...</div>`);
+            const contentTemplate = function(state, wrapperId, contentsEl) {
+                contentsEl.append(`<div id="${wrapperId}">Cortical testing...</div>`);
             };
               
             

@@ -36,7 +36,7 @@ mgtrk.ObjectSelect = (function() {
         };
         
         // insert Tabs object with Tract, Lesion, Cortical tabs
-        _parent.tabsContainerId = _parent.objectSelectId;
+        //_parent.tabsContainerId = _parent.objectSelectId;
         
         const initState = {
             tract: {
@@ -53,9 +53,11 @@ mgtrk.ObjectSelect = (function() {
             }
         };
         
-        const objectSelect = mgtrk.Tabs.init(_parent, templates, initState, options);
+        const objectSelect = mgtrk.Tabs.init(_parent.objectSelectId, templates, initState, options);
         
-        return objectSelect;
+        return {
+            objectSelect: objectSelect
+        };
     };
     
     return ObjectSelect;
