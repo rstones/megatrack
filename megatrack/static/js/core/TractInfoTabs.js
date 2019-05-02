@@ -10,12 +10,16 @@ mgtrk.TractInfoTabs = (function() {
             tract: {
                 header: function(state, wrapperId) {
                     // eventually the state object might define whether to use remove icon or toggle
-                    $(`#${wrapperId}`).append(`<div class="tab-header-color-swatch"></div>
+                    
+                    // use getElementById here to avoid trouble escaping { } with jQuery
+                    const $tabHeader = $(document.getElementById(wrapperId));
+                    
+                    $tabHeader.append(`<div class="tab-header-color-swatch"></div>
                                                             <div class="tab-header-tract-name" title="${state.name}">${state.name}</div>`);
                                                             
                     if (removeIcons) {
-                        $(`#${wrapperId}`).append(`<div id="${state.code}-tab-remove" class="clickable tab-header-remove-icon"></div>`);
-                        $(`#${state.code}-tab-remove`).on('click', function(event) {
+                        $tabHeader.append(`<div id="${state.tractQueryId}-tab-remove" class="clickable tab-header-remove-icon"></div>`);
+                        $(document.getElementById(`#${state.tractQueryId}-tab-remove`)).on('click', function(event) {
                             // remove tract from renderer
                             // fire remove-tract event
                             
@@ -34,50 +38,50 @@ mgtrk.TractInfoTabs = (function() {
                     }
                     
                     // add init color to header color swatch
-                     $(`#${state.code}-tab-header > .tab-header-color-swatch`).addClass(`${state.color}-colormap`);
+                     $tabHeader.find(`.tab-header-color-swatch`).addClass(`${state.color}-colormap`);
                 },
                 content: function(state, wrapperId, contentsEl) {
                     contentsEl.append(`<div id="${wrapperId}" class="tract-info-tab">
                         <div class="info-col tract-info-tab-col">
                             <div class="info-col-query"></div>
                             <div class="info-col-buttons">
-                                <div id="${state.code}-download-button" class="download-button button clickable">Download</div>
-                                <div id="${state.code}-info-button" class="info-button button clickable">Tract info</div>
+                                <div id="${state.tractQueryId}-download-button" class="download-button button clickable">Download</div>
+                                <div id="${state.tractQueryId}-info-button" class="info-button button clickable">Tract info</div>
                             </div>
                         </div>
                         <div class="control-col tract-info-tab-col">
                             <div class="tract-control-wrapper">
                                 <div class="tract-control-label">Probability range (%):</div>
-                                    <div id="${state.code}-prob-range-slider" class="tract-slider">
-                                        <div id="${state.code}-prob-range-min-handle" class="ui-slider-handle tract-slider-handle"></div>
-                                        <div id="${state.code}-prob-range-max-handle" class="ui-slider-handle tract-slider-handle"></div>
+                                    <div id="${state.tractQueryId}-prob-range-slider" class="tract-slider">
+                                        <div id="${state.tractQueryId}-prob-range-min-handle" class="ui-slider-handle tract-slider-handle"></div>
+                                        <div id="${state.tractQueryId}-prob-range-max-handle" class="ui-slider-handle tract-slider-handle"></div>
                                     </div>
                                 </div>
                                 <div class="clear"></div>
                                 <div class="tract-control-wrapper">
                                     <div class="tract-control-label">Opacity (%):</div>
-                                    <div id="${state.code}-opacity-slider" class="tract-slider">
-                                        <div id="${state.code}-opacity-slider-handle" class="ui-slider-handle tract-slider-handle"></div>
+                                    <div id="${state.tractQueryId}-opacity-slider" class="tract-slider">
+                                        <div id="${state.tractQueryId}-opacity-slider-handle" class="ui-slider-handle tract-slider-handle"></div>
                                     </div>
                                 </div>
                                 <div class="tract-control-wrapper">
                                     <div class="tract-control-label">Color:</div>
-                                    <div id="${state.code}-color-select">
-                                        <div id="${state.code}-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div>
+                                    <div id="${state.tractQueryId}-color-select">
+                                        <div id="${state.tractQueryId}-colormap-indicator" class="clickable colormap-indicator"><div class="colormap-indicator-caret"></div></div>
                                     </div>
                                 </div>
                         </div>
                         <div class="metrics-col tract-info-tab-col">
-                            <div id="${state.code}-prob-metrics-wrapper" class="tab-content-metrics-section">
+                            <div id="${state.tractQueryId}-prob-metrics-wrapper" class="tab-content-metrics-section">
                                 <span class="metrics-label">Probability map<br>analysis</span><div class="prob-metrics-help metrics-help help-icon clickable"></div>
-                                <div id="${state.code}-prob-metrics"></div>
+                                <div id="${state.tractQueryId}-prob-metrics"></div>
                             </div>
-                            <div id="${state.code}-pop-metrics-wrapper" class="tab-content-metrics-section">
+                            <div id="${state.tractQueryId}-pop-metrics-wrapper" class="tab-content-metrics-section">
                                 <span class="metrics-label">Demographic<br>analysis</span><div class="pop-metrics-help metrics-help help-icon clickable"></div>
-                                <div id="${state.code}-pop-metrics"></div>
+                                <div id="${state.tractQueryId}-pop-metrics"></div>
                             </div>
                         </div>
-                        <ul id="${state.code}-colormap-select" class="colormap-select"></ul>`
+                        <ul id="${state.tractQueryId}-colormap-select" class="colormap-select"></ul>`
                     );
                     
                     // add event handlers and stuff here
@@ -86,7 +90,8 @@ mgtrk.TractInfoTabs = (function() {
                     const datasetCode = Object.keys(state.currentQuery)[0]; // assuming only one dataset per query
                     const methodCode = state.currentQuery[datasetCode].method;
                     const constraints = state.currentQuery[datasetCode].constraints;
-                    const $infoCol = $(`#${wrapperId} > .info-col > .info-col-query`);
+                    const $tabContents = $(document.getElementById(wrapperId));
+                    const $infoCol = $tabContents.find(`.info-col > .info-col-query`);
                     $infoCol.append(
                         `<div class="dataset">${datasetCode}</div> <div class="method">${methodCode}</div>
                         <div class="constraints">
@@ -120,9 +125,10 @@ mgtrk.TractInfoTabs = (function() {
                     
                     
                     // add sliders to appropriate divs with init settings
-                    var probRangeMinHandle = $(`#${state.code}-prob-range-min-handle`);
-                    var probRangeMaxHandle = $(`#${state.code}-prob-range-max-handle`);
-                    $(`#${state.code}-prob-range-slider`).slider({
+                    var probRangeMinHandle = $(document.getElementById(`${state.tractQueryId}-prob-range-min-handle`));
+                    var probRangeMaxHandle = $(document.getElementById(`${state.tractQueryId}-prob-range-max-handle`));
+                    const $probRangeSlider = $(document.getElementById(`${state.tractQueryId}-prob-range-slider`));
+                    $probRangeSlider.slider({
                         range: true,
                         min: 0,
                         max: 100,
@@ -148,8 +154,9 @@ mgtrk.TractInfoTabs = (function() {
                         }
                     });
                     
-                    var opacitySliderHandle = $(`#${state.code}-opacity-slider-handle`);
-                    $(`#${state.code}-opacity-slider`).slider({
+                    var opacitySliderHandle = $(document.getElementById(`${state.tractQueryId}-opacity-slider-handle`));
+                    const $opacitySlider = $(document.getElementById(`${state.tractQueryId}-opacity-slider`));
+                    $opacitySlider.slider({
                         min: 0,
                         max: 100,
                         value: 100,
@@ -171,14 +178,14 @@ mgtrk.TractInfoTabs = (function() {
                     });
                     
                     // show init color in colormap select
-                    $(`#${state.code}-colormap-indicator`).addClass(`${state.color}-colormap`);
+                    $(document.getElementById(`${state.tractQueryId}-colormap-indicator`)).addClass(`${state.color}-colormap`);
                     
                     /*
                     Fire 'populate-colormap-select' event here so the following loop can move to AtlasViewer factory function?
                     */
                     for (let key in _parent.colormaps.colormaps) {
-                        $(`#${state.code}-colormap-select`).append(`<div id="${state.code}-${key}-colormap-select-item" class="colormap-select-item clickable ${key}-colormap">&nbsp&nbsp&nbsp</div>`);
-                        $(`#${state.code}-${key}-colormap-select-item`).on('click', {color: key}, function(event) {
+                        $(document.getElementById(`${state.tractQueryId}-colormap-select`)).append(`<div id="${state.tractQueryId}-${key}-colormap-select-item" class="colormap-select-item clickable ${key}-colormap">&nbsp&nbsp&nbsp</div>`);
+                        $(document.getElementById(`${state.tractQueryId}-${key}-colormap-select-item`)).on('click', {color: key}, function(event) {
                             // fetch selected tract code from colormap select
                             const tractCode = state.code;
                             const colormapMax = state.colormapMax;
@@ -191,25 +198,25 @@ mgtrk.TractInfoTabs = (function() {
                             if (oldColor != color) {
                                 state.color = color;
                                 $(document).trigger('colormap:change', [state]);
-                                $(`#${tractCode}-colormap-indicator`).removeClass(oldColor+'-colormap');
-                                $(`#${tractCode}-colormap-indicator`).addClass(color+'-colormap');
+                                $(document.getElementById(`${state.tractQueryId}-colormap-indicator`)).removeClass(oldColor+'-colormap');
+                                $(document.getElementById(`${state.tractQueryId}-colormap-indicator`)).addClass(color+'-colormap');
                                 
-                                $(`#${tractCode}-tab-header > .tab-header-color-swatch`).removeClass(oldColor+'-colormap');
-                                $(`#${tractCode}-tab-header > .tab-header-color-swatch`).addClass(color+'-colormap');
+                                $(document.getElementById(`${state.tractQueryId}-tab-header`)).find('.tab-header-color-swatch').removeClass(oldColor+'-colormap');
+                                $(document.getElementById(`${state.tractQueryId}-tab-header`)).find('.tab-header-color-swatch').addClass(color+'-colormap');
                             }
                         });
                     }
-                    $(`#${state.code}-colormap-select`).hide();
+                    $(document.getElementById(`${state.tractQueryId}-colormap-select`)).hide();
                     
-                    $(`#${state.code}-colormap-indicator`).on('click', {tractCode: state.code}, function(event) {
+                    $(document.getElementById(`${state.tractQueryId}-colormap-indicator`)).on('click', {tractQueryId: state.tractQueryId}, function(event) {
                         if ($(this).attr('disabled')) {
                             return;
                         }
-                        const tractCode = event.data.tractCode;
+                        const tractQueryId = event.data.tractQueryId;
                         // work out position of colormap indicator for current tract
-                        const indicatorPos = $(`#${tractCode}-colormap-indicator`).position();
-                        const indicatorOffset = $(`#${tractCode}-colormap-indicator`).offset();
-                        const colormapSelect = $(`#${tractCode}-colormap-select`);
+                        const indicatorPos = $(document.getElementById(`${tractQueryId}-colormap-indicator`)).position();
+                        const indicatorOffset = $(document.getElementById(`${tractQueryId}-colormap-indicator`)).offset();
+                        const colormapSelect = $(document.getElementById(`${tractQueryId}-colormap-select`));
                         
                         if ((indicatorOffset.top - $(window).scrollTop()) + colormapSelect.height() + 20 > $(window).height()) {
                             colormapSelect.css('top', indicatorPos.top - colormapSelect.height());
@@ -220,17 +227,16 @@ mgtrk.TractInfoTabs = (function() {
                         
                         // show colormap select
                         colormapSelect.show('blind');
-                        //$(`#${tractCode}-colormap-select`).css('display', 'block');
                     });
                     
                     $(document).on('click', function(event) {
-                        if (event.target.id.indexOf(`#${state.code}-colormap-indicator`) == -1 
-                                && event.target.parentElement.id.indexOf(`#${state.code}-colormap-indicator`) == -1) {
-                            $(`#${state.code}-colormap-select`).hide();
+                        if (event.target.id.indexOf(`#${state.tractQueryId}-colormap-indicator`) == -1 
+                                && event.target.parentElement.id.indexOf(`#${state.tractQueryId}-colormap-indicator`) == -1) {
+                            $(document.getElementById(`${state.tractQueryId}-colormap-select`)).hide();
                         }
                     });
                     $(window).resize(function() {
-                        $(`#${state.code}-colormap-select`).hide();
+                        $(document.getElementById(`${state.tractQueryId}-colormap-select`)).hide();
                     });
                     
                 }

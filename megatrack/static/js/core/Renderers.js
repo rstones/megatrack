@@ -37,10 +37,10 @@ mgtrk.Renderers = (function() {
         /*
          * Return -1 if labelmap with given code not found.
          */
-        renderers.findVolumeLabelmapIndex = function(code) {
+        renderers.findVolumeLabelmapIndex = function(id) {
             const labelmaps = renderers.volume.labelmap;
             for (let idx=0; idx<labelmaps.length; idx++) {
-                if (labelmaps[idx].code === code) {
+                if (labelmaps[idx].objectId === id) {
                     return idx;
                 }
             }
@@ -102,11 +102,11 @@ mgtrk.Renderers = (function() {
             }
         };
         
-        renderers.removeLabelmapFromVolume = function(tractCode) {            
+        renderers.removeLabelmapFromVolume = function(objectId) {            
             for (let i=renderers.volume.labelmap.length; i--;) {
                 const idx = i; //i - 1; 
                 const map = renderers.volume.labelmap[idx];
-                if (map.tractCode == tractCode) {
+                if (map.objectId == objectId) {
                     renderers.volume.labelmap.splice(idx, 1);
                     renderers.labelmapColors.splice(idx, 1);
                     renderers.removeLabelmapSlices(idx);
@@ -144,7 +144,7 @@ mgtrk.Renderers = (function() {
             // this is assuming there is only 1 cortical map visible and which is
             // first in the labelmap array
             if (renderers.volume.labelmap.length) {
-                if (renderers.volume.labelmap[0].code != 'cortical_surface') {
+                if (renderers.volume.labelmap[0].objectId != 'cortical_surface') {
                     renderers.removeAllLabelmaps();
                 } else {
                     const numLabelmaps = renderers.volume.labelmap.length;
@@ -190,7 +190,7 @@ mgtrk.Renderers = (function() {
             renderers.addingNewTract = true;
             $(document).trigger('view:disable');
             var map = new X.labelmap(renderers.volume);
-            map.code = code; // store tractCode on labelmap for access later. Need cleaner solution
+            map.objectId = settings.tractQueryId; // store tractCode on labelmap for access later. Need cleaner solution
             if (params) {
                 map.file = rootPath + '/'+mapType+'/'+code+'?'+$.param(params)+'&file_type=.nii.gz';
             } else {
@@ -232,7 +232,7 @@ mgtrk.Renderers = (function() {
                     renderers.corticalOverlayMapping = mapping;
                     
                     const surfaceMap = new X.labelmap(renderers.volume);
-                    surfaceMap.code = 'cortical_surface'; // can't remember what we need this for now!
+                    surfaceMap.objectId = 'cortical_surface'; // can't remember what we need this for now!
                     surfaceMap.file = `${rootPath}/get_cortical_surface_map/${atlasName}?file_type=.nii.gz`;
                     surfaceMap.colormap = function(normpixval) {
                         // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
@@ -247,7 +247,7 @@ mgtrk.Renderers = (function() {
                     //renderers.resetSlicesForDirtyFiles();
                     
                     const map = new X.labelmap(renderers.volume)
-                    map.code = 'cortical';
+                    map.objectId = 'cortical';
                     map.file = `${rootPath}/get_cortical_map/${atlasName}?file_type=.nii.gz`;
                     map.colormap = function(normpixval) {
                         // the labelmap voxel values are scaled to between 0 and 255 in X.parser.reslice2
@@ -304,7 +304,7 @@ mgtrk.Renderers = (function() {
                 // count the number of tract labelmaps we need to wait for updating
                 let numTracts = 0;
                 for (let k = 0; k < renderers.volume.labelmap.length; k++) {
-                    if (!['lesion', 'cortical', 'cortical_surface'].includes(renderers.volume.labelmap[k].code)) {
+                    if (!['lesion', 'cortical', 'cortical_surface'].includes(renderers.volume.labelmap[k].objectId)) {
                         numTracts++;
                     }
                 }
@@ -420,13 +420,17 @@ mgtrk.Renderers = (function() {
         
         $(document).on("colormap:change", function(event, settings) {
             const tractCode = settings.code;
+            const tractQueryId = settings.tractQueryId;
             const color = settings.color;
             const colormapMin = settings.colormapMin;
             const colormapMax = settings.colormapMax;
             const opacity = settings.opacity;
+            console.log('colormap:change fired! ' + tractQueryId);
             for (let i=0; i<renderers.volume.labelmap.length; i++) {
                 const map = renderers.volume.labelmap[i];
-                if (map.file.indexOf(tractCode) != -1) {
+                console.log(i + ' ' + map.objectId);
+                if (map.objectId === tractQueryId) {
+                    console.log('matched ' + map.objectId);
                     map.colormap = _parent.colormaps.generateXTKColormap(_parent.colormaps.colormapFunctions[color](
                                                                                                                 colormapMin,
                                                                                                                 colormapMax,
@@ -441,8 +445,8 @@ mgtrk.Renderers = (function() {
             return false;
         });
         
-        $(document).on('tract:remove', function(event, tractCode) {
-            renderers.removeLabelmapFromVolume(tractCode);
+        $(document).on('tract:remove', function(event, objectId) {
+            renderers.removeLabelmapFromVolume(objectId);
         });
         
         return {

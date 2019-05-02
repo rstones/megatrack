@@ -31,7 +31,8 @@ mgtrk.Query = (function() {
             return false; // we may want a situation where no constraints are passed though?
         }
         
-        for (let key in constraintKeys) {
+        for (let i = 0; i < constraintKeys.length; i++) {
+            const key = constraintKeys[i];
             const constraint = constraints[key];
             const type = constraint.type;
             
@@ -71,10 +72,10 @@ mgtrk.Query = (function() {
                 default:
                     return false;
             }
-            
-            return true;
+
         }
         
+        return true;
         
     };
     
@@ -83,6 +84,36 @@ mgtrk.Query = (function() {
         
         if (isValid) {
             // stringify after deep ordering of keys
+            
+            const datasetCode = Object.keys(query)[0];
+            const methodCode = query[datasetCode].method;
+            
+            const constraintKeys = Object.keys(query[datasetCode].constraints);
+            const sortedKeys = constraintKeys.sort();
+            
+            const constraints = [];
+            for (let i = 0; i < sortedKeys.length; i++) {
+                
+                const key = sortedKeys[i];
+                
+                const constraint = query[datasetCode].constraints[key];
+                
+                const keys = Object.keys(constraint).sort();
+                
+                const constraintProps = [];
+                for (let j = 0; j < keys.length; j++) {
+                    let value = constraint[keys[j]];
+                    if (value instanceof Array) {
+                        value = `[${value.sort()}]`;
+                    }
+                    constraintProps.push(`${keys[j]}-${value}`);
+                }
+                
+                constraints.push(`${key}-\{${constraintProps.join(',')}\}`);
+            }
+            
+            return `\{${datasetCode}-\{constraints-\{${constraints.join(',')}\},method-${methodCode}\}\}`;
+            
         } else {
             return false;
         }

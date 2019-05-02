@@ -87,6 +87,9 @@ mgtrk.AtlasViewer = (function() {
                 
                 const settings = tractQuery.settings;
                 const color = Object.keys(atlasViewer.colormaps.colormaps)[Math.floor(Math.random()*atlasViewer.colormaps.numColormaps)];
+                
+                const tractQueryId = `${tractQuery.code}-${mgtrk.Query.stringify(tractQuery.query)}`;
+                
                 Object.assign(settings, {
                     color: color,
                     colormap: atlasViewer.colormaps.colormaps[color],
@@ -94,18 +97,19 @@ mgtrk.AtlasViewer = (function() {
                     colormapMin: atlasViewer.colormaps.initColormapMin,
                     opacity: atlasViewer.colormaps.initColormapOpacity,
                     colormapMinUpdate: 0,
+                    tractQueryId: tractQueryId 
                 });
                 
                 // add TractInfoTab
                 atlasViewer.tractInfoTabs.addTab(
-                    tractQuery.code,
+                    tractQueryId,
                     'tract',
                     settings
                 );
-                atlasViewer.tractInfoTabs.selectTab(tractQuery.code);
+                atlasViewer.tractInfoTabs.selectTab(tractQueryId);
                 
                 // add tract to renderers
-                atlasViewer.renderers.addLabelmapToVolumeNew('tract', tractQuery.code, null, settings, tractQuery.query);
+                atlasViewer.renderers.addLabelmapToVolumeNew('tract', tractQuery.code, null, settings, tractQuery.query, tractQueryId);
                 atlasViewer.renderers.resetSlicesForDirtyFiles();
             }
         });

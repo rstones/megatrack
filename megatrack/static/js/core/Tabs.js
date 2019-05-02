@@ -36,8 +36,8 @@ mgtrk.Tabs = (function() {
         tabs.templates = templates;
         
         tabs.removeTab = (id) => {
-            $(`#${id}-tab-contents`).remove();
-            $(`#${id}-tab-header`).remove();
+            $(document.getElementById(`${id}-tab-contents`)).remove();
+            $(document.getElementById(`#${id}-tab-header`)).remove();
             delete tabs.cache[id];
             $(document).trigger('tabs:remove', [id]);
             if (tabs.scrollingActive) {
@@ -105,13 +105,19 @@ mgtrk.Tabs = (function() {
         
         tabs.selectTab = (id) => {
             const tabContents = tabs.cache[id];
+            
             // display the tab contents, show required content view and hide
-            $(`#${tabs.selectedTabId}-tab-contents`).hide();
-            $(`#${id}-tab-contents`).show();
-            tabs.selectedTabId = id; 
+            const $selectedTab = $(document.getElementById(`${tabs.selectedTabId}-tab-contents`));
+            $selectedTab.hide();
+            
+            const $newSelection = $(document.getElementById(`${id}-tab-contents`));
+            $newSelection.show();
+            tabs.selectedTabId = id;
+             
             // change the tab header style to selected
             tabs.container.find('.tab-header').removeClass('tab-header-selected');
-            $(`#${id}-tab-header`).toggleClass('tab-header-selected');
+            const $tabHeader = $(document.getElementById(`${id}-tab-header`));
+            $tabHeader.toggleClass('tab-header-selected');
             // add icons like remove or toggle to the header
             // do I only want them visible when tab is selected?
             
@@ -124,20 +130,24 @@ mgtrk.Tabs = (function() {
         
             // add elements to DOM (tab header)
             const customHeaderClass = tabs.options.headerClass || '';
+            
+            const tabHeaderId = `${id}-tab-header`;
+            const tabContentsId = `${id}-tab-contents`;
+            
             tabs.container.find('.tab-headers-wrapper').append(
-                `<div id="${id}-tab-header" class="${customHeaderClass} tab-header clickable"></div>`
+                `<div id="${tabHeaderId}" class="${customHeaderClass} tab-header clickable"></div>`
             );
-            insertHeader(state, `${id}-tab-header`);
+            insertHeader(state, tabHeaderId);
             // have an event handler for clicks on the tab to display the contents
-            $(`#${id}-tab-header`).on('click', function(event) {
+            $(document.getElementById(tabHeaderId)).on('click', function(event) {
                 if ($(this).attr('disabled')) {
                     return;
                 } 
                 tabs.selectTab(id);
             });
             // add content template to cache
-            insertContent(state, `${id}-tab-contents`, tabs.container.find('.tab-contents-wrapper'));
-            $(`#${id}-tab-contents`).hide();
+            insertContent(state, tabContentsId, tabs.container.find('.tab-contents-wrapper'));
+            $(document.getElementById(tabContentsId)).hide();
             
             tabs.cache[id] = state;
             
